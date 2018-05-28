@@ -133,6 +133,7 @@ generate_thread_element(Thread, String) ->
                           {"title", ecf_thread:title(Thread)},
                           {"creator_id", integer_to_binary(CreatorId)},
                           {"creator_name", Name},
+                          {"replies", integer_to_list(LastId)},
                           {"last_post_time", iso8601:format(LastPostTime)},
                           {"last_poster_id", integer_to_binary(LastPosterId)},
                           {"last_poster_name", LastPosterName}]).

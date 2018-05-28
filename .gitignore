@@ -11,4 +11,5 @@ ebin
 .rebar
 ecf.d
 .erlang.mk
+tags
 

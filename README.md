@@ -27,12 +27,17 @@ The following may happen at some point, but I'm unsure about them:
 * Possibly an expansion upon the current "template-ish" system, maybe a future
 switch to ErlyDTL for something a bit easier
 
+### Requirements
+Erlang/OTP 20
+
+
 ### Installation
 Currently there is no real installation process. However, testing ECF is very
 simple since it uses [erlang.mk](https://erlang.mk). Simple `make run` and it
-will drop you into an Erlang REPL. For the first time you start it up,
-`ecf_db:install().` followed by `mnesia:start().` to create and setup the
-database.
+will start it listening on port 8080 and drop you into an Erlang REPL. The first
+time you start it up, be sure to use `ecf_db:install().` followed by
+`mnesia:start().` to create and setup the database.
+
 
 ### Configuration
 TODO: Describe all configuration options. Most of them are just simple messages
