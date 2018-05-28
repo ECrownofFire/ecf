@@ -1,0 +1,19 @@
+<main id="profile">
+<dl>
+    <dt>Username<dd id="username">{{username}}</dd>
+    <dt>Joined<dd id="joined"><time class="format-time" datetime="{{joined}}"></time></dd>
+    <dt>Birthday<dd id="bday"><time class="format-time" datetime="{{birthday}}"></time></dd>
+    <dt>Biography<dd id="bio">{{bio}}</dd>
+    <dt>Location<dd id="loc">{{loc}}</dd>
+    <script language="javascript" type="text/javascript">
+        (function() {
+            var J = document.getElementById('joined').children[0];
+            J.innerHTML = (new Date(J.dateTime)).toLocaleString();
+            var B = document.getElementById('bday').children[0];
+            var D = new Date(B.dateTime);
+            B.innerHTML = new Date(D.getTime() + D.getTimezoneOffset() * 60000).toDateString();
+        })();
+    </script>
+</dl>
+</main>
+

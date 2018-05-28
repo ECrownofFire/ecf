@@ -1,0 +1,13 @@
+<main id="edit-profile">
+    <form id="form-edit-profile" action="{{base}}/edit_profile" method="post">
+        <label><h3>Username:</h3><input id="username" type="text" autocomplete="username" name="username" disabled value="{{username}}"></label>
+        <label><h3>Birthday:</h3><input id="bday" type="date" autocomplete="bday" name="bday" required></label>
+        <label><h3>Biography:</h3><textarea id="bio" type="text" name="bio" autocomplete="off">{{bio}}</textarea></label>
+        <label><h3>Location:</h3><input id="loc" type="text" name="loc" value="{{loc}}"></label>
+        <script language="javascript" type="text/javascript">
+            document.getElementById('bday').value = "{{bday}}";
+        </script>
+        <input id="submit" type="submit" value="Submit Changes">
+    </form>
+</main>
+
