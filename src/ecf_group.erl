@@ -6,7 +6,8 @@
          new_group/2, delete_group/1,
          get_group/1,
          edit_name/2, edit_desc/2,
-         id/1, name/1, desc/1]).
+         add_member/2, remove_member/2,
+         id/1, name/1, desc/1, member/2, members/1]).
 
 %%% Wrapper for group type
 
@@ -14,9 +15,10 @@
 
 
 -record(ecf_group,
-        {id    :: id(),
-         name  :: string(),
-         desc  :: string()}).
+        {id      :: id(),
+         name    :: string(),
+         desc    :: string(),
+         members :: [ecf_user:id()]}).
 -type group() :: #ecf_group{}.
 
 -spec create_table([node()]) -> ok.
@@ -34,7 +36,6 @@ new_group(Name, Desc) ->
         end,
     mnesia:activity(transaction, F).
 
-% TODO: search permissions for group and delete them
 -spec delete_group(id()) -> ok.
 delete_group(Id) ->
     F = fun() ->
@@ -67,6 +68,28 @@ edit_desc(Id, Desc) ->
         end,
     mnesia:activity(transaction, F).
 
+-spec add_member(id(), ecf_user:id()) -> ok.
+add_member(Id, User) ->
+    F = fun() ->
+                [G] = mnesia:wread({ecf_group, Id}),
+                _ = ecf_user:get_user(User),
+                ecf_user:add_group(User, Id),
+                NewList = [User|G#ecf_group.members],
+                mnesia:write(G#ecf_group{members=NewList})
+        end,
+    mnesia:activity(transaction, F).
+
+-spec remove_member(id(), ecf_user:id()) -> ok.
+remove_member(Id, User) ->
+    F = fun() ->
+                [G] = mnesia:wread({ecf_group, Id}),
+                _ = ecf_user:get_user(User),
+                ecf_user:remove_group(User, Id),
+                NewList = lists:delete(User, G#ecf_group.members),
+                mnesia:write(G#ecf_group{members=NewList})
+        end,
+    mnesia:activity(transaction, F).
+
 %% Wrapper functions
 
 -spec id(group()) -> id().
@@ -80,4 +103,12 @@ name(Group) ->
 -spec desc(group()) -> string().
 desc(Group) ->
     Group#ecf_group.desc.
+
+-spec member(group(), ecf_user:id()) -> boolean().
+member(Group, User) ->
+    lists:member(User, Group#ecf_group.members).
+
+-spec members(group()) -> [ecf_user:id()].
+members(Group) ->
+    Group#ecf_group.members.
 

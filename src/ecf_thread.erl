@@ -12,17 +12,19 @@
          edit_title/2, new_post/2,
          delete_thread/1, delete_forum_threads/1,
          order_threads/1,
-         id/1, forum/1, title/1, time/1, last/1, last_time/1, creator/1, views/1]).
+         id/1, forum/1, title/1, time/1, last/1, last_time/1, creator/1,
+         views/1, locked/1]).
 
 -record(ecf_thread,
-        {id      :: id(),
-         forum   :: ecf_forum:id(),
-         title   :: string(),
-         time    :: erlang:timestamp(),
+        {id        :: id(),
+         forum     :: ecf_forum:id(),
+         title     :: string(),
+         time      :: erlang:timestamp(),
          last_time :: erlang:timestamp(),
-         last    :: ecf_post:id(),
-         creator :: ecf_user:id(),
-         views   = 0 :: non_neg_integer()}).
+         last = 0  :: ecf_post:id(),
+         creator   :: ecf_user:id(),
+         views = 0 :: non_neg_integer(),
+         locked = false :: boolean()}).
 -type thread() :: #ecf_thread{}.
 
 -spec create_table([node()]) -> ok.
@@ -57,7 +59,7 @@ create_thread(Forum, Title, Time, Creator, Text) ->
     F = fun() ->
                 Id = ecf_db:get_new_id(ecf_thread),
                 mnesia:write(#ecf_thread{id=Id,forum=Forum,title=Title,
-                                         time=Time,last=0,last_time=Time,
+                                         time=Time,last_time=Time,
                                          creator=Creator}),
                 ecf_post:new_post(Id, Creator, Time, Text),
                 get_thread(Id)
@@ -140,4 +142,8 @@ creator(Thread) ->
 -spec views(thread()) -> non_neg_integer().
 views(Thread) ->
     Thread#ecf_thread.views.
+
+-spec locked(thread()) -> boolean().
+locked(Thread) ->
+    Thread#ecf_thread.locked.
 

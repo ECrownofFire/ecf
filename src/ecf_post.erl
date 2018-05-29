@@ -34,12 +34,14 @@ create_table(Nodes) ->
                          {disc_copies, Nodes}]),
     ok.
 
+% Main method to create a new post
 -spec new_post(ecf_thread:id(), ecf_user:id(), erlang:timestamp(),
                binary()) -> ok.
 new_post(Thread, Poster, Time, Text) ->
     F = fun() ->
                 _ = ecf_thread:get_thread(Thread),
                 Id = ecf_thread:new_post(Thread, Time),
+                ecf_user:add_post(Poster),
                 mnesia:write(#ecf_post{thread=Thread,id=Id,poster=Poster,
                                        time=Time,text=Text})
         end,

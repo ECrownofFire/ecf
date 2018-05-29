@@ -12,8 +12,7 @@ though!
 At the bare minimum, ECF still needs the following:
 * Documentation
 * Lots and lots of CSS and HTML magic to make it look decent!
-* Pagination of threads and posts (former can probably just use `lists:sublist`,
-but the latter should probably use something more performant)
+* Terms of use and privacy policy
 * Administration functionality
     * Subforum creation (currently you must manually call `ecf_forum:new_forum/4`)
     * Deleting threads/posts
@@ -29,12 +28,15 @@ but the latter should probably use something more performant)
     * Rate limiting for creating threads and posting
     * Email on registration
     * CAPTCHAs on registration and login
-    * Logging of access and account creation and such
+    * Logging most stuff
 
 To actually be useable, I'd like to add the following:
-* More admin actions
+* Pagination of threads and posts (former can probably just use `lists:sublist/3`,
+but the latter should probably use something more performant)
+* More useful things for administration
     * Banning people for a given length of time
-* Listing all users, sorting by stuff
+    * Listing all users, sorting by various fields
+    * List all posts by user
 * Searching
 
 The following may happen at some point, but I'm unsure about them:

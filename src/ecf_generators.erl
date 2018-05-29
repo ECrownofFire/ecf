@@ -185,7 +185,8 @@ generate_user_profile(Self, Profile) ->
                   {"birthday", iso8601:format(ecf_user:bday(Profile))},
                   {"bio", ecf_user:bio(Profile)},
                   {"title", ecf_user:title(Profile)},
-                  {"loc", ecf_user:loc(Profile)}]).
+                  {"loc", ecf_user:loc(Profile)},
+                  {"posts", ecf_user:posts(Profile)}]).
 
 generate_login(undefined, Type, Url) ->
     Message = application:get_env(ecf, Type, <<"Please login.">>),

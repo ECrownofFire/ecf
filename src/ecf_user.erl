@@ -20,12 +20,14 @@
          get_user/1, get_user_by_name/1, get_user_by_email/1,
          edit_name/2, edit_email/2, edit_pass/2, new_session/1,
          enable_user/1, disable_user/1,
+         add_group/2, remove_group/2,
          edit_bio/2, edit_bday/2,
          edit_title/2, edit_loc/2,
+         add_post/1,
          delete_user/1,
          check_session/2, check_pass/2,
          id/1, name/1, enabled/1, email/1, joined/1, groups/1, bday/1,
-         title/1, bio/1, loc/1]).
+         title/1, bio/1, loc/1, posts/1]).
 
 -record(ecf_user,
         {id     :: id(),
@@ -40,7 +42,8 @@
          bday   :: calendar:datetime(),
          title  = <<"">> :: binary(),
          bio    = <<"">> :: binary(),
-         loc    = <<"">> :: binary()}).
+         loc    = <<"">> :: binary(),
+         posts = 0 :: non_neg_integer()}).
 -type user() :: #ecf_user{}.
 
 -spec create_table([node()]) -> ok.
@@ -192,6 +195,25 @@ disable_user(Id) ->
         end,
     mnesia:activity(transaction, F).
 
+
+-spec add_group(id(), ecf_group:id()) -> ok.
+add_group(Id, Group) ->
+    F = fun() ->
+                [User] = mnesia:wread({ecf_user, Id}),
+                NewList = [Group|groups(User)],
+                mnesia:write(User#ecf_user{groups=NewList})
+        end,
+    mnesia:activity(transaction, F).
+
+-spec remove_group(id(), ecf_group:id()) -> ok.
+remove_group(Id, Group) ->
+    F = fun() ->
+                [User] = mnesia:wread({ecf_user, Id}),
+                NewList = lists:delete(Group, groups(User)),
+                mnesia:write(User#ecf_user{groups=NewList})
+        end,
+    mnesia:activity(transaction, F).
+
 -spec edit_bio(id(), binary()) -> ok.
 edit_bio(Id, Bio) ->
     F = fun() ->
@@ -224,11 +246,21 @@ edit_loc(Id, Loc) ->
         end,
     mnesia:activity(transaction, F).
 
+-spec add_post(id()) -> ok.
+add_post(Id) ->
+    F = fun() ->
+                [User] = mnesia:wread({ecf_user, Id}),
+                New = User#ecf_user.posts + 1,
+                mnesia:write(User#ecf_user{posts=New})
+        end,
+    mnesia:activity(transaction, F).
+
 
 -spec delete_user(id()) -> ok.
 delete_user(Id) ->
     F = fun() ->
-                [_] = mnesia:wread({ecf_user, Id}),
+                [User] = mnesia:wread({ecf_user, Id}),
+                [ecf_group:remove_member(Group, Id) || Group <- groups(User)],
                 mnesia:delete({ecf_user, Id})
         end,
     mnesia:activity(transaction, F).
@@ -284,4 +316,8 @@ bio(User) ->
 -spec loc(user()) -> binary().
 loc(User) ->
     User#ecf_user.loc.
+
+-spec posts(user()) -> non_neg_integer().
+posts(User) ->
+    User#ecf_user.posts.
 
