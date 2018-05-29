@@ -183,11 +183,15 @@ generate_user_profile(Self, Profile) ->
                false -> "user_profile.html" end,
     String = read_priv_file(File),
     Joined = iso8601:format(calendar:now_to_datetime(ecf_user:joined(Profile))),
+    Bday = case ecf_user:bday(Profile) of
+               undefined -> <<"">>;
+               B -> iso8601:format(B)
+           end,
     replace_many(String,
                  [{"username", ecf_user:name(Profile)},
                   {"email", ecf_user:email(Profile)},
                   {"joined", Joined},
-                  {"birthday", iso8601:format(ecf_user:bday(Profile))},
+                  {"birthday", Bday},
                   {"bio", ecf_user:bio(Profile)},
                   {"title", ecf_user:title(Profile)},
                   {"loc", ecf_user:loc(Profile)},
@@ -217,9 +221,12 @@ generate_register(Type) ->
     replace(read_priv_file("register.html"), "message", Message).
 
 generate_edit_profile(User) ->
-    {{Y, M, D}, _} = ecf_user:bday(User),
-    FmtStr = "~4.10.0B-~2.10.0B-~2.10.0B",
-    Bday = io_lib:format(FmtStr, [Y, M, D]),
+    Bday = case ecf_user:bday(User) of
+               {{Y, M, D}, _} ->
+                   FmtStr = "~4.10.0B-~2.10.0B-~2.10.0B",
+                   io_lib:format(FmtStr, [Y, M, D]);
+               _ -> <<"">>
+           end,
     String = read_priv_file("edit_profile.html"),
     replace_many(String, [{"username", ecf_user:name(User)},
                           {"bday", Bday},

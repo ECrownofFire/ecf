@@ -39,7 +39,7 @@
          email  :: binary(),
          joined :: erlang:timestamp(),
          groups = [] :: [ecf_group:id()],
-         bday   :: calendar:datetime(),
+         bday   :: calendar:datetime() | undefined,
          title  = <<"">> :: binary(),
          bio    = <<"">> :: binary(),
          loc    = <<"">> :: binary(),
@@ -225,7 +225,7 @@ edit_bio(Id, Bio) ->
         end,
     mnesia:activity(transaction, F).
 
--spec edit_bday(id(), calendar:datetime()) -> ok.
+-spec edit_bday(id(), calendar:datetime() | undefined) -> ok.
 edit_bday(Id, Bday) ->
     F = fun() ->
                 [User] = mnesia:wread({ecf_user, Id}),
@@ -304,7 +304,7 @@ joined(User) ->
 groups(User) ->
     User#ecf_user.groups.
 
--spec bday(user()) -> calendar:datetime().
+-spec bday(user()) -> calendar:datetime() | undefined.
 bday(User) ->
     User#ecf_user.bday.
 

@@ -12,9 +12,12 @@ init(Req0, State) ->
             {_, Username} = lists:keyfind(<<"username">>, 1, KV),
             {_, Password} = lists:keyfind(<<"password">>, 1, KV),
             {_, Email}    = lists:keyfind(<<"email">>, 1, KV),
-            {_, Bday0}    = lists:keyfind(<<"bday">>, 1, KV),
+            Bday = case lists:keyfind(<<"bday">>, 1, KV) of
+                       {_, <<"">>} -> undefined;
+                       {_, Bday0} -> iso8601:parse(Bday0);
+                       _ -> undefined
+                   end,
             Bio = ecf_utils:get_and_sanitize(KV, <<"bio">>),
-            Bday = iso8601:parse(Bday0),
             try_register(check_username(Username) and check_password(Password),
                          {Username, Password, Email, Bday, Bio},
                          Req, State);

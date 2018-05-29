@@ -19,8 +19,11 @@ init(Req0, State) ->
                 <<"POST">> ->
                     Id = ecf_user:id(User),
                     {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
-                    {_, Bday0} = lists:keyfind(<<"bday">>, 1, KV),
-                    Bday = iso8601:parse(Bday0),
+                    Bday = case lists:keyfind(<<"bday">>, 1, KV) of
+                               {_, <<"">>} -> undefined;
+                               {_, Bday0} -> iso8601:parse(Bday0);
+                               _ -> undefined
+                           end,
                     Bio = ecf_utils:get_and_sanitize(KV, <<"bio">>),
                     Loc = ecf_utils:get_and_sanitize(KV, <<"loc">>),
                     ecf_user:edit_bday(Id, Bday),

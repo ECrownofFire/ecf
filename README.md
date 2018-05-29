@@ -12,7 +12,7 @@ though!
 At the bare minimum, ECF still needs the following:
 * Documentation
 * Tests
-* Lots and lots of CSS and HTML magic to make it look decent!
+* Lots and lots of CSS/HTML/JS magic to make it look decent!
 * Terms of use and privacy policy
 * Administration frontend
     * Subforum creation
