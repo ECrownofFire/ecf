@@ -39,7 +39,7 @@ start(_Type, _Args) ->
           stream_handlers => [ecf_stream, cowboy_stream_h]
          }
     ),
-    mnesia:start(),
+    ok = mnesia:start(),
     %ok = mnesia:wait_for_tables([ecf_forum, ecf_post, ecf_user, ecf_group,
     %                             ecf_group_perms], 10000),
     ecf_sup:start_link().

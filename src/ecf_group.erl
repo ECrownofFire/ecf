@@ -15,10 +15,10 @@
 
 
 -record(ecf_group,
-        {id      :: id(),
-         name    :: string(),
-         desc    :: string(),
-         members :: [ecf_user:id()]}).
+        {id   :: id(),
+         name :: string(),
+         desc :: string(),
+         members = [] :: [ecf_user:id()]}).
 -type group() :: #ecf_group{}.
 
 -spec create_table([node()]) -> ok.

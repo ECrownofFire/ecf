@@ -20,16 +20,15 @@ get_new_id(Type) ->
 
 install() ->
     Nodes = [node()],
-    application:stop(mnesia),
+    ok = application:stop(mnesia),
     ok = mnesia:create_schema(Nodes),
-    application:start(mnesia),
-    create_id_table(Nodes),
+    ok = application:start(mnesia),
+    ok = create_id_table(Nodes),
     ecf_forum:create_table(Nodes),
     ecf_thread:create_table(Nodes),
     ecf_post:create_table(Nodes),
     ecf_user:create_table(Nodes),
-    ecf_group:create_table(Nodes),
-    application:stop(mnesia).
+    ecf_group:create_table(Nodes).
 
 -spec create_id_table([node()]) -> ok.
 create_id_table(Nodes) ->

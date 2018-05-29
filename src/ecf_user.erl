@@ -48,7 +48,7 @@
 
 -spec create_table([node()]) -> ok.
 create_table(Nodes) ->
-    mnesia:create_table(ecf_user,
+    {atomic, ok} = mnesia:create_table(ecf_user,
                         [{attributes, record_info(fields, ecf_user)},
                          {disc_copies, Nodes}]),
     ok.
