@@ -25,20 +25,43 @@ init(Req, State) ->
                            reply_200(Html, Req)
                    end;
                <<"forum">> ->
-                   Forum = ecf_forum:get_forum(Id),
-                   Threads = ecf_thread:get_forum_threads(Id),
-                   Html = ecf_generators:generate(forum, User, {Forum, Threads}),
-                   reply_200(Html, Req);
+                   case ecf_forum:get_forum(Id) of
+                       {error, forum_not_found} ->
+                           reply_404(User, Req);
+                       Forum ->
+                           case ecf_perms:check_perm(User,
+                                                     {forum, Forum},
+                                                     view_forum) of
+                               true ->
+                                   Threads = ecf_thread:get_forum_threads(Id),
+                                   Html = ecf_generators:generate(forum, User,
+                                                                  {Forum, Threads}),
+                                   reply_200(Html, Req);
+                               false ->
+                                   reply_403(User, view_forum_403, Req)
+                           end
+                   end;
                <<"thread">> ->
                    case ecf_thread:get_thread(Id) of
                        {error, thread_not_found} ->
                            reply_404(User, Req);
                        Thread ->
-                           Forum = ecf_forum:get_forum(ecf_thread:forum(Thread)),
-                           Posts = ecf_post:get_posts(Id),
-                           Html = ecf_generators:generate(thread, User,
-                                                          {Forum, Thread, Posts}),
-                           reply_200(Html, Req)
+                           case ecf_perms:check_perm(User,
+                                                     {thread, Thread},
+                                                     view_thread) of
+                               true ->
+                                   Forum = ecf_forum:get_forum(
+                                             ecf_thread:forum(Thread)),
+                                   Posts = ecf_post:get_posts(Id),
+                                   Html = ecf_generators:generate(thread,
+                                                                  User,
+                                                                  {Forum,
+                                                                   Thread,
+                                                                   Posts}),
+                                   reply_200(Html, Req);
+                               false ->
+                                   reply_403(User, view_thread_403, Req)
+                           end
                    end
            end,
     {ok, Req2, State}.
@@ -50,6 +73,12 @@ reply_200(Html, Req) ->
     cowboy_req:reply(200,
                      #{<<"content-type">> => <<"text/html">>},
                      Html,
+                     Req).
+
+reply_403(User, Type, Req) ->
+    cowboy_req:reply(403,
+                     #{<<"content-type">> => <<"text/html">>},
+                     ecf_generators:generate(403, User, Type),
                      Req).
 
 reply_404(User, Req) ->

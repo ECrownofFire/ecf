@@ -72,6 +72,9 @@ new_user(Name, Pass, Email, Time, Bday) ->
                                                  salt=Salt,pass=Hash,
                                                  session=Session,email=Email,
                                                  joined=Time,bday=Bday}),
+                                % All users are in the two basic groups
+                                ecf_group:add_member(1, Id),
+                                ecf_group:add_member(2, Id),
                                 Id;
                             _ ->
                                 {error, email_taken}

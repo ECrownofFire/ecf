@@ -9,11 +9,14 @@
 -export([create_table/1,
          create_thread/5,
          get_thread/1, get_forum_threads/1,
-         edit_title/2, new_post/2,
+         edit_title/2, edit_perms/2,
+         lock_thread/1,
+         new_post/2,
          delete_thread/1, delete_forum_threads/1,
-         order_threads/1,
+         visible_threads/2,
+         filter_threads/2, order_threads/1,
          id/1, forum/1, title/1, time/1, last/1, last_time/1, creator/1,
-         views/1, locked/1]).
+         views/1, perms/1]).
 
 -record(ecf_thread,
         {id        :: id(),
@@ -24,7 +27,7 @@
          last = 0  :: ecf_post:id(),
          creator   :: ecf_user:id(),
          views = 0 :: non_neg_integer(),
-         locked = false :: boolean()}).
+         perms = []:: [ecf_perms:perms()]}).
 -type thread() :: #ecf_thread{}.
 
 -spec create_table([node()]) -> ok.
@@ -58,9 +61,11 @@ get_forum_threads(Forum) ->
 create_thread(Forum, Title, Time, Creator, Text) ->
     F = fun() ->
                 Id = ecf_db:get_new_id(ecf_thread),
+                % copy forum perms by default
+                Perms = ecf_forum:perms(ecf_forum:get_forum(Forum)),
                 mnesia:write(#ecf_thread{id=Id,forum=Forum,title=Title,
                                          time=Time,last_time=Time,
-                                         creator=Creator}),
+                                         creator=Creator,perms=Perms}),
                 ecf_post:new_post(Id, Creator, Time, Text),
                 get_thread(Id)
         end,
@@ -71,6 +76,24 @@ edit_title(Id, Title) ->
     F = fun() ->
                 [Thread] = mnesia:wread({ecf_thread, Id}),
                 mnesia:write(Thread#ecf_thread{title=Title})
+        end,
+    mnesia:activity(transaction, F).
+
+-spec edit_perms(id(), [ecf_perms:perms()]) -> ok.
+edit_perms(Id, Perms) ->
+    F = fun() ->
+                [Thread] = mnesia:wread({ecf_thread, Id}),
+                mnesia:write(Thread#ecf_thread{perms=Perms})
+        end,
+    mnesia:activity(transaction, F).
+
+% convenience function, just denies creating new posts from the base user group
+-spec lock_thread(id()) -> ok.
+lock_thread(Id) ->
+    F = fun() ->
+                [Thread] = mnesia:wread({ecf_thread, Id}),
+                New = lists:keydelete({group, 1}, 1, Thread#ecf_thread.perms),
+                mnesia:write(Thread#ecf_thread{perms=New})
         end,
     mnesia:activity(transaction, F).
 
@@ -104,6 +127,17 @@ delete_forum_threads(Forum) ->
     mnesia:activity(transaction, F).
 
 %% Utilities
+
+-spec visible_threads([thread()], ecf_user:user()) -> [thread()].
+visible_threads(Threads, User) ->
+    order_threads(filter_threads(Threads, User)).
+
+-spec filter_threads([thread()], ecf_user:user()) -> [thread()].
+filter_threads(Threads, User) ->
+    lists:filter(fun(T) -> ecf_perms:check_perm(User, {thread, T},
+                                                view_thread)
+                 end,
+                 Threads).
 
 -spec order_threads([thread()]) -> [thread()].
 order_threads(Threads) ->
@@ -143,7 +177,7 @@ creator(Thread) ->
 views(Thread) ->
     Thread#ecf_thread.views.
 
--spec locked(thread()) -> boolean().
-locked(Thread) ->
-    Thread#ecf_thread.locked.
+-spec perms(thread()) -> [ecf_perms:perms()].
+perms(Thread) ->
+    Thread#ecf_thread.perms.
 

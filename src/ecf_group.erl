@@ -16,8 +16,8 @@
 
 -record(ecf_group,
         {id   :: id(),
-         name :: string(),
-         desc :: string(),
+         name :: binary(),
+         desc :: binary(),
          members = [] :: [ecf_user:id()]}).
 -type group() :: #ecf_group{}.
 
@@ -26,13 +26,23 @@ create_table(Nodes) ->
     {atomic, ok} = mnesia:create_table(ecf_group,
                         [{attributes, record_info(fields, ecf_group)},
                          {disc_copies, Nodes}]),
+    F = fun() ->
+                mnesia:write(#ecf_group{id=0,
+                                        name = <<"Administrators">>,
+                                        desc = <<"Administrator group">>})
+        end,
+    0 = mnesia:activity(transaction, F),
+    1 = new_group(<<"All Users">>, <<"All users, including guests">>),
+    2 = new_group(<<"Registered Users">>, <<"Default user group">>),
     ok.
 
--spec new_group(binary(), binary()) -> ok.
+
+-spec new_group(binary(), binary()) -> id().
 new_group(Name, Desc) ->
     F = fun() ->
                 Id = ecf_db:get_new_id(ecf_group),
-                mnesia:write(#ecf_group{id=Id,name=Name,desc=Desc})
+                ok = mnesia:write(#ecf_group{id=Id,name=Name,desc=Desc}),
+                Id
         end,
     mnesia:activity(transaction, F).
 
@@ -96,11 +106,11 @@ remove_member(Id, User) ->
 id(Group) ->
     Group#ecf_group.id.
 
--spec name(group()) -> string().
+-spec name(group()) -> binary().
 name(Group) ->
     Group#ecf_group.name.
 
--spec desc(group()) -> string().
+-spec desc(group()) -> binary().
 desc(Group) ->
     Group#ecf_group.desc.
 

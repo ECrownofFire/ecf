@@ -6,7 +6,7 @@
 generate(main, User, Forums) ->
     [generate_head("Home"),
      generate_header(User),
-     generate_forum_list(Forums),
+     generate_forum_list(Forums, User),
      generate_forum_end()];
 generate(login, User, {Message, Url}) ->
     [generate_head("Login"),
@@ -49,6 +49,11 @@ generate(401, User, Type) ->
      generate_header(User),
      generate_401_error(Type),
      generate_forum_end()];
+generate(403, User, Type) ->
+    [generate_head("403 - Forbidden"),
+     generate_header(User),
+     generate_403_error(Type),
+     generate_forum_end()];
 generate(404, User, _) ->
     [generate_head("404 - Not Found"),
      generate_header(User),
@@ -84,12 +89,12 @@ generate_header(User) ->
                           {"username", ecf_user:name(User)}]).
 
 
--spec generate_forum_list([ecf_forum:forum()]) -> iodata().
-generate_forum_list(Forums) ->
+-spec generate_forum_list([ecf_forum:forum()], ecf_user:user()) -> iodata().
+generate_forum_list(Forums, User) ->
     Begin = read_priv_file("forum_list.html"),
     Elem = read_priv_file("forum_list_element.html"),
     End = read_priv_file("forum_list_end.html"),
-    Sorted = ecf_forum:order_forums(Forums),
+    Sorted = ecf_forum:visible_forums(Forums, User),
     [Begin, [generate_forum_element(X, Elem) || X <- Sorted], End].
 
 
@@ -107,13 +112,13 @@ generate_thread_list(User, Forum, Threads) ->
     Begin2 = replace_many(Begin, [{"forum", ecf_forum:name(Forum)},
                                   {"forum_desc", ecf_forum:desc(Forum)}]),
     Elem = read_priv_file("thread_list_element.html"),
-    EndFile = case User of
-                  undefined -> "thread_list_end_guest.html";
-                  _ -> "thread_list_end.html"
+    EndFile = case ecf_perms:check_perm(User, {forum, Forum}, create_thread) of
+                  false -> "thread_list_end_guest.html";
+                  true -> "thread_list_end.html"
               end,
     ForumId = integer_to_list(ecf_forum:id(Forum)),
     End = replace(read_priv_file(EndFile), "forum_id", ForumId),
-    Sorted = ecf_thread:order_threads(Threads),
+    Sorted = ecf_thread:visible_threads(Threads, User),
     [Begin2, [generate_thread_element(X, Elem) || X <- Sorted], End].
 
 -spec generate_thread_element(ecf_thread:thread(), iodata()) -> iodata().
@@ -146,9 +151,9 @@ generate_post_list(User, Forum, Thread, Posts) ->
                            {"forum_id", integer_to_list(ForumId)},
                            {"forum_name", ForumName}]),
     Elem = read_priv_file("post_list_element.html"),
-    EndFile = case User of
-                  undefined -> "post_list_end_guest.html";
-                  _ -> "post_list_end.html"
+    EndFile = case ecf_perms:check_perm(User, {thread, Thread}, create_post) of
+                  false -> "post_list_end_guest.html";
+                  true -> "post_list_end.html"
               end,
     End = replace(read_priv_file(EndFile),
                   "thread", integer_to_list(ecf_thread:id(Thread))),
@@ -225,6 +230,11 @@ generate_edit_profile(User) ->
 generate_401_error(Type) ->
     Message = application:get_env(ecf, Type, <<"You need to log in first.">>),
     replace(read_priv_file("401.html"), "message", Message).
+
+generate_403_error(Type) ->
+    Message = application:get_env(ecf, Type,
+                                  <<"You don't have permission to do that.">>),
+    replace(read_priv_file("403.html"), "message", Message).
 
 generate_404_error() ->
     read_priv_file("404.html").

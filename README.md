@@ -11,39 +11,35 @@ though!
 
 At the bare minimum, ECF still needs the following:
 * Documentation
+* Tests
 * Lots and lots of CSS and HTML magic to make it look decent!
 * Terms of use and privacy policy
-* Administration functionality
-    * Subforum creation (currently you must manually call `ecf_forum:new_forum/4`)
+* Administration frontend
+    * Subforum creation
     * Deleting threads/posts
     * Banning accounts
-* Permissions system
-    * Locking threads/forums
-    * User groups
-    * Restricting viewing forums
-    * Restricting creating threads in forums
-    * Restricting posting in threads/forums
-* Actual security
+    * Editing permissions
+* Security
     * HTTPS
     * Rate limiting for creating threads and posting
     * Email on registration
     * CAPTCHAs on registration and login
     * Logging most stuff
 
-To actually be useable, I'd like to add the following:
+So that ECF is reasonably useable, I'd like to add the following as well:
+* Editing posts
 * Pagination of threads and posts (former can probably just use `lists:sublist/3`,
 but the latter should probably use something more performant)
-* More useful things for administration
-    * Banning people for a given length of time
-    * Listing all users, sorting by various fields
-    * List all posts by user
+* Banning people for a given length of time (needs backend)
+* Listing all users, sorting by various fields
+* List all posts by a user
 * Searching
 
 The following may happen at some point, but I'm unsure about them:
 * Markdown for posts
 * Using Argon2 for password hashing instead of PBKDF2
 * Possibly an expansion upon the current "template-ish" system, maybe a future
-switch to ErlyDTL or something else
+switch to ErlyDTL or something else, but the current method works well enough
 
 ### Requirements
 Erlang/OTP 20

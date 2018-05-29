@@ -9,8 +9,11 @@
          new_forum/4,
          edit_name/2, edit_desc/2, edit_perms/2, edit_order/2,
          delete_forum/1,
-         order_forums/1,
+         visible_forums/2,
+         filter_forums/2, order_forums/1,
          id/1, name/1, desc/1, order/1, perms/1]).
+
+-export([new_forum/3]).
 
 
 -type id()  :: non_neg_integer().
@@ -33,11 +36,13 @@ create_table(Nodes) ->
 
 %% Forum actions
 
--spec get_forum(id()) -> forum().
+-spec get_forum(id()) -> forum() | {error, forum_not_found}.
 get_forum(Id) ->
     F = fun() ->
-                [Forum] = mnesia:read({ecf_forum, Id}),
-                Forum
+                case mnesia:read({ecf_forum, Id}) of
+                    [] -> {error, forum_not_found};
+                    [Forum] -> Forum
+                end
         end,
     mnesia:activity(transaction, F).
 
@@ -48,6 +53,11 @@ get_forums() ->
                 mnesia:select(ecf_forum,[{'_',[],['$_']}])
         end,
     mnesia:activity(transaction, F).
+
+% should only be used for testing
+-spec new_forum(binary(), binary(), id()) -> ok.
+new_forum(Name, Desc, Order) ->
+    new_forum(Name, Desc, Order, []).
 
 -spec new_forum(binary(), binary(), id(), [ecf_perms:perms()]) -> ok.
 new_forum(Name, Desc, Order, Perms) ->
@@ -104,9 +114,21 @@ edit_perms(Id, Perms) ->
 
 %% Utilities
 
+-spec visible_forums([forum()], ecf_user:user()) -> [forum()].
+visible_forums(Forums, User) ->
+    order_forums(filter_forums(Forums, User)).
+
+-spec filter_forums([forum()], ecf_user:user()) -> [forum()].
+filter_forums(Forums, User) ->
+    lists:filter(fun(F) -> ecf_perms:check_perm(User, {forum, F},
+                                                view_forum)
+                 end,
+                 Forums).
+
 -spec order_forums([forum()]) -> [forum()].
 order_forums(Forums) ->
     lists:keysort(#ecf_forum.order, Forums).
+
 
 %% Wrapper functions
 
