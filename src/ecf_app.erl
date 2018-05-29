@@ -17,6 +17,7 @@ start(_Type, _Args) ->
                    {id, int}],
     Host = application:get_env(ecf, host, '_'),
     Base = application:get_env(ecf, base_url, ""),
+    Port = application:get_env(ecf, port, 8080),
     Dispatch = cowboy_router:compile([
         {Host, [{Base ++ "/favicon.ico", cowboy_static,
                  {priv_file, ecf, "favicon.ico"}},
@@ -33,7 +34,7 @@ start(_Type, _Args) ->
 
     ]),
     {ok, _Pid} = cowboy:start_clear(my_http_listener,
-        [{port, 8080}],
+        [{port, Port}],
         #{env => #{dispatch => Dispatch},
           stream_handlers => [ecf_stream, cowboy_stream_h]
          }
