@@ -38,10 +38,10 @@ generate(forum, User, {Forum, Threads}) ->
      generate_header(User),
      generate_thread_list(User, Forum, Threads),
      generate_forum_end()];
-generate(thread, User, {Thread, Posts}) ->
+generate(thread, User, {Forum, Thread, Posts}) ->
     [generate_head(ecf_thread:title(Thread)),
      generate_header(User),
-     generate_post_list(User, Thread, Posts),
+     generate_post_list(User, Forum, Thread, Posts),
      generate_forum_end()];
 generate(edit_profile, User, _) ->
     [generate_head("Edit Profile"),
@@ -138,9 +138,14 @@ generate_thread_element(Thread, String) ->
                           {"last_poster_id", integer_to_binary(LastPosterId)},
                           {"last_poster_name", LastPosterName}]).
 
-generate_post_list(User, Thread, Posts) ->
+generate_post_list(User, Forum, Thread, Posts) ->
     Begin = read_priv_file("post_list.html"),
-    Begin2 = replace(Begin, "title", ecf_thread:title(Thread)),
+    ForumId = ecf_forum:id(Forum),
+    ForumName = ecf_forum:name(Forum),
+    Begin2 = replace_many(Begin,
+                          [{"title", ecf_thread:title(Thread)},
+                           {"forum_id", integer_to_list(ForumId)},
+                           {"forum_name", ForumName}]),
     Elem = read_priv_file("post_list_element.html"),
     EndFile = case User of
                   undefined -> "post_list_end_guest.html";

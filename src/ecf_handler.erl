@@ -34,9 +34,10 @@ init(Req, State) ->
                        {error, thread_not_found} ->
                            reply_404(User, Req);
                        Thread ->
+                           Forum = ecf_forum:get_forum(ecf_thread:forum(Thread)),
                            Posts = ecf_post:get_posts(Id),
                            Html = ecf_generators:generate(thread, User,
-                                                          {Thread, Posts}),
+                                                          {Forum, Thread, Posts}),
                            reply_200(Html, Req)
                    end
            end,
