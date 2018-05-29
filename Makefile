@@ -1,7 +1,6 @@
 PROJECT = ecf
 PROJECT_DESCRIPTION = New project
 PROJECT_VERSION = 0.0.1
-PROJECT_ENV = [{forum_name, <<"Erlang Creative Forum">>}]
 
 DEPS = cowboy iso8601
 dep_cowboy_commit = 2.4.0

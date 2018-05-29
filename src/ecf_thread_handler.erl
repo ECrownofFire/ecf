@@ -27,11 +27,10 @@ init(Req, State) ->
                     Thread = ecf_thread:create_thread(Forum, Title,
                                                       erlang:timestamp(),
                                                       ecf_user:id(User), Text),
-                    Base = application:get_env(ecf, base_url, ""),
                     ThreadId = integer_to_list(ecf_thread:id(Thread)),
                     Req3 = cowboy_req:reply(302,
                                             #{<<"Location">> =>
-                                              [Base, "/thread/", ThreadId]},
+                                              [<<"{{base}}/thread/">>, ThreadId]},
                                             Req2),
                     {ok, Req3, State}
             end;

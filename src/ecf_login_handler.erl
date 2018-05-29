@@ -22,9 +22,7 @@ init(Req0, State) ->
             try_login(User, Password, Url, Req, State);
         <<"GET">> ->
             User = ecf_utils:check_user_session(Req0),
-            Message = application:get_env(ecf, login_message,
-                                          <<"Please login.">>),
-            Html = ecf_generators:generate(login, User, {Message, Url}),
+            Html = ecf_generators:generate(login, User, {login_message, Url}),
             Req = cowboy_req:reply(200,
                                    #{<<"content-type">> => <<"text/html">>},
                                    Html,
@@ -57,10 +55,10 @@ try_login(User, Password, Url, Req, State) ->
                                                 max_age => ?SESSION_TIME}),
             Req3 = cowboy_req:set_resp_cookie(<<"user">>,
                                               integer_to_list(ecf_user:id(User)),
-                                              Req2),
-            Base = application:get_env(ecf, base_url, ""),
+                                              Req2,
+                                              #{max_age => ?SESSION_TIME}),
             Req4 = cowboy_req:reply(302,
-                                    #{<<"Location">> => [Base, "/", Url]},
+                                    #{<<"Location">> => ["{{base}}/", Url]},
                                     Req3),
             {ok, Req4, State};
         false ->
@@ -68,12 +66,10 @@ try_login(User, Password, Url, Req, State) ->
     end.
 
 login_fail(Url, Req, State) ->
-    Message = application:get_env(ecf, login_fail_message,
-                                  <<"Login Failed! Try again">>),
     Req2 = cowboy_req:reply(400,
                             #{<<"content-type">> => <<"text/html">>},
                             ecf_generators:generate(login, undefined,
-                                                    {Message, Url}),
+                                                    {login_fail_message, Url}),
                             Req),
     {ok, Req2, State}.
 

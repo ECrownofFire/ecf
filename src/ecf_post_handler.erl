@@ -22,11 +22,10 @@ init(Req, State) ->
                     Text = ecf_utils:get_and_sanitize(KV, <<"text">>),
                     ok = ecf_post:new_post(Thread, ecf_user:id(User),
                                            erlang:timestamp(), Text),
-                    Base = application:get_env(ecf, base_url, ""),
                     Thread2 = integer_to_list(Thread),
                     Req3 = cowboy_req:reply(302,
                                             #{<<"Location">> =>
-                                              [Base, "/thread/", Thread2]},
+                                              [<<"{{base}}/thread/">>, Thread2]},
                                             Req2),
                     {ok, Req3, State};
                 _ ->

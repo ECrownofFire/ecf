@@ -11,27 +11,25 @@
         {type :: atom(),
          id   :: non_neg_integer()}).
 
--export([install/1, install/0,
+-export([install/0,
          get_new_id/1]).
 
 -spec get_new_id(atom()) -> non_neg_integer().
 get_new_id(Type) ->
     mnesia:dirty_update_counter(ecf_id, Type, 1).
 
-install(Nodes) ->
-    rpc:multicall(Nodes, application, stop, [mnesia]),
+install() ->
+    Nodes = [node()],
+    application:stop(mnesia),
     ok = mnesia:create_schema(Nodes),
-    rpc:multicall(Nodes, application, start, [mnesia]),
+    application:start(mnesia),
     create_id_table(Nodes),
     ecf_forum:create_table(Nodes),
     ecf_thread:create_table(Nodes),
     ecf_post:create_table(Nodes),
     ecf_user:create_table(Nodes),
     ecf_group:create_table(Nodes),
-    rpc:multicall(Nodes, application, stop, [mnesia]).
-
-install() ->
-    install([node()]).
+    application:stop(mnesia).
 
 -spec create_id_table([node()]) -> ok.
 create_id_table(Nodes) ->

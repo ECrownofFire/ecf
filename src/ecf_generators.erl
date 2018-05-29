@@ -4,26 +4,22 @@
 
 -spec generate(atom() | integer, ecf_user:user() | undefined, term()) -> iodata().
 generate(main, User, Forums) ->
-    {ok, ForumName} = application:get_env(ecf, forum_name),
-    [generate_head(ForumName),
+    [generate_head("Home"),
      generate_header(User),
      generate_forum_list(Forums),
      generate_forum_end()];
 generate(login, User, {Message, Url}) ->
-    {ok, ForumName} = application:get_env(ecf, forum_name),
-    [generate_head([ForumName, " - Login"]),
+    [generate_head("Login"),
      generate_header(User),
      generate_login(User, Message, Url),
      generate_forum_end()];
 generate(logout, User, Url) ->
-    {ok, ForumName} = application:get_env(ecf, forum_name),
-    [generate_head(ForumName),
+    [generate_head("Logout"),
      generate_header(User),
      generate_logout(Url),
      generate_forum_end()];
 generate(register, _, Message) ->
-    {ok, ForumName} = application:get_env(ecf, forum_name),
-    [generate_head([ForumName, " - Register"]),
+    [generate_head("Register"),
      generate_header(undefined),
      generate_register(Message),
      generate_forum_end()];
@@ -65,10 +61,13 @@ generate(405, User, _Context) ->
      generate_forum_end()].
 
 
+
 -spec generate_head(iodata()) -> iodata().
 generate_head(Title) ->
+    {ok, ForumName} = application:get_env(ecf, forum_name),
+    Title2 = [ForumName, " - ", Title],
     String = read_priv_file("head.html"),
-    replace(String, "title", Title).
+    replace(String, "title", Title2).
 
 
 -spec generate_header(undefined | ecf_user:user()) -> iodata().
@@ -188,24 +187,27 @@ generate_user_profile(Self, Profile) ->
                   {"title", ecf_user:title(Profile)},
                   {"loc", ecf_user:loc(Profile)}]).
 
-generate_login(undefined, Message, Url) ->
+generate_login(undefined, Type, Url) ->
+    Message = application:get_env(ecf, Type, <<"Please login.">>),
     String = read_priv_file("login.html"),
     replace_many(String, [{"url", Url},
                           {"message", Message}]);
 generate_login(_User, _Message, Url) ->
-    Message = application:get_env(ecf, already_logged_in, <<"You're already logged in!">>),
+    Message = application:get_env(ecf, already_logged_in,
+                                  <<"You're already logged in!">>),
     replace_many(read_priv_file("already_logged_in.html"),
                  [{"url", Url},
                   {"message", Message}]).
 
 generate_logout(Url) ->
-    Message = application:get_env(ecf, logout,
+    Message = application:get_env(ecf, logout_message,
                                   <<"You've successfully been logged out.">>),
     replace_many(read_priv_file("logout.html"),
                  [{"url", Url},
                   {"message", Message}]).
 
-generate_register(Message) ->
+generate_register(Type) ->
+    Message = application:get_env(ecf, Type, <<"Please register.">>),
     replace(read_priv_file("register.html"), "message", Message).
 
 generate_edit_profile(User) ->

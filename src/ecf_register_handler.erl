@@ -19,9 +19,7 @@ init(Req0, State) ->
                          {Username, Password, Email, Bday, Bio},
                          Req, State);
         <<"GET">> ->
-            Message = application:get_env(ecf, register_message,
-                                          <<"Please register.">>),
-            Html = ecf_generators:generate(register, ignored, Message),
+            Html = ecf_generators:generate(register, ignored, register_message),
             Req = cowboy_req:reply(200,
                                    #{<<"content-type">> => <<"text/html">>},
                                    Html,
@@ -36,23 +34,17 @@ terminate(_Reason, _Req, _State) ->
     ok.
 
 try_register(false, _, Req, State) ->
-    Message = application:get_env(ecf, invalid_username,
-                                  <<"Invalid username, try again!">>),
-    Html = ecf_generators:generate(register, undefined, Message),
+    Html = ecf_generators:generate(register, undefined, invalid_username),
     Req2 = cowboy_req:reply(400,
                             #{<<"content-type">> => <<"text/html">>},
                             Html,
                             Req),
     {ok, Req2, State};
 try_register(true, {Username, Password, Email, Bday, Bio}, Req, State) ->
-    Base = application:get_env(ecf, base_url, ""),
-    Url = [Base, "/"],
     Time = erlang:timestamp(),
     case ecf_user:new_user(Username, Password, Email, Time, Bday) of
         {error, Reason} ->
-            Message = application:get_env(ecf, Reason,
-              <<"Username or email already taken, please use another">>),
-            Html = ecf_generators:generate(register, undefined, Message),
+            Html = ecf_generators:generate(register, undefined, Reason),
             Req2 = cowboy_req:reply(400,
                                     #{<<"content-type">> => <<"text/html">>},
                                     Html,
@@ -61,7 +53,7 @@ try_register(true, {Username, Password, Email, Bday, Bio}, Req, State) ->
         Id ->
             ok = ecf_user:edit_bio(Id, Bio),
             Req2 = cowboy_req:reply(302,
-                                    #{<<"Location">> => Url},
+                                    #{<<"Location">> => <<"{{base}}/">>},
                                     Req),
             {ok, Req2, State}
     end.

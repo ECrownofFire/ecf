@@ -26,10 +26,10 @@ init(Req0, State) ->
                     ecf_user:edit_bday(Id, Bday),
                     ecf_user:edit_bio(Id, Bio),
                     ecf_user:edit_loc(Id, Loc),
-                    Base = application:get_env(ecf, base_url, ""),
                     Req2 = cowboy_req:reply(302,
                                             #{<<"Location">> =>
-                                              [Base, "/user/", integer_to_list(Id)]},
+                                              [<<"{{base}}/user/">>,
+                                               integer_to_list(Id)]},
                                             Req),
                     {ok, Req2, State};
                 <<"GET">> ->
