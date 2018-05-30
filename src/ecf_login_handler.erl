@@ -4,6 +4,8 @@
 -export([init/2]).
 -export([terminate/3]).
 
+-export([set_login_cookies/3]).
+
 -define(SESSION_TIME, 604800). % one week
 
 init(Req0, State) ->
@@ -48,19 +50,11 @@ try_login(User, Password, Url, Req, State) ->
     case ecf_user:check_pass(User, Password) of
         true ->
             Session = ecf_user:new_session(ecf_user:id(User)),
-            SessionEncoded = base64:encode(Session),
-            Req2 = cowboy_req:set_resp_cookie(<<"session">>, SessionEncoded,
-                                              Req,
-                                              #{http_only => true,
-                                                max_age => ?SESSION_TIME}),
-            Req3 = cowboy_req:set_resp_cookie(<<"user">>,
-                                              integer_to_list(ecf_user:id(User)),
-                                              Req2,
-                                              #{max_age => ?SESSION_TIME}),
-            Req4 = cowboy_req:reply(302,
+            Req2 = set_login_cookies(Req, ecf_user:id(User), Session),
+            Req3 = cowboy_req:reply(302,
                                     #{<<"Location">> => ["{{base}}/", Url]},
-                                    Req3),
-            {ok, Req4, State};
+                                    Req2),
+            {ok, Req3, State};
         false ->
             login_fail(Url, Req, State)
     end.
@@ -72,4 +66,15 @@ login_fail(Url, Req, State) ->
                                                     {login_fail_message, Url}),
                             Req),
     {ok, Req2, State}.
+
+set_login_cookies(Req, Id, Session) ->
+    SessionEncoded = base64:encode(Session),
+    Req2 = cowboy_req:set_resp_cookie(<<"session">>, SessionEncoded,
+                                      Req,
+                                      #{http_only => true,
+                                        max_age => ?SESSION_TIME}),
+    cowboy_req:set_resp_cookie(<<"user">>,
+                               integer_to_list(Id),
+                               Req2,
+                               #{max_age => ?SESSION_TIME}).
 

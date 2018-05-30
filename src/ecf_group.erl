@@ -45,6 +45,7 @@ new_group(Name, Desc) ->
         end,
     mnesia:activity(transaction, F).
 
+% TODO: search for group in users and permissions to delete it
 -spec delete_group(id()) -> ok.
 delete_group(Id) ->
     F = fun() ->

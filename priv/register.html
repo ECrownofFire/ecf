@@ -8,6 +8,7 @@
         <label><h3>Email:</h3><input id="email" type="email" autocomplete="email" name="email" required></label>
         <label><h3>Birthday:</h3><input id="bday" type="date" autocomplete="bday" name="bday"></label>
         <label><h3>Biography:</h3><p>Optional. Tell us about yourself!</p><textarea id="bio" autocomplete="off" name="bio"></textarea></label>
+        <div class="g-recaptcha" data-sitekey="{{recaptcha_key}}"></div>
         <input id="submit-register" type="submit" value="Register">
         <script language="javascript" type="text/javascript">
             function confirm_password(input) {

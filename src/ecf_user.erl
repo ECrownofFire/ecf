@@ -55,7 +55,7 @@ create_table(Nodes) ->
 
 -spec new_user(binary(), binary(), binary(),
                erlang:timestamp(), calendar:datetime()) ->
-    id() | {error, atom()}.
+    {id(), binary()} | {error, atom()}.
 new_user(Name, Pass, Email, Time, Bday) ->
     Salt = crypto:strong_rand_bytes(?SALT_LENGTH),
     {ok, Hash} = pbkdf2:pbkdf2(?HMAC, Pass, Salt,
@@ -72,10 +72,9 @@ new_user(Name, Pass, Email, Time, Bday) ->
                                                  salt=Salt,pass=Hash,
                                                  session=Session,email=Email,
                                                  joined=Time,bday=Bday}),
-                                % All users are in the two basic groups
-                                ecf_group:add_member(1, Id),
-                                ecf_group:add_member(2, Id),
-                                Id;
+                                % All users are in the basic group
+                                ok = ecf_group:add_member(1, Id),
+                                {Id, Session};
                             _ ->
                                 {error, email_taken}
                         end;

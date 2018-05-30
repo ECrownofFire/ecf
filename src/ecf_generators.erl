@@ -218,7 +218,10 @@ generate_logout(Url) ->
 
 generate_register(Type) ->
     Message = application:get_env(ecf, Type, <<"Please register.">>),
-    replace(read_priv_file("register.html"), "message", Message).
+    {ok, Key} = application:get_env(ecf, recaptcha_key),
+    String = read_priv_file("register.html"),
+    replace_many(String, [{"message", Message},
+                          {"recaptcha_key", Key}]).
 
 generate_edit_profile(User) ->
     Bday = case ecf_user:bday(User) of

@@ -59,8 +59,16 @@ will start it listening on port 8080 and drop you into an Erlang REPL. The first
 time you start it up, be sure to use `ecf_db:install().` followed by
 `mnesia:start().` to create and setup the database.
 
+You will need to set the following app env variables as well:
+* `captcha_key`: reCAPTCHA site key
+* `captcha_secret`: reCAPTCHA site secret
 
 ### Configuration
+You can set them with `PROJECT_ENV`, but I'd recommend setting them with an
+overlay file instead (see
+[the Erlang documentation](http://erlang.org/doc/man/config.html) on how to do
+that).
+
 TODO: Describe all configuration options. Most of them are just simple messages
 in case you want to customize them, but a few are actually important.
 
