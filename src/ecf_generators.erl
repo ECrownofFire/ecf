@@ -44,6 +44,11 @@ generate(edit_profile, User, _) ->
      generate_header(User),
      generate_edit_profile(User),
      generate_forum_end()];
+generate(400, User, _) ->
+    [generate_head("400 - Bad Request"),
+     generate_header(User),
+     generate_400_error(),
+     generate_forum_end()];
 generate(401, User, Type) ->
     [generate_head("401 - Unauthorized"),
      generate_header(User),
@@ -200,8 +205,10 @@ generate_user_profile(Self, Profile) ->
 generate_login(undefined, Type, Url) ->
     Message = application:get_env(ecf, Type, <<"Please login.">>),
     String = read_priv_file("login.html"),
+    {ok, Key} = application:get_env(ecf, recaptcha_key),
     replace_many(String, [{"url", Url},
-                          {"message", Message}]);
+                          {"message", Message},
+                          {"recaptcha_key", Key}]);
 generate_login(_User, _Message, Url) ->
     Message = application:get_env(ecf, already_logged_in,
                                   <<"You're already logged in!">>),
@@ -236,6 +243,9 @@ generate_edit_profile(User) ->
                           {"bio", ecf_user:bio(User)},
                           {"title", ecf_user:title(User)},
                           {"loc", ecf_user:loc(User)}]).
+
+generate_400_error() ->
+    read_priv_file("400.html").
 
 generate_401_error(Type) ->
     Message = application:get_env(ecf, Type, <<"You need to log in first.">>),

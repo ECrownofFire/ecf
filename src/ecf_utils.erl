@@ -1,6 +1,6 @@
 -module(ecf_utils).
 
--export([check_user_session/1, sanitize/1, get_and_sanitize/2]).
+-export([check_user_session/1, sanitize/1, get_and_sanitize/2, get_ip/1]).
 
 %%% Contains a few utility functions
 
@@ -55,4 +55,17 @@ get_and_sanitize(KV, Target) ->
         _ ->
             <<"">>
     end.
+
+% wrapper to get IP in case reverse proxying is in use
+-spec get_ip(cowboy_req:req()) -> inet:ip_address().
+get_ip(Req) ->
+    case cowboy_req:header(<<"x-forwarded-for">>, Req) of
+        undefined ->
+            {Addr, _} = cowboy_req:peer(Req),
+            Addr;
+        I ->
+            {ok, Ip} = inet:parse_address(binary_to_list(I)),
+            Ip
+    end.
+
 

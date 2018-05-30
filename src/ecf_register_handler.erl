@@ -5,8 +5,6 @@
 
 -define(SESSION_TIME, 604800). % one week
 
--define(RECAPTCHA_URL, "https://www.google.com/recaptcha/api/siteverify").
-
 init(Req0, State) ->
     case maps:get(method, Req0) of
         <<"POST">> ->
@@ -14,16 +12,28 @@ init(Req0, State) ->
             {_, Username} = lists:keyfind(<<"username">>, 1, KV),
             {_, Password} = lists:keyfind(<<"password">>, 1, KV),
             {_, Email}    = lists:keyfind(<<"email">>, 1, KV),
-            {_, Resp}     = lists:keyfind(<<"g-recaptcha-response">>, 1, KV),
             Bday = case lists:keyfind(<<"bday">>, 1, KV) of
                        {_, <<"">>} -> undefined;
                        {_, Bday0} -> iso8601:parse(Bday0);
                        _ -> undefined
                    end,
             Bio = ecf_utils:get_and_sanitize(KV, <<"bio">>),
-            try_register(check_username(Username) and check_password(Password),
-                         {Username, Password, Email, Bday, Bio, Resp},
-                         Req, State);
+            Ip = ecf_utils:get_ip(Req),
+            case ecf_captcha:check_captcha(Ip, KV) of
+                true ->
+                    try_register(check_username(Username)
+                                 and check_password(Password),
+                                 {Username, Password, Email, Bday, Bio},
+                                 Req, State);
+                false ->
+                    Html = ecf_generators:generate(register, undefined,
+                                                   register_failed_captcha),
+                    Req2 = cowboy_req:reply(400,
+                                            #{<<"content-type">> => <<"text/html">>},
+                                            Html,
+                                            Req),
+                    {ok, Req2, State}
+            end;
         <<"GET">> ->
             Html = ecf_generators:generate(register, ignored, register_message),
             Req = cowboy_req:reply(200,
@@ -46,42 +56,23 @@ try_register(false, _, Req, State) ->
                             Html,
                             Req),
     {ok, Req2, State};
-try_register(true, {Username, Password, Email, Bday, Bio, Resp}, Req, State) ->
+try_register(true, {Username, Password, Email, Bday, Bio}, Req, State) ->
     Time = erlang:timestamp(),
-    % for nginx reverse proxying
-    Ip = case cowboy_req:header(<<"x-real-ip">>, Req) of
-             undefined ->
-                 {Addr, _} = cowboy_req:peer(Req),
-                 inet:ntoa(Addr);
-             I ->
-                 I
-         end,
-    case check_recaptcha(Ip, Resp) of
-        true ->
-            case ecf_user:new_user(Username, Password, Email, Time, Bday) of
-                {error, Reason} ->
-                    Html = ecf_generators:generate(register, undefined, Reason),
-                    Req2 = cowboy_req:reply(400,
-                                            #{<<"content-type">> => <<"text/html">>},
-                                            Html,
-                                            Req),
-                    {ok, Req2, State};
-                {Id, Session} ->
-                    ok = ecf_user:edit_bio(Id, Bio),
-                    Req2 = ecf_login_handler:set_login_cookies(Req, Id, Session),
-                    Req3 = cowboy_req:reply(302,
-                                            #{<<"Location">> => <<"{{base}}/">>},
-                                            Req2),
-                    {ok, Req3, State}
-            end;
-        false ->
-            Html = ecf_generators:generate(register, undefined,
-                                           register_failed_captcha),
+    case ecf_user:new_user(Username, Password, Email, Time, Bday) of
+        {error, Reason} ->
+            Html = ecf_generators:generate(register, undefined, Reason),
             Req2 = cowboy_req:reply(400,
                                     #{<<"content-type">> => <<"text/html">>},
                                     Html,
                                     Req),
-            {ok, Req2, State}
+            {ok, Req2, State};
+        {Id, Session} ->
+            ok = ecf_user:edit_bio(Id, Bio),
+            Req2 = ecf_login_handler:set_login_cookies(Req, Id, Session),
+            Req3 = cowboy_req:reply(302,
+                                    #{<<"Location">> => <<"{{base}}/">>},
+                                    Req2),
+            {ok, Req3, State}
     end.
 
 
@@ -107,17 +98,4 @@ check_password(Password) ->
         _ ->
             false
     end.
-
-check_recaptcha(Ip, Resp) ->
-    {ok, Secret} = application:get_env(ecf, recaptcha_secret),
-    Data = iolist_to_binary(["secret=", Secret,
-                             "&response=", Resp,
-                             "&remoteip=", Ip]),
-    {ok, {200, Body}} = httpc:request(post,
-                         {?RECAPTCHA_URL, [],
-                          "application/x-www-form-urlencoded", Data},
-                         [],
-                         [{body_format, binary}, {full_result, false}]),
-    Map = jiffy:decode(Body, [return_maps]),
-    maps:get(<<"success">>, Map).
 

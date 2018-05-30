@@ -17,11 +17,25 @@ init(Req0, State) ->
             {_, Password} = lists:keyfind(<<"password">>, 1, KeyValues),
             % TODO: persist cookie option?
             {_, _Persist}  = lists:keyfind(<<"persist">>,  1, KeyValues),
-            % TODO: limit login attempts
-            % probably with a table of login attempts?
-            % could just use ETS, no need to persist it in mnesia
-            User = ecf_user:get_user_by_name(Username),
-            try_login(User, Password, Url, Req, State);
+            Ip = ecf_utils:get_ip(Req),
+            case ecf_log:check_log(Username, Ip) of
+                true ->
+                    case ecf_captcha:check_captcha(Ip, KeyValues) of
+                        true ->
+                            try_login(Username, Password, Url, Req, State);
+                        false ->
+                            Html = ecf_generators:generate(400, undefined,
+                                                           captcha_failed_login),
+                            Req2 = cowboy_req:reply(400,
+                                                    #{<<"content-type">>
+                                                      => <<"text/html">>},
+                                                    Html,
+                                                    Req),
+                            {ok, Req2, State}
+                    end;
+                false ->
+                    try_login(Username, Password, Url, Req, State)
+            end;
         <<"GET">> ->
             User = ecf_utils:check_user_session(Req0),
             Html = ecf_generators:generate(login, User, {login_message, Url}),
@@ -42,13 +56,17 @@ init(Req0, State) ->
 terminate(_Reason, _Req, _State) ->
     ok.
 
+try_login(Username, Password, Url, Req, State) ->
+    User = ecf_user:get_user_by_name(Username),
+    try_login(User, Password, Url, Req, State, Username).
 
 
-try_login({error, user_not_found}, _, Url, Req, State) ->
-    login_fail(Url, Req, State);
-try_login(User, Password, Url, Req, State) ->
+try_login({error, user_not_found}, _, Url, Req, State, Username) ->
+    login_fail(Url, Req, State, Username);
+try_login(User, Password, Url, Req, State, Username) ->
     case ecf_user:check_pass(User, Password) of
         true ->
+            ecf_log:clear_log(Username, ecf_utils:get_ip(Req)),
             Session = ecf_user:new_session(ecf_user:id(User)),
             Req2 = set_login_cookies(Req, ecf_user:id(User), Session),
             Req3 = cowboy_req:reply(302,
@@ -56,10 +74,11 @@ try_login(User, Password, Url, Req, State) ->
                                     Req2),
             {ok, Req3, State};
         false ->
-            login_fail(Url, Req, State)
+            login_fail(Url, Req, State, Username)
     end.
 
-login_fail(Url, Req, State) ->
+login_fail(Url, Req, State, Username) ->
+    ecf_log:log(Username, ecf_utils:get_ip(Req)),
     Req2 = cowboy_req:reply(400,
                             #{<<"content-type">> => <<"text/html">>},
                             ecf_generators:generate(login, undefined,

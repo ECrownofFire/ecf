@@ -24,6 +24,7 @@ start(_Type, _Args) ->
                {Base ++ "/static/[...]", cowboy_static,
                 {priv_dir, ecf, "static"}},
                {Base ++ "/login", ecf_login_handler, {}},
+               {Base ++ "/verify_login", ecf_verify_login_handler, {}},
                {Base ++ "/register", ecf_register_handler, {}},
                {Base ++ "/edit_profile", ecf_profile_edit_handler, {}},
                {Base ++ "/logout", ecf_logout_handler, {}},

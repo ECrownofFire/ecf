@@ -64,8 +64,7 @@ You will need to set the following app env variables as well:
 * `captcha_secret`: reCAPTCHA site secret
 
 ### Configuration
-You can set them with `PROJECT_ENV`, but I'd recommend setting them with an
-overlay file instead (see
+I'd recommend setting all the relevant config options with an overlay file (see
 [the Erlang documentation](http://erlang.org/doc/man/config.html) on how to do
 that).
 

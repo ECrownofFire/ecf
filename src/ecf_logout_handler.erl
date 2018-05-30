@@ -8,9 +8,9 @@ init(Req, State) ->
     #{url := Url} = cowboy_req:match_qs([{url, [], <<"">>}], Req),
     case maps:get(method, Req) of
         <<"POST">> ->
-            Req2 = cowboy_req:set_resp_cookie(<<"session">>, <<"">>, Req,
+            Req2 = cowboy_req:set_resp_cookie(<<"session">>, <<"0">>, Req,
                                               #{max_age => 0}),
-            Req3 = cowboy_req:set_resp_cookie(<<"user">>, <<"">>, Req2,
+            Req3 = cowboy_req:set_resp_cookie(<<"user">>, <<"0">>, Req2,
                                               #{max_age => 0}),
             Req4 = cowboy_req:reply(200,
                                     #{<<"content-type">> => <<"text/html">>},
@@ -19,7 +19,8 @@ init(Req, State) ->
             {ok, Req4, State};
         _ ->
             Req2 = cowboy_req:reply(405,
-                                    #{<<"content-type">> => <<"text/html">>},
+                                    #{<<"content-type">> => <<"text/html">>,
+                                      <<"Allow">> => <<"POST">>},
                                     ecf_generators:generate(405, User, logout),
                                     Req),
             {ok, Req2, State}

@@ -1,11 +1,40 @@
 <main id="login">
+<script type="text/javascript">
+    var onloadCallback = function() { return true; };
+    function verify_login() {
+        //CAPTCHA is still verified on the server, of course
+        //This just provides a better user experience
+        var url = new URL(window.location.href);
+        url.pathname = "{{base}}/verify_login";
+        url.search = "?user=" + document.getElementById('username').value;
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url.href);
+        xhr.onload = function(e) {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    if (xhr.responseText == 'true') {
+                        var div = document.createElement('div');
+                        document.getElementById('form-login').appendChild(div);
+                        grecaptcha.render(div, {'sitekey' : '{{recaptcha_key}}'});
+                        document.getElementById('form-login').onsubmit = null;
+                    } else if(xhr.responseText == 'false') {
+                        document.getElementById('form-login').submit();
+                    }
+                }
+            }
+        }
+        xhr.send();
+        return false;
+    };
+</script>
+<script src='https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit' async defer></script>
 <h2>Login</h2>
 <p>{{message}}</p>
-<form id="form-login" action="{{base}}/login?url={{url}}" method="post">
-        <label>Username: <input id="username" type="text" autocomplete="username" name="username" required></label>
-        <label>Password: <input id="password" type="password" autocomplete="current-password" name="password" required></label>
-        <label>Stay logged in: <input id="persist" type="checkbox" checked name="persist"></label>
-        <input id="submit-login" type="submit" value="Login">
-    </form>
+<form id="form-login" action="{{base}}/login?url={{url}}" method="post" onsubmit="verify_login(); return false;">
+    <label>Username: <input id="username" type="text" autocomplete="username" name="username" required></label>
+    <label>Password: <input id="password" type="password" autocomplete="current-password" name="password" required></label>
+    <label>Stay logged in: <input id="persist" type="checkbox" checked name="persist"></label>
+    <input id="submit-login" type="submit" value="Login">
+</form>
 </main>
 

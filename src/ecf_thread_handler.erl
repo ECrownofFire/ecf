@@ -9,10 +9,9 @@ init(Req, State) ->
         <<"POST">> ->
             post_reply(Req, State, User);
         _ ->
-            Html = ecf_generators:generate(405, User, thread),
-            Req2 = cowboy_req:reply(405,
-                                    #{<<"content-type">> => <<"text/html">>,
-                                      <<"Allow">> => <<"POST">>},
+            Html = ecf_generators:generate(404, User, ignored),
+            Req2 = cowboy_req:reply(404,
+                                    #{<<"content-type">> => <<"text/html">>},
                                     Html,
                                     Req),
             {ok, Req2, State}
