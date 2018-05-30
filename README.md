@@ -28,6 +28,7 @@ At the bare minimum, ECF still needs the following:
 
 So that ECF is reasonably useable, I'd like to add the following as well:
 * Editing posts
+* Messaging
 * Pagination of threads and posts (former can probably just use `lists:sublist/3`,
 but the latter should probably use something more performant)
 * Banning people for a given length of time (needs backend)
@@ -40,6 +41,12 @@ The following may happen at some point, but I'm unsure about them:
 * Using Argon2 for password hashing instead of PBKDF2
 * Possibly an expansion upon the current "template-ish" system, maybe a future
 switch to ErlyDTL or something else, but the current method works well enough
+
+And these would be nice to eventually get:
+* Events calendar
+* Announcements
+* Track read/unread posts
+* Replying directly to posts
 
 ### Requirements
 Erlang/OTP 20

@@ -32,8 +32,7 @@ create_table(Nodes) ->
                                         desc = <<"Administrator group">>})
         end,
     0 = mnesia:activity(transaction, F),
-    1 = new_group(<<"All Users">>, <<"All users, including guests">>),
-    2 = new_group(<<"Registered Users">>, <<"Default user group">>),
+    1 = new_group(<<"Registered Users">>, <<"Default user group">>),
     ok.
 
 
