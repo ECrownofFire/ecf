@@ -15,8 +15,6 @@ init(Req0, State) ->
             {ok, KeyValues, Req} = cowboy_req:read_urlencoded_body(Req0),
             {_, Username} = lists:keyfind(<<"username">>, 1, KeyValues),
             {_, Password} = lists:keyfind(<<"password">>, 1, KeyValues),
-            % TODO: persist cookie option?
-            {_, _Persist}  = lists:keyfind(<<"persist">>,  1, KeyValues),
             Ip = ecf_utils:get_ip(Req),
             case ecf_log:check_log(Username, Ip) of
                 true ->
@@ -24,12 +22,15 @@ init(Req0, State) ->
                         true ->
                             try_login(Username, Password, Url, Req, State);
                         false ->
-                            Html = ecf_generators:generate(400, undefined,
-                                                           captcha_failed_login),
+                            Text = application:get_env(ecf, login_fail_captcha,
+                                               <<"You need to solve a CAPTCHA">>),
+                            Map = #{<<"result">> => <<"captcha">>,
+                                    <<"text">> => Text},
+                            Json = jiffy:encode(Map),
                             Req2 = cowboy_req:reply(400,
                                                     #{<<"content-type">>
-                                                      => <<"text/html">>},
-                                                    Html,
+                                                      => <<"application/json">>},
+                                                    Json,
                                                     Req),
                             {ok, Req2, State}
                     end;
@@ -38,7 +39,7 @@ init(Req0, State) ->
             end;
         <<"GET">> ->
             User = ecf_utils:check_user_session(Req0),
-            Html = ecf_generators:generate(login, User, {login_message, Url}),
+            Html = ecf_generators:generate(login, User, Url),
             Req = cowboy_req:reply(200,
                                    #{<<"content-type">> => <<"text/html">>},
                                    Html,
@@ -61,28 +62,37 @@ try_login(Username, Password, Url, Req, State) ->
     try_login(User, Password, Url, Req, State, Username).
 
 
-try_login({error, user_not_found}, _, Url, Req, State, Username) ->
-    login_fail(Url, Req, State, Username);
+try_login({error, user_not_found}, _, _, Req, State, Username) ->
+    ok = ecf_user:fake_hash(),
+    login_fail(Req, State, Username);
 try_login(User, Password, Url, Req, State, Username) ->
     case ecf_user:check_pass(User, Password) of
         true ->
             ecf_log:clear_log(Username, ecf_utils:get_ip(Req)),
             Session = ecf_user:new_session(ecf_user:id(User)),
             Req2 = set_login_cookies(Req, ecf_user:id(User), Session),
-            Req3 = cowboy_req:reply(302,
-                                    #{<<"Location">> => ["{{base}}/", Url]},
+            Map = #{<<"result">> => <<"success">>,
+                    <<"newLocation">> => list_to_binary([<<"{{base}}/">>, Url])},
+            Json = jiffy:encode(Map),
+            Req3 = cowboy_req:reply(200,
+                                    #{<<"content-type">> => <<"application/json">>},
+                                    Json,
                                     Req2),
             {ok, Req3, State};
         false ->
-            login_fail(Url, Req, State, Username)
+            login_fail(Req, State, Username)
     end.
 
-login_fail(Url, Req, State, Username) ->
+login_fail(Req, State, Username) ->
     ecf_log:log(Username, ecf_utils:get_ip(Req)),
+    Text = application:get_env(ecf, login_fail_message,
+                               <<"Invalid username or password, try again.">>),
+    Map = #{<<"result">> => <<"failed">>,
+            <<"text">> => Text},
+    Json = jiffy:encode(Map),
     Req2 = cowboy_req:reply(400,
-                            #{<<"content-type">> => <<"text/html">>},
-                            ecf_generators:generate(login, undefined,
-                                                    {login_fail_message, Url}),
+                            #{<<"content-type">> => <<"application/json">>},
+                            Json,
                             Req),
     {ok, Req2, State}.
 

@@ -8,10 +8,10 @@ generate(main, User, Forums) ->
      generate_header(User),
      generate_forum_list(Forums, User),
      generate_forum_end()];
-generate(login, User, {Message, Url}) ->
+generate(login, User, Url) ->
     [generate_head("Login"),
      generate_header(User),
-     generate_login(User, Message, Url),
+     generate_login(User, Url),
      generate_forum_end()];
 generate(logout, User, Url) ->
     [generate_head("Logout"),
@@ -202,14 +202,14 @@ generate_user_profile(Self, Profile) ->
                   {"loc", ecf_user:loc(Profile)},
                   {"posts", integer_to_list(ecf_user:posts(Profile))}]).
 
-generate_login(undefined, Type, Url) ->
-    Message = application:get_env(ecf, Type, <<"Please login.">>),
+generate_login(undefined, Url) ->
+    Message = application:get_env(ecf, login_message, <<"Please login.">>),
     String = read_priv_file("login.html"),
     {ok, Key} = application:get_env(ecf, recaptcha_key),
     replace_many(String, [{"url", Url},
                           {"message", Message},
                           {"recaptcha_key", Key}]);
-generate_login(_User, _Message, Url) ->
+generate_login(_User, Url) ->
     Message = application:get_env(ecf, already_logged_in,
                                   <<"You're already logged in!">>),
     replace_many(read_priv_file("already_logged_in.html"),

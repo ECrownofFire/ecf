@@ -25,7 +25,7 @@
          edit_title/2, edit_loc/2,
          add_post/1,
          delete_user/1,
-         check_session/2, check_pass/2,
+         check_session/2, check_pass/2, fake_hash/0,
          id/1, name/1, enabled/1, email/1, joined/1, groups/1, bday/1,
          title/1, bio/1, loc/1, posts/1]).
 
@@ -290,6 +290,15 @@ check_pass(User, Pass) ->
     PHash = User#ecf_user.pass,
     {ok, Hash} = pbkdf2:pbkdf2(?HMAC, Pass, Salt, ?HASH_ITERATIONS, ?HASH_LENGTH),
     pbkdf2:compare_secure(PHash, Hash).
+
+% Fakes hashing for invalid usernames
+-spec fake_hash() -> ok.
+fake_hash() ->
+    Pass = <<"password">>,
+    Salt = <<"saltSALTsaltSALT">>,
+    {ok, Hash} = pbkdf2:pbkdf2(?HMAC, Pass, Salt, ?HASH_ITERATIONS, ?HASH_LENGTH),
+    _ = pbkdf2:compare_secure(Hash, Hash),
+    ok.
 
 -spec email(user()) -> binary().
 email(User) ->
