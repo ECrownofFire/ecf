@@ -13,7 +13,7 @@ At the bare minimum, ECF still needs the following:
 * Documentation
 * Tests
 * Lots and lots of CSS/HTML/JS magic to make it look decent!
-* Terms of use and privacy policy
+* Terms of use and privacy policy?
 * Administration frontend
     * Subforum creation
     * Deleting threads/posts
@@ -23,7 +23,6 @@ At the bare minimum, ECF still needs the following:
     * HTTPS
     * Rate limiting for creating threads and posting
     * Email on registration
-    * CAPTCHAs on registration and login
     * Logging most stuff
 
 So that ECF is reasonably useable, I'd like to add the following as well:

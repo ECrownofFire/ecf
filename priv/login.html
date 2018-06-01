@@ -1,54 +1,52 @@
 <main id="login">
 <script type="text/javascript">
-    var onloadCallback = function() { return true; };
-    function verify_login() {
-        var xhr = new XMLHttpRequest();
-        xhr.responseType = "json";
-        xhr.open("POST", "{{base}}/login");
-        xhr.onload = function(e) {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    window.location.href = xhr.response.newLocation;
-                } else if(xhr.status === 400) {
-                    if (xhr.response.result == "failed") {
-                        var M = document.getElementById('message');
-                        M.innerHTML = xhr.response.text;
-                        document.getElementById('form-login').reset();
-                        if (document.getElementById('recaptcha') !== null) {
-                            grecaptcha.reset();
-                        }
-                    } else if(xhr.response.result == "captcha") {
-                        var M = document.getElementById('message');
-                        M.innerHTML = xhr.response.text;
-                        var div = document.getElementById('recaptcha');
-                        if (div === null) {
-                            div = document.createElement('div');
-                            div.id = "recaptcha";
-                            document.getElementById('form-login').appendChild(div);
-                            grecaptcha.render(div, {'sitekey' : '{{recaptcha_key}}'});
-                        } else {
-                            grecaptcha.reset();
-                        }
-                    }
+var onloadCallback = function() { return true; };
+function verify_login() {
+    var xhr = new XMLHttpRequest();
+    xhr.responseType = "json";
+    xhr.open("POST", "{{base}}/login");
+    xhr.onload = function(e) {
+        if (xhr.status === 200) {
+            window.location.href = xhr.response.newLocation;
+        } else if(xhr.status === 400) {
+            if (xhr.response.result == "failed") {
+                var M = document.getElementById('message');
+                M.innerHTML = xhr.response.text;
+                document.getElementById('form-login').reset();
+                if (document.getElementById('recaptcha') !== null) {
+                    grecaptcha.reset();
+                }
+            } else if(xhr.response.result == "captcha") {
+                var M = document.getElementById('message');
+                M.innerHTML = xhr.response.text;
+                var div = document.getElementById('recaptcha');
+                if (div === null) {
+                    div = document.createElement('div');
+                    div.id = "recaptcha";
+                    document.getElementById('form-login').appendChild(div);
+                    grecaptcha.render(div, {'sitekey' : '{{recaptcha_key}}'});
+                } else {
+                    grecaptcha.reset();
                 }
             }
         }
-        var data = construct_request();
-        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-        xhr.send(data);
-        return false;
-    };
-    function construct_request() {
-        var user = document.getElementById('username').value;
-        var pass = document.getElementById('password').value;
-        var str = "username=" + user + "&password=" + pass;
-        var captcha = document.getElementById('recaptcha');
-        if (captcha === null) {
-            return str;
-        } else {
-            return str + "&g-recaptcha-response=" + grecaptcha.getResponse();
-        }
-    };
+    }
+    var data = construct_request();
+    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+    xhr.send(data);
+    return false;
+};
+function construct_request() {
+    var user = document.getElementById('username').value;
+    var pass = document.getElementById('password').value;
+    var str = "username=" + user + "&password=" + pass;
+    var captcha = document.getElementById('recaptcha');
+    if (captcha === null) {
+        return str;
+    } else {
+        return str + "&g-recaptcha-response=" + grecaptcha.getResponse();
+    }
+};
 </script>
 <script src='https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit' async defer></script>
 <h2>Login</h2>
