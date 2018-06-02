@@ -1,8 +1,8 @@
 -module(ecf_perms).
 
--export_type([perms/0, mode/0]).
+-export_type([perm/0, perms/0, mode/0]).
 
--export([create_perm/2, check_perm/3]).
+-export([create_perm/2, check_perm/3, add_perm/2, remove_perm/2]).
 
 
 % 'others' includes any user who isn't listed in other perms, as well as guests
@@ -14,6 +14,7 @@
               | edit_thread | edit_post
               | move_thread | lock_thread | ban_user.
 
+-type perm() :: {perm_type(), mode()}.
 -type perms() :: {perm_type(), [mode()]}.
 
 
@@ -72,4 +73,33 @@ check_perm([{{group, Id}, Modes}|Tail], User, Mode, false) ->
     end;
 check_perm([{others, Modes}|Tail], User, Mode, false) ->
     check_perm(Tail, User, Mode, lists:member(Mode, Modes)).
+
+-spec add_perm([perms()], perm()) -> [perms()].
+add_perm(Perms, P = {Type, Mode}) ->
+    case lists:keyfind(Type, 1, Perms) of
+        false ->
+            [P|Perms];
+        {Type, Modes} ->
+            case lists:member(Mode, Modes) of
+                true ->
+                    Perms;
+                false ->
+                    lists:keyreplace(Type, 1, Perms, {Type, [Mode|Modes]})
+            end
+    end.
+
+-spec remove_perm([perms()], perm()) -> [perms()].
+remove_perm(Perms, {Type, Mode}) ->
+    case lists:keyfind(Type, 1, Perms) of
+        false ->
+            Perms;
+        {Type, Modes} ->
+            case lists:member(Mode, Modes) of
+                false ->
+                    Perms;
+                true ->
+                    NewModes = lists:delete(Mode, Modes),
+                    lists:keyreplace(Type, 1, Perms, {Type, NewModes})
+            end
+    end.
 

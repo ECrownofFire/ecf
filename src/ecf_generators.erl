@@ -170,6 +170,7 @@ generate_post_element(Post, String) ->
     Poster = ecf_user:get_user(PosterId),
     PosterName = ecf_user:name(Poster),
     PosterTitle = ecf_user:title(Poster),
+    PosterPosts = integer_to_list(ecf_user:posts(Poster)),
     Time = iso8601:format(ecf_post:time(Post)),
     Text = ecf_post:text(Post),
     % TODO: edited by/time
@@ -178,6 +179,7 @@ generate_post_element(Post, String) ->
                   {"user_id", integer_to_list(PosterId)},
                   {"username", PosterName},
                   {"user_title", PosterTitle},
+                  {"user_posts", PosterPosts},
                   {"time", Time},
                   {"text", Text}]).
 

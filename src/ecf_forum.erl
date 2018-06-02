@@ -7,7 +7,8 @@
 -export([create_table/1,
          get_forum/1, get_forums/0,
          new_forum/4,
-         edit_name/2, edit_desc/2, edit_perms/2, edit_order/2,
+         edit_name/2, edit_desc/2, edit_order/2,
+         edit_perms/2, add_perm/2, remove_perm/2,
          delete_forum/1,
          visible_forums/2,
          filter_forums/2, order_forums/1,
@@ -109,6 +110,24 @@ edit_perms(Id, Perms) ->
     F = fun() ->
                 [Forum] = mnesia:wread({ecf_forum, Id}),
                 mnesia:write(Forum#ecf_forum{perms=Perms})
+        end,
+    mnesia:activity(transaction, F).
+
+-spec add_perm(id(), ecf_perms:perm()) -> ok.
+add_perm(Id, Perm) ->
+    F = fun() ->
+                [Forum] = mnesia:wread({ecf_forum, Id}),
+                NewPerms = ecf_perms:add_perm(perms(Forum), Perm),
+                mnesia:write(Forum#ecf_forum{perms=NewPerms})
+        end,
+    mnesia:activity(transaction, F).
+
+-spec remove_perm(id(), ecf_perms:perm()) -> ok.
+remove_perm(Id, Perm) ->
+    F = fun() ->
+                [Forum] = mnesia:wread({ecf_forum, Id}),
+                NewPerms = ecf_perms:remove_perm(perms(Forum), Perm),
+                mnesia:write(Forum#ecf_forum{perms=NewPerms})
         end,
     mnesia:activity(transaction, F).
 

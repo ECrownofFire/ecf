@@ -23,7 +23,7 @@ At the bare minimum, ECF still needs the following:
     * HTTPS
     * Rate limiting for creating threads and posting
     * Email on registration
-    * Logging most stuff
+    * Logging stuff
 
 So that ECF is reasonably useable, I'd like to add the following as well:
 * Editing posts
@@ -63,9 +63,8 @@ You will need to set the following app env variables as well:
 * `captcha_secret`: reCAPTCHA site secret
 
 ### Configuration
-I'd recommend setting all the relevant config options with an overlay file (see
-[the Erlang documentation](http://erlang.org/doc/man/config.html) on how to do
-that).
+I'd recommend leaving sys.config alone and editing private.config with all of
+your needed configuration.
 
 TODO: Describe all configuration options. Most of them are just simple messages
 in case you want to customize them, but a few are actually important.

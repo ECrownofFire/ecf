@@ -9,8 +9,8 @@
 -export([create_table/1,
          create_thread/5,
          get_thread/1, get_forum_threads/1,
-         edit_title/2, edit_perms/2,
-         lock_thread/1,
+         edit_title/2,
+         edit_perms/2, add_perm/2, remove_perm/2, lock_thread/1,
          new_post/2,
          delete_thread/1, delete_forum_threads/1,
          visible_threads/2,
@@ -87,12 +87,31 @@ edit_perms(Id, Perms) ->
         end,
     mnesia:activity(transaction, F).
 
+-spec add_perm(id(), ecf_perms:perm()) -> ok.
+add_perm(Id, Perm) ->
+    F = fun() ->
+                [Thread] = mnesia:wread({ecf_thread, Id}),
+                NewPerms = ecf_perms:add_perm(perms(Thread), Perm),
+                mnesia:write(Thread#ecf_thread{perms=NewPerms})
+        end,
+    mnesia:activity(transaction, F).
+
+-spec remove_perm(id(), ecf_perms:perm()) -> ok.
+remove_perm(Id, Perm) ->
+    F = fun() ->
+                [Thread] = mnesia:wread({ecf_thread, Id}),
+                NewPerms = ecf_perms:remove_perm(perms(Thread), Perm),
+                mnesia:write(Thread#ecf_thread{perms=NewPerms})
+        end,
+    mnesia:activity(transaction, F).
+
 % convenience function, just denies creating new posts from the base user group
 -spec lock_thread(id()) -> ok.
 lock_thread(Id) ->
     F = fun() ->
                 [Thread] = mnesia:wread({ecf_thread, Id}),
-                New = lists:keydelete({group, 1}, 1, Thread#ecf_thread.perms),
+                New = ecf_perms:remove_perm(perms(Thread), {{group, 1},
+                                                            create_post}),
                 mnesia:write(Thread#ecf_thread{perms=New})
         end,
     mnesia:activity(transaction, F).

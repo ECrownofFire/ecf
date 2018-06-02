@@ -1,4 +1,22 @@
 
+#post-list ol {
+    list-style-type: none;
+}
+
+.post {
+    display: flex;
+    flex-direction: row;
+}
+
+.poster {
+    flex: none;
+    width: 120px;
+}
+
+.post-content {
+    flex: auto;
+}
+
 .post-content p {
     white-space: pre-wrap;
 }

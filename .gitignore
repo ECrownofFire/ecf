@@ -12,5 +12,4 @@ ebin
 ecf.d
 .erlang.mk
 tags
-private.mk
 
