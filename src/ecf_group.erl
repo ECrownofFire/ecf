@@ -6,8 +6,9 @@
          new_group/2, delete_group/1,
          get_group/1,
          edit_name/2, edit_desc/2,
+         add_perm/2, remove_perm/2,
          add_member/2, remove_member/2,
-         id/1, name/1, desc/1, member/2, members/1]).
+         id/1, name/1, desc/1, member/2, members/1, perms/1]).
 
 %%% Wrapper for group type
 
@@ -18,7 +19,8 @@
         {id   :: id(),
          name :: binary(),
          desc :: binary(),
-         members = [] :: [ecf_user:id()]}).
+         members = [] :: [ecf_user:id()],
+         global_perms = [] :: ecf_perms:global_perms()}).
 -type group() :: #ecf_group{}.
 
 -spec create_table([node()]) -> ok.
@@ -100,6 +102,24 @@ remove_member(Id, User) ->
         end,
     mnesia:activity(transaction, F).
 
+-spec add_perm(id(), ecf_perms:global_mode()) -> ok.
+add_perm(Id, Perm) ->
+    F = fun() ->
+                [G] = mnesia:wread({ecf_group, Id}),
+                New = [Perm|perms(G)],
+                mnesia:write(G#ecf_group{global_perms=New})
+        end,
+    mnesia:activity(transaction, F).
+
+-spec remove_perm(id(), ecf_perms:global_mode()) -> ok.
+remove_perm(Id, Perm) ->
+    F = fun() ->
+                [G] = mnesia:wread({ecf_group, Id}),
+                New = lists:delete(Perm, perms(G)),
+                mnesia:write(G#ecf_group{global_perms=New})
+        end,
+    mnesia:activity(transaction, F).
+
 %% Wrapper functions
 
 -spec id(group()) -> id().
@@ -121,4 +141,8 @@ member(Group, User) ->
 -spec members(group()) -> [ecf_user:id()].
 members(Group) ->
     Group#ecf_group.members.
+
+-spec perms(group()) -> ecf_perms:global_perms().
+perms(Group) ->
+    Group#ecf_group.global_perms.
 

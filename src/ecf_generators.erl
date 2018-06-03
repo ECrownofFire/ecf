@@ -1,5 +1,8 @@
 -module(ecf_generators).
 
+-define(GRAVATAR_URL, <<"https://gravatar.com/avatar/">>).
+-define(GRAVATAR_OPTIONS, <<"?s=100&d=identicon">>).
+
 -export([generate/3]).
 
 -spec generate(atom() | integer, ecf_user:user() | undefined, term()) -> iodata().
@@ -38,6 +41,11 @@ generate(thread, User, {Forum, Thread, Posts}) ->
     [generate_head(ecf_thread:title(Thread)),
      generate_header(User),
      generate_post_list(User, Forum, Thread, Posts),
+     generate_forum_end()];
+generate(admin, User, Forums) ->
+    [generate_head("Administration"),
+     generate_header(User),
+     generate_admin(Forums),
      generate_forum_end()];
 generate(edit_profile, User, _) ->
     [generate_head("Edit Profile"),
@@ -169,6 +177,7 @@ generate_post_element(Post, String) ->
     PosterId = ecf_post:poster(Post),
     Poster = ecf_user:get_user(PosterId),
     PosterName = ecf_user:name(Poster),
+    Gravatar = gravatar(Poster),
     PosterTitle = ecf_user:title(Poster),
     PosterPosts = integer_to_list(ecf_user:posts(Poster)),
     Time = iso8601:format(ecf_post:time(Post)),
@@ -176,6 +185,7 @@ generate_post_element(Post, String) ->
     % TODO: edited by/time
     replace_many(String,
                  [{"id", integer_to_list(Id)},
+                  {"gravatar", Gravatar},
                   {"user_id", integer_to_list(PosterId)},
                   {"username", PosterName},
                   {"user_title", PosterTitle},
@@ -184,12 +194,16 @@ generate_post_element(Post, String) ->
                   {"text", Text}]).
 
 
+generate_admin(Forums) ->
+    Forums.
+
+
 generate_user_profile(Self, Profile) ->
     File = case Self of
                true -> "user_profile_self.html";
                false -> "user_profile.html" end,
     String = read_priv_file(File),
-    Joined = iso8601:format(calendar:now_to_datetime(ecf_user:joined(Profile))),
+    Joined = iso8601:format(ecf_user:joined(Profile)),
     Bday = case ecf_user:bday(Profile) of
                undefined -> <<"">>;
                B -> iso8601:format(B)
@@ -286,4 +300,11 @@ replace_many(String, List) ->
 -spec replace(iodata(), iodata(), iodata()) -> iodata().
 replace(String, Search, Replace) ->
     string:replace(String, ["{{",Search,"}}"], Replace, all).
+
+-spec gravatar(ecf_user:user()) -> iodata().
+gravatar(User) ->
+    Email = string:lowercase(ecf_user:email(User)),
+    Hash = erlang:md5(Email),
+    Hex = [[io_lib:format("~2.16.0b", [X]) || <<X:8>> <= Hash]],
+    [?GRAVATAR_URL, Hex, ?GRAVATAR_OPTIONS].
 

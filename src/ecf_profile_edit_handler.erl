@@ -7,12 +7,7 @@ init(Req0, State) ->
     User = ecf_utils:check_user_session(Req0),
     case User of
         undefined ->
-            Req = cowboy_req:reply(401,
-                                   #{<<"content-type">> => <<"text/html">>,
-                                     <<"WWW-Authenticate">> => <<"FormBased">>},
-                                   ecf_generators:generate(401, undefined,
-                                                           edit_profile_401),
-                                   Req0),
+            Req = ecf_utils:reply_401(Req0, edit_profile_401),
             {ok, Req, State};
         _ ->
             case maps:get(method, Req0) of

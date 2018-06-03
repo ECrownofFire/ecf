@@ -6,12 +6,7 @@
 init(Req, State) ->
     case ecf_utils:check_user_session(Req) of
         undefined ->
-            Html = ecf_generators:generate(401, undefined, new_post_401),
-            Req2 = cowboy_req:reply(401,
-                                    #{<<"content-type">> => <<"text/html">>,
-                                      <<"WWW-Authenticate">> => <<"FormBased">>},
-                                    Html,
-                                    Req),
+            Req2 = ecf_utils:reply_401(Req, new_post_401),
             {ok, Req2, State};
         User ->
             case maps:get(method, Req) of
@@ -20,12 +15,13 @@ init(Req, State) ->
                     {_, Thread0} = lists:keyfind(<<"thread">>, 1, KV),
                     Thread = binary_to_integer(Thread0),
                     Text = ecf_utils:get_and_sanitize(KV, <<"text">>),
-                    ok = ecf_post:new_post(Thread, ecf_user:id(User),
-                                           erlang:timestamp(), Text),
+                    Post = ecf_post:new_post(Thread, ecf_user:id(User),
+                                             erlang:timestamp(), Text),
                     Thread2 = integer_to_list(Thread),
-                    Req3 = cowboy_req:reply(302,
+                    Req3 = cowboy_req:reply(303,
                                             #{<<"Location">> =>
-                                              [<<"{{base}}/thread/">>, Thread2]},
+                                              [<<"{{base}}/thread/">>, Thread2,
+                                               <<"#post-">>, integer_to_list(Post)]},
                                             Req2),
                     {ok, Req3, State};
                 _ ->

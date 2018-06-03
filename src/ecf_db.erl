@@ -1,7 +1,5 @@
 -module(ecf_db).
 
--include_lib("stdlib/include/qlc.hrl").
-
 %%% Contains helper functions for connecting to the database
 
 % Record definitions to be used in the database, private to the database

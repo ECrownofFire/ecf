@@ -21,14 +21,7 @@ terminate(_Reason, _Req, _State) ->
     ok.
 
 post_reply(Req, State, undefined) ->
-    Html = ecf_generators:generate(401, undefined, new_thread_401),
-    Req2 = cowboy_req:reply(401,
-                            #{<<"content-type">> =>
-                              <<"text/html">>,
-                              <<"WWW-Authenticate">> =>
-                              <<"FormBased">>},
-                            Html,
-                            Req),
+    Req2 = ecf_utils:reply_401(Req, new_thread_401),
     {ok, Req2, State};
 post_reply(Req, State, User) ->
     {ok, KV, Req2} = cowboy_req:read_urlencoded_body(Req),

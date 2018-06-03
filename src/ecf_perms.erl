@@ -1,28 +1,25 @@
 -module(ecf_perms).
 
--export_type([perm/0, perms/0, mode/0]).
+-export_type([perm/0, perms/0, mode/0, global_mode/0, global_perms/0]).
 
--export([create_perm/2, check_perm/3, add_perm/2, remove_perm/2]).
+-export([check_perm/3, add_perm/2, remove_perm/2]).
 
 
 % 'others' includes any user who isn't listed in other perms, as well as guests
 -type perm_type() :: {user, ecf_user:id()} | {group, ecf_group:id()} | others.
 
-% most of these are self-explanatory
--type mode() :: view_forum | view_thread | view_post
-              | create_thread | create_post | delete_thread | delete_post
-              | edit_thread | edit_post
-              | move_thread | lock_thread | ban_user.
+-type mode() :: view_forum | view_thread
+              | create_forum | create_thread | create_post
+              | delete_forum | delete_thread | delete_post
+              | edit_forum | edit_thread | edit_post
+              | move_thread | lock_thread.
 
 -type perm() :: {perm_type(), mode()}.
 -type perms() :: {perm_type(), [mode()]}.
 
 
--spec create_perm(perm_type(), [mode()]) -> perms().
-create_perm(others, Modes) ->
-    {others, Modes};
-create_perm({Type, Id}, Modes) when Type =:= user; Type =:= group ->
-    {{Type, Id}, Modes}.
+-type global_mode() :: mode() | ban_user.
+-type global_perms() :: [global_mode()].
 
 
 -spec check_perm(ecf_user:user() | undefined,
@@ -52,8 +49,12 @@ check_perm_guest(Mode, Perms) ->
     end.
 
 -spec check_perm([perms()], ecf_user:user(), mode(), boolean()) -> boolean().
-check_perm([], _, _, false) ->
-    false;
+check_perm([], User, Mode, false) ->
+    Groups = ecf_user:groups(User),
+    lists:any(fun(G) ->
+                      Modes = ecf_group:perms(G),
+                      lists:member(Mode, Modes) end,
+              Groups);
 check_perm(_, _, _, true) ->
     true;
 check_perm([{{user, Id}, Modes}|Tail], User, Mode, false) ->

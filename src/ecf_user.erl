@@ -56,7 +56,8 @@ create_table(Nodes) ->
 -spec new_user(binary(), binary(), binary(),
                erlang:timestamp(), calendar:datetime()) ->
     {id(), binary()} | {error, atom()}.
-new_user(Name, Pass, Email, Time, Bday) ->
+new_user(Name, Pass, Email0, Time, Bday) ->
+    Email = string:trim(Email0),
     Salt = crypto:strong_rand_bytes(?SALT_LENGTH),
     {ok, Hash} = pbkdf2:pbkdf2(?HMAC, Pass, Salt,
                                ?HASH_ITERATIONS, ?HASH_LENGTH),

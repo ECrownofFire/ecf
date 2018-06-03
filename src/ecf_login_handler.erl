@@ -101,6 +101,7 @@ set_login_cookies(Req, Id, Session) ->
     Req2 = cowboy_req:set_resp_cookie(<<"session">>, SessionEncoded,
                                       Req,
                                       #{http_only => true,
+                                        secure => true,
                                         max_age => ?SESSION_TIME}),
     cowboy_req:set_resp_cookie(<<"user">>,
                                integer_to_list(Id),
