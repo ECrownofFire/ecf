@@ -8,7 +8,7 @@
          get_forum/1, get_forums/0,
          new_forum/4,
          edit_name/2, edit_desc/2, edit_order/2,
-         edit_perms/2, add_perm/2, remove_perm/2,
+         edit_perms/2, edit_perm/4, remove_perm/3,
          delete_forum/1,
          visible_forums/2,
          filter_forums/2, order_forums/1,
@@ -113,20 +113,20 @@ edit_perms(Id, Perms) ->
         end,
     mnesia:activity(transaction, F).
 
--spec add_perm(id(), ecf_perms:perm()) -> ok.
-add_perm(Id, Perm) ->
+-spec edit_perm(id(), ecf_perms:class(), ecf_perms:mode(), allow | deny) -> ok.
+edit_perm(Id, Class, Mode, Set) ->
     F = fun() ->
                 [Forum] = mnesia:wread({ecf_forum, Id}),
-                NewPerms = ecf_perms:add_perm(perms(Forum), Perm),
+                NewPerms = ecf_perms:edit_perm(perms(Forum), Class, Mode, Set),
                 mnesia:write(Forum#ecf_forum{perms=NewPerms})
         end,
     mnesia:activity(transaction, F).
 
--spec remove_perm(id(), ecf_perms:perm()) -> ok.
-remove_perm(Id, Perm) ->
+-spec remove_perm(id(), ecf_perms:class(), ecf_perms:mode()) -> ok.
+remove_perm(Id, Class, Mode) ->
     F = fun() ->
                 [Forum] = mnesia:wread({ecf_forum, Id}),
-                NewPerms = ecf_perms:remove_perm(perms(Forum), Perm),
+                NewPerms = ecf_perms:remove_perm(perms(Forum), Class, Mode),
                 mnesia:write(Forum#ecf_forum{perms=NewPerms})
         end,
     mnesia:activity(transaction, F).
@@ -139,8 +139,7 @@ visible_forums(Forums, User) ->
 
 -spec filter_forums([forum()], ecf_user:user()) -> [forum()].
 filter_forums(Forums, User) ->
-    lists:filter(fun(F) -> ecf_perms:check_perm(User, {forum, F},
-                                                view_forum)
+    lists:filter(fun(F) -> ecf_perms:check_perm_forum(User, F, view_forum)
                  end,
                  Forums).
 

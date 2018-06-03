@@ -29,9 +29,8 @@ init(Req, State) ->
                        {error, forum_not_found} ->
                            reply_404(User, Req);
                        Forum ->
-                           case ecf_perms:check_perm(User,
-                                                     {forum, Forum},
-                                                     view_forum) of
+                           case ecf_perms:check_perm_forum(User, Forum,
+                                                           view_forum) of
                                true ->
                                    Threads = ecf_thread:get_forum_threads(Id),
                                    Html = ecf_generators:generate(forum, User,
@@ -46,8 +45,7 @@ init(Req, State) ->
                        {error, thread_not_found} ->
                            reply_404(User, Req);
                        Thread ->
-                           case ecf_perms:check_perm(User,
-                                                     {thread, Thread},
+                           case ecf_perms:check_perm_thread(User, Thread,
                                                      view_thread) of
                                true ->
                                    Forum = ecf_forum:get_forum(

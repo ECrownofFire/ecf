@@ -20,7 +20,7 @@
          name :: binary(),
          desc :: binary(),
          members = [] :: [ecf_user:id()],
-         global_perms = [] :: ecf_perms:global_perms()}).
+         perms = [] :: [ecf_perms:perms()]}).
 -type group() :: #ecf_group{}.
 
 -spec create_table([node()]) -> ok.
@@ -33,7 +33,7 @@ create_table(Nodes) ->
                                         name = <<"Administrators">>,
                                         desc = <<"Administrator group">>})
         end,
-    0 = mnesia:activity(transaction, F),
+    ok = mnesia:activity(transaction, F),
     1 = new_group(<<"Registered Users">>, <<"Default user group">>),
     ok.
 
@@ -102,21 +102,21 @@ remove_member(Id, User) ->
         end,
     mnesia:activity(transaction, F).
 
--spec add_perm(id(), ecf_perms:global_mode()) -> ok.
+-spec add_perm(id(), ecf_perms:perm()) -> ok.
 add_perm(Id, Perm) ->
     F = fun() ->
                 [G] = mnesia:wread({ecf_group, Id}),
                 New = [Perm|perms(G)],
-                mnesia:write(G#ecf_group{global_perms=New})
+                mnesia:write(G#ecf_group{perms=New})
         end,
     mnesia:activity(transaction, F).
 
--spec remove_perm(id(), ecf_perms:global_mode()) -> ok.
+-spec remove_perm(id(), ecf_perms:perm()) -> ok.
 remove_perm(Id, Perm) ->
     F = fun() ->
                 [G] = mnesia:wread({ecf_group, Id}),
                 New = lists:delete(Perm, perms(G)),
-                mnesia:write(G#ecf_group{global_perms=New})
+                mnesia:write(G#ecf_group{perms=New})
         end,
     mnesia:activity(transaction, F).
 
@@ -142,7 +142,7 @@ member(Group, User) ->
 members(Group) ->
     Group#ecf_group.members.
 
--spec perms(group()) -> ecf_perms:global_perms().
+-spec perms(group()) -> [ecf_perms:perms()].
 perms(Group) ->
-    Group#ecf_group.global_perms.
+    Group#ecf_group.perms.
 

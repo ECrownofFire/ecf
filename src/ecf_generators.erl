@@ -125,7 +125,7 @@ generate_thread_list(User, Forum, Threads) ->
     Begin2 = replace_many(Begin, [{"forum", ecf_forum:name(Forum)},
                                   {"forum_desc", ecf_forum:desc(Forum)}]),
     Elem = read_priv_file("thread_list_element.html"),
-    EndFile = case ecf_perms:check_perm(User, {forum, Forum}, create_thread) of
+    EndFile = case ecf_perms:check_perm_forum(User, Forum, create_thread) of
                   false -> "thread_list_end_guest.html";
                   true -> "thread_list_end.html"
               end,
@@ -164,7 +164,7 @@ generate_post_list(User, Forum, Thread, Posts) ->
                            {"forum_id", integer_to_list(ForumId)},
                            {"forum_name", ForumName}]),
     Elem = read_priv_file("post_list_element.html"),
-    EndFile = case ecf_perms:check_perm(User, {thread, Thread}, create_post) of
+    EndFile = case ecf_perms:check_perm_thread(User, Thread, create_post) of
                   false -> "post_list_end_guest.html";
                   true -> "post_list_end.html"
               end,

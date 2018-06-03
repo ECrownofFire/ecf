@@ -10,7 +10,7 @@
          create_thread/5,
          get_thread/1, get_forum_threads/1,
          edit_title/2,
-         edit_perms/2, add_perm/2, remove_perm/2, lock_thread/1,
+         edit_perms/2, edit_perm/4, remove_perm/3, lock_thread/1,
          new_post/2,
          delete_thread/1, delete_forum_threads/1,
          visible_threads/2,
@@ -87,20 +87,20 @@ edit_perms(Id, Perms) ->
         end,
     mnesia:activity(transaction, F).
 
--spec add_perm(id(), ecf_perms:perm()) -> ok.
-add_perm(Id, Perm) ->
+-spec edit_perm(id(), ecf_perms:class(), ecf_perms:mode(), allow | deny) -> ok.
+edit_perm(Id, Class, Mode, Set) ->
     F = fun() ->
                 [Thread] = mnesia:wread({ecf_thread, Id}),
-                NewPerms = ecf_perms:add_perm(perms(Thread), Perm),
+                NewPerms = ecf_perms:edit_perm(perms(Thread), Class, Mode, Set),
                 mnesia:write(Thread#ecf_thread{perms=NewPerms})
         end,
     mnesia:activity(transaction, F).
 
--spec remove_perm(id(), ecf_perms:perm()) -> ok.
-remove_perm(Id, Perm) ->
+-spec remove_perm(id(), ecf_perms:class(), ecf_perms:mode()) -> ok.
+remove_perm(Id, Class, Mode) ->
     F = fun() ->
                 [Thread] = mnesia:wread({ecf_thread, Id}),
-                NewPerms = ecf_perms:remove_perm(perms(Thread), Perm),
+                NewPerms = ecf_perms:remove_perm(perms(Thread), Class, Mode),
                 mnesia:write(Thread#ecf_thread{perms=NewPerms})
         end,
     mnesia:activity(transaction, F).
@@ -108,13 +108,7 @@ remove_perm(Id, Perm) ->
 % convenience function, just denies creating new posts from the base user group
 -spec lock_thread(id()) -> ok.
 lock_thread(Id) ->
-    F = fun() ->
-                [Thread] = mnesia:wread({ecf_thread, Id}),
-                New = ecf_perms:remove_perm(perms(Thread), {{group, 1},
-                                                            create_post}),
-                mnesia:write(Thread#ecf_thread{perms=New})
-        end,
-    mnesia:activity(transaction, F).
+    edit_perm(Id, {group, 1}, create_post, deny).
 
 % Should only be called by ecf_post:new_post/4
 -spec new_post(id(), erlang:timestamp()) -> ecf_post:id().
@@ -153,8 +147,7 @@ visible_threads(Threads, User) ->
 
 -spec filter_threads([thread()], ecf_user:user()) -> [thread()].
 filter_threads(Threads, User) ->
-    lists:filter(fun(T) -> ecf_perms:check_perm(User, {thread, T},
-                                                view_thread)
+    lists:filter(fun(T) -> ecf_perms:check_perm_thread(User, T, view_thread)
                  end,
                  Threads).
 
