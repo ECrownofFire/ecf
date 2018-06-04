@@ -9,11 +9,7 @@ init(Req, State) ->
         <<"POST">> ->
             post_reply(Req, State, User);
         _ ->
-            Html = ecf_generators:generate(404, User, ignored),
-            Req2 = cowboy_req:reply(404,
-                                    #{<<"content-type">> => <<"text/html">>},
-                                    Html,
-                                    Req),
+            Req2 = ecf_utils:reply_status(404, User, ignored, Req),
             {ok, Req2, State}
     end.
 
@@ -21,7 +17,7 @@ terminate(_Reason, _Req, _State) ->
     ok.
 
 post_reply(Req, State, undefined) ->
-    Req2 = ecf_utils:reply_401(Req, new_thread_401),
+    Req2 = ecf_utils:reply_status(401, undefined, create_thread_401, Req),
     {ok, Req2, State};
 post_reply(Req, State, User) ->
     {ok, KV, Req2} = cowboy_req:read_urlencoded_body(Req),
@@ -30,25 +26,30 @@ post_reply(Req, State, User) ->
     case ecf_perms:check_perm_forum(User, ecf_forum:get_forum(Forum),
                                     create_thread) of
         true ->
-            Title = ecf_utils:get_and_sanitize(KV, <<"title">>),
-            Text = ecf_utils:get_and_sanitize(KV, <<"text">>),
-            Thread = ecf_thread:create_thread(Forum, Title,
-                                              erlang:timestamp(),
-                                              ecf_user:id(User),
-                                              Text),
-            ThreadId = integer_to_list(ecf_thread:id(Thread)),
-            Req3 = cowboy_req:reply(303,
-                                    #{<<"Location">> =>
-                                      [<<"{{base}}/thread/">>,
-                                       ThreadId]},
-                                    Req2),
-            {ok, Req3, State};
+            Limit = application:get_env(ecf, post_limit_seconds, 30) * 1000000,
+            Time = timer:now_diff(erlang:timestamp(), ecf_user:last_post(User)),
+            case Limit > Time of
+                true ->
+                    Title = ecf_utils:get_and_sanitize(KV, <<"title">>),
+                    Text = ecf_utils:get_and_sanitize(KV, <<"text">>),
+                    Thread = ecf_thread:create_thread(Forum, Title,
+                                                      erlang:timestamp(),
+                                                      ecf_user:id(User),
+                                                      Text),
+                    ThreadId = integer_to_list(ecf_thread:id(Thread)),
+                    Req3 = cowboy_req:reply(303,
+                                            #{<<"Location">> =>
+                                              [<<"{{base}}/thread/">>,
+                                               ThreadId]},
+                                            Req2),
+                    {ok, Req3, State};
+                false ->
+                    Req3 = ecf_utils:reply_status(429, User,
+                                                  create_thread_429, Req2),
+                    {ok, Req3, State}
+            end;
         false ->
-            Html = ecf_generators:generate(403, User, create_thread_403),
-            Req3 = cowboy_req:reply(403,
-                                    #{<<"content-type">> => <<"text/html">>},
-                                    Html,
-                                    Req2),
+            Req3 = ecf_utils:reply_status(403, User, create_thread_403, Req2),
             {ok, Req3, State}
     end.
 

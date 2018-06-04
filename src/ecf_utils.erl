@@ -1,7 +1,7 @@
 -module(ecf_utils).
 
 -export([check_user_session/1, sanitize/1, get_and_sanitize/2, get_ip/1,
-         reply_401/2]).
+         reply_status/4]).
 
 %%% Contains a few utility functions
 
@@ -69,12 +69,15 @@ get_ip(Req) ->
             Ip
     end.
 
--spec reply_401(cowboy_req:req(), atom()) -> cowboy_req:req().
-reply_401(Req, Type) ->
-    Html = ecf_generators:generate(401, undefined, Type),
-    cowboy_req:reply(401,
-                     #{<<"content-type">> => <<"text/html">>,
-                       <<"WWW-Authenticate">> => <<"FormBased">>},
-                     Html,
-                     Req).
+-spec reply_status(integer(), ecf_user:user(), atom(), cowboy_req:req()) ->
+    cowboy_req:req().
+reply_status(Status, User, Type, Req) ->
+    Html = ecf_generators:generate(Status, User, Type),
+    Map = case Status of
+              401 ->
+                  #{<<"content-type">> => <<"text/html">>,
+                    <<"www-authenticate">> => <<"FormBase">>};
+              _ -> #{<<"content-type">> => <<"text/html">>}
+          end,
+    cowboy_req:reply(Status, Map, Html, Req).
 

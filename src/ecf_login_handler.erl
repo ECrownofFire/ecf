@@ -46,11 +46,7 @@ init(Req0, State) ->
                                    Req0),
             {ok, Req, State};
         _ ->
-            Req = cowboy_req:reply(405,
-                                   #{<<"content-type">> => <<"text/html">>},
-                                   ecf_generators:generate(405, undefined,
-                                                           login),
-                                   Req0),
+            Req = ecf_utils:reply_status(405, undefined, login, Req0),
             {ok, Req, State}
     end.
 

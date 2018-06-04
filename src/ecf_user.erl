@@ -23,11 +23,11 @@
          add_group/2, remove_group/2,
          edit_bio/2, edit_bday/2,
          edit_title/2, edit_loc/2,
-         add_post/1,
+         add_post/2,
          delete_user/1,
          check_session/2, check_pass/2, fake_hash/0,
          id/1, name/1, enabled/1, email/1, joined/1, groups/1, bday/1,
-         title/1, bio/1, loc/1, posts/1]).
+         title/1, bio/1, loc/1, posts/1, last_post/1]).
 
 -record(ecf_user,
         {id     :: id(),
@@ -43,7 +43,8 @@
          title  = <<"">> :: binary(),
          bio    = <<"">> :: binary(),
          loc    = <<"">> :: binary(),
-         posts = 0 :: non_neg_integer()}).
+         posts = 0 :: non_neg_integer(),
+         last_post :: erlang:timestamp()}).
 -type user() :: #ecf_user{}.
 
 -spec create_table([node()]) -> ok.
@@ -68,11 +69,12 @@ new_user(Name, Pass, Email0, Time, Bday) ->
                         case get_user_by_email(Email) of
                             {error, user_not_found} ->
                                 Id = ecf_db:get_new_id(ecf_user),
-                                ok = mnesia:write(#ecf_user{
-                                                 id=Id,name=Name,enabled=true,
-                                                 salt=Salt,pass=Hash,
-                                                 session=Session,email=Email,
-                                                 joined=Time,bday=Bday}),
+                                ok = mnesia:write(
+                                       #ecf_user{
+                                          id=Id, name=Name, enabled=true,
+                                          salt=Salt, pass=Hash, session=Session,
+                                          email=Email, joined=Time, bday=Bday,
+                                          last_post=Time}),
                                 % All users are in the basic group
                                 ok = ecf_group:add_member(1, Id),
                                 {Id, Session};
@@ -249,12 +251,12 @@ edit_loc(Id, Loc) ->
         end,
     mnesia:activity(transaction, F).
 
--spec add_post(id()) -> ok.
-add_post(Id) ->
+-spec add_post(id(), erlang:timestamp()) -> ok.
+add_post(Id, Time) ->
     F = fun() ->
                 [User] = mnesia:wread({ecf_user, Id}),
                 New = User#ecf_user.posts + 1,
-                mnesia:write(User#ecf_user{posts=New})
+                mnesia:write(User#ecf_user{posts=New, last_post=Time})
         end,
     mnesia:activity(transaction, F).
 
@@ -332,4 +334,8 @@ loc(User) ->
 -spec posts(user()) -> non_neg_integer().
 posts(User) ->
     User#ecf_user.posts.
+
+-spec last_post(user()) -> erlang:timestamp().
+last_post(User) ->
+    User#ecf_user.last_post.
 

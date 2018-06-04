@@ -76,6 +76,11 @@ generate(405, User, _Context) ->
     [generate_head("405 - Method Not Allowed"),
      generate_header(User),
      generate_405_error(),
+     generate_forum_end()];
+generate(429, User, Type) ->
+    [generate_head("429 - Too Many Requests"),
+     generate_header(User),
+     generate_429_error(Type),
      generate_forum_end()].
 
 
@@ -277,6 +282,11 @@ generate_404_error() ->
 
 generate_405_error() ->
     read_priv_file("405.html").
+
+generate_429_error(Type) ->
+    Message = application:get_env(ecf, Type,
+                      <<"You're making too many requests, please slow down!">>),
+    replace(read_priv_file("429.html"), "message", Message).
 
 generate_forum_end() ->
     read_priv_file("forum_end.html").
