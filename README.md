@@ -20,7 +20,7 @@ At the bare minimum, ECF still needs the following:
     * Banning accounts
     * Editing permissions
 * Security
-    * HTTPS
+    * HTTPS (works fine behind nginx reverse proxy though)
     * Email on registration
     * Logging stuff
 

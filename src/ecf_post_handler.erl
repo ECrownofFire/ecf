@@ -6,7 +6,7 @@
 init(Req, State) ->
     case ecf_utils:check_user_session(Req) of
         undefined ->
-            Req2 = ecf_utils:reply_status(401, undefined, new_post_401, Req),
+            Req2 = ecf_utils:reply_status(401, undefined, create_post_401, Req),
             {ok, Req2, State};
         User ->
             % convert to microseconds
@@ -49,6 +49,6 @@ try_post(Req, User, State, true) ->
             {ok, Req2, State}
     end;
 try_post(Req, User, State, false) ->
-    Req2 = ecf_utils:reply_status(429, User, post_limit_message, Req),
+    Req2 = ecf_utils:reply_status(429, User, create_post_429, Req),
     {ok, Req2, State}.
 
