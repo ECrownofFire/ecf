@@ -10,11 +10,11 @@
 % 'others' includes any user as well as guests
 -type class() :: {user, ecf_user:id()} | {group, ecf_group:id()} | others.
 
--type mode() :: view_forum | view_thread | view_group
+-type mode() :: view_forum | view_thread | view_group | view_user
               | create_forum | create_thread | create_post | create_group
               | delete_forum | delete_thread | delete_post | delete_group
-              | edit_forum | edit_thread | edit_post | edit_group
-              | move_thread | lock_thread
+              | edit_forum | edit_thread | edit_post | edit_group | edit_user
+              | move_thread | lock_thread | ban_user
               | manage_group.
 
 % class, allowed, denied

@@ -21,8 +21,15 @@ init(Req, State) ->
                        {error, user_not_found} ->
                            ecf_utils:reply_status(404, User, ignored, Req);
                        Profile ->
-                           Html = ecf_generators:generate(user, User, Profile),
-                           reply_200(Html, Req)
+                           case ecf_perms:check_perm_global(User, view_user) of
+                               true ->
+                                   Html = ecf_generators:generate(user, User,
+                                                                  Profile),
+                                   reply_200(Html, Req);
+                               false ->
+                                   ecf_utils:reply_status(403, User,
+                                                          view_user_403, Req)
+                           end
                    end;
                <<"forum">> ->
                    case ecf_forum:get_forum(Id) of
@@ -47,7 +54,7 @@ init(Req, State) ->
                            ecf_utils:reply_status(404, User, ignored, Req);
                        Thread ->
                            case ecf_perms:check_perm_thread(User, Thread,
-                                                     view_thread) of
+                                                            view_thread) of
                                true ->
                                    Forum = ecf_forum:get_forum(
                                              ecf_thread:forum(Thread)),
