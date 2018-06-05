@@ -28,7 +28,7 @@ post_reply(Req, State, User) ->
         true ->
             Limit = application:get_env(ecf, post_limit_seconds, 30) * 1000000,
             Time = timer:now_diff(erlang:timestamp(), ecf_user:last_post(User)),
-            case Limit > Time of
+            case Time > Limit of
                 true ->
                     Title = ecf_utils:get_and_sanitize(KV, <<"title">>),
                     Text = ecf_utils:get_and_sanitize(KV, <<"text">>),

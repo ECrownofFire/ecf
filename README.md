@@ -21,7 +21,6 @@ At the bare minimum, ECF still needs the following:
     * Editing permissions
 * Security
     * HTTPS
-    * Rate limiting for creating threads and posting
     * Email on registration
     * Logging stuff
 
