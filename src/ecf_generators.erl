@@ -297,7 +297,8 @@ generate_forum_end() ->
 
 -spec read_priv_file(string()) -> binary().
 read_priv_file(Filename) ->
-    {ok, String} = file:read_file(filename:join(code:priv_dir(ecf), Filename)),
+    {ok, String, _} = erl_prim_loader:get_file(filename:join(code:priv_dir(ecf),
+                                                             Filename)),
     String.
 
 -spec replace_many(iodata(), [{iodata(),iodata()}]) -> iodata().
