@@ -13,11 +13,7 @@ init(Req, State) ->
         _ ->
             case lists:member(0, ecf_user:groups(User)) of
                 false ->
-                    Html = ecf_generators:generate(403, User, admin_403),
-                    Req2 = cowboy_req:reply(403,
-                                            #{<<"content-type">> => <<"text/html">>},
-                                            Html,
-                                            Req),
+                    Req2 = ecf_utils:reply_status(403, User, admin_403, Req),
                     {ok, Req2, State};
                 true ->
                     Html = ecf_generators:generate(admin, User, ignored),

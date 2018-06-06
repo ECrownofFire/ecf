@@ -3,7 +3,8 @@
 -export_type([class/0, mode/0, perms/0]).
 
 -export([create_table/1, edit_global_perm/1, remove_global_perm/1,
-         check_perm_forum/3, check_perm_thread/3, check_perm_group/3,
+         check_perm_global/2, check_perm_forum/3, check_perm_thread/3,
+         check_perm_group/3,
          edit_perm/4, remove_perm/3]).
 
 

@@ -56,11 +56,13 @@ delete_group(Id) ->
         end,
     mnesia:activity(transaction, F).
 
--spec get_group(id()) -> ok.
+-spec get_group(id()) -> ok | {error, group_not_found}.
 get_group(Id) ->
     F = fun() ->
-                [Group] = mnesia:read({ecf_group, Id}),
-                Group
+                case mnesia:read({ecf_group, Id}) of
+                    [] -> {error, group_not_found};
+                    [Group] -> Group
+                end
         end,
     mnesia:activity(transaction, F).
 

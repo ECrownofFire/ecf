@@ -31,6 +31,22 @@ init(Req, State) ->
                                                           view_user_403, Req)
                            end
                    end;
+               <<"group">> ->
+                   case ecf_group:get_group(Id) of
+                       {error, group_not_found} ->
+                           ecf_utils:reply_status(404, User, ignored, Req);
+                       Group ->
+                           case ecf_perms:check_perm_group(User, Group,
+                                                           view_group) of
+                               true ->
+                                    Html = ecf_generators:generate(group, User,
+                                                                   Group),
+                               reply_200(Html, Req);
+                               false ->
+                                   ecf_utils:reply_status(403, User,
+                                                          view_group_403, Req)
+                           end
+                   end;
                <<"forum">> ->
                    case ecf_forum:get_forum(Id) of
                        {error, forum_not_found} ->

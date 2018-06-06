@@ -32,6 +32,11 @@ generate(user, User, Profile) ->
      generate_header(User),
      generate_user_profile(Self, Profile),
      generate_forum_end()];
+generate(group, User, Group) ->
+    [generate_head(["Group: ", ecf_group:name(Group)]),
+     generate_header(User),
+     generate_group(Group),
+     generate_forum_end()];
 generate(forum, User, {Forum, Threads}) ->
     [generate_head(ecf_forum:name(Forum)),
      generate_header(User),
@@ -222,6 +227,22 @@ generate_user_profile(Self, Profile) ->
                   {"title", ecf_user:title(Profile)},
                   {"loc", ecf_user:loc(Profile)},
                   {"posts", integer_to_list(ecf_user:posts(Profile))}]).
+
+generate_group(Group) ->
+    Begin0 = read_priv_file("group.html"),
+    Name = ecf_group:name(Group),
+    Desc = ecf_group:desc(Group),
+    Begin = replace_many(Begin0, [{"name", Name}, {"desc", Desc}]),
+    Members = ecf_group:members(Group),
+    Elem = read_priv_file("group_member.html"),
+    End = read_priv_file("group_end.html"),
+    [Begin, [generate_group_member(X, Elem) || X <- Members], End].
+
+generate_group_member(Id, Elem) ->
+    User = ecf_user:get_user(Id),
+    Name = ecf_user:name(User),
+    replace_many(Elem, [{"id", integer_to_list(Id)},
+                        {"name", Name}]).
 
 generate_login(undefined, Url) ->
     Message = application:get_env(ecf, login_message, <<"Please login.">>),

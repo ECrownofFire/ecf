@@ -4,7 +4,7 @@
 -export([start/2]).
 -export([stop/1]).
 
--define(TYPES, [<<"forum">>, <<"thread">>, <<"user">>]).
+-define(TYPES, [<<"user">>, <<"group">>, <<"forum">>, <<"thread">>]).
 
 start(_Type, _Args) ->
     TypeFun = fun (_, Name) ->
@@ -31,7 +31,6 @@ start(_Type, _Args) ->
                {[Base, "/post"], ecf_post_handler, {}},
                {[Base, "/thread"], ecf_thread_handler, {}},
                {[Base, "/[...]"], ecf_404_handler, {}}]}
-
     ]),
     {ok, _Pid} = cowboy:start_clear(ecf_http_listener,
         [{port, Port}],
