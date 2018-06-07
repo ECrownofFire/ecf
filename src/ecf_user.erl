@@ -294,7 +294,7 @@ check_pass(User, Pass) ->
     {ok, Hash} = pbkdf2:pbkdf2(?HMAC, Pass, Salt, ?HASH_ITERATIONS, ?HASH_LENGTH),
     pbkdf2:compare_secure(PHash, Hash).
 
-% Fakes hashing for invalid usernames
+% Fakes hashing for invalid logins
 -spec fake_hash() -> ok.
 fake_hash() ->
     Pass = <<"password">>,

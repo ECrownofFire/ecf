@@ -13,14 +13,14 @@ init(Req0, State) ->
     case maps:get(method, Req0) of
         <<"POST">> ->
             {ok, KeyValues, Req} = cowboy_req:read_urlencoded_body(Req0),
-            {_, Username} = lists:keyfind(<<"username">>, 1, KeyValues),
+            {_, Email} = lists:keyfind(<<"email">>, 1, KeyValues),
             {_, Password} = lists:keyfind(<<"password">>, 1, KeyValues),
             Ip = ecf_utils:get_ip(Req),
-            case ecf_log:check_log(Username, Ip) of
+            case ecf_log:check_log(Email, Ip) of
                 true ->
                     case ecf_captcha:check_captcha(Ip, KeyValues) of
                         true ->
-                            try_login(Username, Password, Url, Req, State);
+                            try_login(Email, Password, Url, Req, State);
                         false ->
                             Text = application:get_env(ecf, login_fail_captcha,
                                                <<"You need to solve a CAPTCHA">>),
@@ -35,7 +35,7 @@ init(Req0, State) ->
                             {ok, Req2, State}
                     end;
                 false ->
-                    try_login(Username, Password, Url, Req, State)
+                    try_login(Email, Password, Url, Req, State)
             end;
         <<"GET">> ->
             User = ecf_utils:check_user_session(Req0),
@@ -53,18 +53,18 @@ init(Req0, State) ->
 terminate(_Reason, _Req, _State) ->
     ok.
 
-try_login(Username, Password, Url, Req, State) ->
-    User = ecf_user:get_user_by_name(Username),
-    try_login(User, Password, Url, Req, State, Username).
+try_login(Email, Password, Url, Req, State) ->
+    User = ecf_user:get_user_by_email(Email),
+    try_login(User, Password, Url, Req, State, Email).
 
 
-try_login({error, user_not_found}, _, _, Req, State, Username) ->
+try_login({error, user_not_found}, _, _, Req, State, Email) ->
     ok = ecf_user:fake_hash(),
-    login_fail(Req, State, Username);
-try_login(User, Password, Url, Req, State, Username) ->
+    login_fail(Req, State, Email);
+try_login(User, Password, Url, Req, State, Email) ->
     case ecf_user:check_pass(User, Password) of
         true ->
-            ecf_log:clear_log(Username, ecf_utils:get_ip(Req)),
+            ecf_log:clear_log(Email, ecf_utils:get_ip(Req)),
             Session = ecf_user:new_session(ecf_user:id(User)),
             Req2 = set_login_cookies(Req, ecf_user:id(User), Session),
             Map = #{<<"result">> => <<"success">>,
@@ -76,13 +76,13 @@ try_login(User, Password, Url, Req, State, Username) ->
                                     Req2),
             {ok, Req3, State};
         false ->
-            login_fail(Req, State, Username)
+            login_fail(Req, State, Email)
     end.
 
-login_fail(Req, State, Username) ->
-    ecf_log:log(Username, ecf_utils:get_ip(Req)),
+login_fail(Req, State, Email) ->
+    ecf_log:log(Email, ecf_utils:get_ip(Req)),
     Text = application:get_env(ecf, login_fail_message,
-                               <<"Invalid username or password, try again.">>),
+                               <<"Invalid email or password, try again.">>),
     Map = #{<<"result">> => <<"failed">>,
             <<"text">> => Text},
     Json = jiffy:encode(Map),

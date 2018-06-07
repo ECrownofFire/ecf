@@ -37,9 +37,9 @@ function verify_login() {
     return false;
 };
 function construct_request() {
-    var user = document.getElementById('username').value;
+    var email = document.getElementById('email').value;
     var pass = document.getElementById('password').value;
-    var str = "username=" + user + "&password=" + pass;
+    var str = "email=" + email + "&password=" + pass;
     var captcha = document.getElementById('recaptcha');
     if (captcha === null) {
         return str;
@@ -52,7 +52,7 @@ function construct_request() {
 <h2>Login</h2>
 <p id="message">{{message}}</p>
 <form id="form-login" action="{{base}}/login?url={{url}}" method="post" onsubmit="return verify_login()">
-    <label>Username: <input id="username" type="text" autocomplete="username" name="username" required></label>
+    <label>Email: <input id="email" type="text" autocomplete="email" name="email" required></label>
     <label>Password: <input id="password" type="password" autocomplete="current-password" name="password" required></label>
     <input id="submit-login" type="submit" value="Login">
 </form>
