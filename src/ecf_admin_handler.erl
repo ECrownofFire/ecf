@@ -8,7 +8,7 @@ init(Req, State) ->
     User = ecf_utils:check_user_session(Req),
     case User of
         undefined ->
-            Req2 = ecf_utils:reply_401(Req, admin_401),
+            Req2 = ecf_utils:reply_status(401, undefined, admin_401, Req),
             {ok, Req2, State};
         _ ->
             case lists:member(0, ecf_user:groups(User)) of

@@ -57,6 +57,11 @@ generate(edit_profile, User, _) ->
      generate_header(User),
      generate_edit_profile(User),
      generate_forum_end()];
+generate(edit_forum, User, Forum) ->
+    [generate_head(["Edit ", ecf_forum:name(Forum)]),
+     generate_header(User),
+     generate_edit_forum(Forum),
+     generate_forum_end()];
 generate(400, User, _) ->
     [generate_head("400 - Bad Request"),
      generate_header(User),
@@ -285,6 +290,12 @@ generate_edit_profile(User) ->
                           {"bio", ecf_user:bio(User)},
                           {"title", ecf_user:title(User)},
                           {"loc", ecf_user:loc(User)}]).
+
+generate_edit_forum(Forum) ->
+    String = read_priv_file("edit_forum.html"),
+    replace_many(String, [{"id", integer_to_list(ecf_forum:id(Forum))},
+                          {"name", ecf_forum:name(Forum)},
+                          {"desc", ecf_forum:desc(Forum)}]).
 
 generate_400_error() ->
     read_priv_file("400.html").

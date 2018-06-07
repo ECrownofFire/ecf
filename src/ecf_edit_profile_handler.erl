@@ -4,12 +4,11 @@
 -export([init/2, terminate/3]).
 
 init(Req0, State) ->
-    User = ecf_utils:check_user_session(Req0),
-    case User of
+    case ecf_utils:check_user_session(Req0) of
         undefined ->
-            Req = ecf_utils:reply_401(Req0, edit_profile_401),
+            Req = ecf_utils:reply_status(401, undefined, edit_profile_401, Req0),
             {ok, Req, State};
-        _ ->
+        User ->
             case maps:get(method, Req0) of
                 <<"POST">> ->
                     Id = ecf_user:id(User),

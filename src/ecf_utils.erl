@@ -69,8 +69,8 @@ get_ip(Req) ->
             Ip
     end.
 
--spec reply_status(integer(), ecf_user:user(), atom(), cowboy_req:req()) ->
-    cowboy_req:req().
+-spec reply_status(integer(), ecf_user:user() | undefined, atom(),
+                   cowboy_req:req()) -> cowboy_req:req().
 reply_status(Status, User, Type, Req) ->
     Html = ecf_generators:generate(Status, User, Type),
     Map = case Status of
