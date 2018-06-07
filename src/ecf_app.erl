@@ -25,7 +25,7 @@ start(_Type, _Args) ->
                 {priv_dir, ecf, "static"}},
                {[Base, "/login"], ecf_login_handler, {}},
                {[Base, "/register"], ecf_register_handler, {}},
-               {[Base, "/edit_profile"], ecf_profile_edit_handler, {}},
+               {[Base, "/edit_profile"], ecf_edit_profile_handler, {}},
                {[Base, "/logout"], ecf_logout_handler, {}},
                {[Base, "/[:type/:id]"], Constraints, ecf_handler, {}},
                {[Base, "/post"], ecf_post_handler, {}},

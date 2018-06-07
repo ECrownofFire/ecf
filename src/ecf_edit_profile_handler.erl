@@ -1,4 +1,4 @@
--module(ecf_profile_edit_handler).
+-module(ecf_edit_profile_handler).
 -behaviour(cowboy_handler).
 
 -export([init/2, terminate/3]).
