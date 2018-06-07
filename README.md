@@ -6,8 +6,7 @@
 Erlang Creative Forum (ECF) is intended to be a very simple forum host, similar
 to SMF or vBulletin or the like, but very lightweight and fast. It's still very
 early in development so it's missing a lot of features, and I would (currently)
-strongly recommend against using it. Feel free to take a look around the code
-though!
+recommend against using it. Feel free to take a look around the code though!
 
 At the bare minimum, ECF still needs the following:
 * Documentation
@@ -15,24 +14,28 @@ At the bare minimum, ECF still needs the following:
 * Lots and lots of CSS/HTML/JS magic to make it look decent!
 * Terms of use and privacy policy?
 * Administration frontend
-    * Subforum creation
+    * Subforum creation/editing
     * Deleting threads/posts
     * Banning accounts
     * Editing permissions
+    * Groups
+        * Creation
+        * Editing
+        * Adding/removing members
 * Security
     * HTTPS (works fine behind nginx reverse proxy though)
-    * Email on registration
-    * Logging stuff
+    * Email on registration (need `gen_smtp`)
+    * Logging stuff (most likely through lager)
 
 So that ECF is reasonably useable, I'd like to add the following as well:
-* Editing posts
-* Messaging
-* Pagination of threads and posts (former can probably just use `lists:sublist/3`,
-but the latter should probably use something more performant)
+* Editing posts (and displaying time/user)
+* Messaging (needs backend)
+* Pagination of threads and posts (former can probably just use
+`lists:sublist/3`, but the latter should probably select in Mnesia itself)
 * Banning people for a given length of time (needs backend)
-* Listing all users, sorting by various fields
+* Listing all users, sorting by various fields (partially done)
 * List all posts by a user
-* Searching
+* Searching (needs backend)
 
 The following may happen at some point, but I'm unsure about them:
 * Markdown for posts
@@ -44,7 +47,7 @@ And these would be nice to eventually get:
 * Events calendar
 * Announcements
 * Track read/unread posts
-* Replying directly to posts
+* Replying to posts
 
 ### Requirements
 Erlang/OTP 20
@@ -54,10 +57,11 @@ Erlang/OTP 20
 Currently there is no real installation process. However, testing ECF is very
 simple since it uses [erlang.mk](https://erlang.mk). Simple `make run` and it
 will start it listening on port 8080 and drop you into an Erlang REPL. The first
-time you start it up, be sure to use `ecf_db:install().` followed by
-`mnesia:start().` to create and setup the database.
+time you start it up, be sure to use `ecf_db:install().` to create and setup the
+database. After that if you change the backing records you will need to either
+delete and recreate the Mnesia database, or call `mnesia:transform_table/3`.
 
-You will need to set the following app env variables as well:
+You will need to set the following app env variables in rel/private.config:
 * `captcha_key`: reCAPTCHA site key
 * `captcha_secret`: reCAPTCHA site secret
 
