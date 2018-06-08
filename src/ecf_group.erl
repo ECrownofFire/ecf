@@ -6,7 +6,7 @@
          new_group/2, delete_group/1,
          get_group/1,
          edit_name/2, edit_desc/2,
-         add_perm/2, remove_perm/2,
+         edit_perm/4, remove_perm/3,
          add_member/2, remove_member/2,
          id/1, name/1, desc/1, member/2, members/1, perms/1]).
 
@@ -39,7 +39,7 @@ create_table(Nodes) ->
 
 
 -spec new_group(binary(), binary()) -> id().
-new_group(Name, Desc) ->
+new_group(Name, Desc) when is_binary(Name), is_binary(Desc) ->
     F = fun() ->
                 Id = ecf_db:get_new_id(ecf_group),
                 ok = mnesia:write(#ecf_group{id=Id,name=Name,desc=Desc}),
@@ -47,16 +47,17 @@ new_group(Name, Desc) ->
         end,
     mnesia:activity(transaction, F).
 
-% TODO: search for group in users and permissions to delete it
+% TODO: search for group in permissions to delete it
 -spec delete_group(id()) -> ok.
-delete_group(Id) ->
+delete_group(Id) when is_integer(Id), Id >= 2 ->
     F = fun() ->
-                [_] = mnesia:wread({ecf_group, Id}),
+                [G] = mnesia:wread({ecf_group, Id}),
+                [ecf_user:remove_group(U, Id) || U <- members(G)],
                 mnesia:delete(Id)
         end,
     mnesia:activity(transaction, F).
 
--spec get_group(id()) -> ok | {error, group_not_found}.
+-spec get_group(id()) -> group() | {error, group_not_found}.
 get_group(Id) ->
     F = fun() ->
                 case mnesia:read({ecf_group, Id}) of
@@ -67,7 +68,7 @@ get_group(Id) ->
     mnesia:activity(transaction, F).
 
 -spec edit_name(id(), binary()) -> ok.
-edit_name(Id, Name) ->
+edit_name(Id, Name) when is_binary(Name) ->
     F = fun() ->
                 [G] = mnesia:wread({ecf_group, Id}),
                 mnesia:write(G#ecf_group{name=Name})
@@ -75,7 +76,7 @@ edit_name(Id, Name) ->
     mnesia:activity(transaction, F).
 
 -spec edit_desc(id(), binary()) -> ok.
-edit_desc(Id, Desc) ->
+edit_desc(Id, Desc) when is_binary(Desc) ->
     F = fun() ->
                 [G] = mnesia:wread({ecf_group, Id}),
                 mnesia:write(G#ecf_group{desc=Desc})
@@ -86,9 +87,8 @@ edit_desc(Id, Desc) ->
 add_member(Id, User) ->
     F = fun() ->
                 [G] = mnesia:wread({ecf_group, Id}),
-                _ = ecf_user:get_user(User),
                 ecf_user:add_group(User, Id),
-                NewList = [User|G#ecf_group.members],
+                NewList = [User|members(G)],
                 mnesia:write(G#ecf_group{members=NewList})
         end,
     mnesia:activity(transaction, F).
@@ -97,27 +97,26 @@ add_member(Id, User) ->
 remove_member(Id, User) ->
     F = fun() ->
                 [G] = mnesia:wread({ecf_group, Id}),
-                _ = ecf_user:get_user(User),
                 ecf_user:remove_group(User, Id),
                 NewList = lists:delete(User, G#ecf_group.members),
                 mnesia:write(G#ecf_group{members=NewList})
         end,
     mnesia:activity(transaction, F).
 
--spec add_perm(id(), ecf_perms:perm()) -> ok.
-add_perm(Id, Perm) ->
+-spec edit_perm(id(), ecf_perms:class(), ecf_perms:mode(), allow | deny) -> ok.
+edit_perm(Id, Class, Mode, Set) ->
     F = fun() ->
                 [G] = mnesia:wread({ecf_group, Id}),
-                New = [Perm|perms(G)],
+                New = ecf_perms:edit_perm(perms(G), Class, Mode, Set),
                 mnesia:write(G#ecf_group{perms=New})
         end,
     mnesia:activity(transaction, F).
 
--spec remove_perm(id(), ecf_perms:perm()) -> ok.
-remove_perm(Id, Perm) ->
+-spec remove_perm(id(), ecf_perms:class(), ecf_perms:mode()) -> ok.
+remove_perm(Id, Class, Mode) ->
     F = fun() ->
                 [G] = mnesia:wread({ecf_group, Id}),
-                New = lists:delete(Perm, perms(G)),
+                New = ecf_perms:remove_perm(perms(G), Class, Mode),
                 mnesia:write(G#ecf_group{perms=New})
         end,
     mnesia:activity(transaction, F).

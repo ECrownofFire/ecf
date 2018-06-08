@@ -61,11 +61,9 @@ get_forum_threads(Forum) ->
 create_thread(Forum, Title, Time, Creator, Text) ->
     F = fun() ->
                 Id = ecf_db:get_new_id(ecf_thread),
-                % copy forum perms by default
-                Perms = ecf_forum:perms(ecf_forum:get_forum(Forum)),
                 mnesia:write(#ecf_thread{id=Id,forum=Forum,title=Title,
                                          time=Time,last_time=Time,
-                                         creator=Creator,perms=Perms}),
+                                         creator=Creator,perms=[]}),
                 ecf_post:new_post(Id, Creator, Time, Text),
                 get_thread(Id)
         end,
