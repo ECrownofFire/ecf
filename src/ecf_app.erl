@@ -6,6 +6,8 @@
 
 -define(TYPES, [<<"user">>, <<"group">>, <<"forum">>, <<"thread">>]).
 
+-define(P_TYPES, [<<"global">>, <<"forum">>, <<"thread">>, <<"group">>]).
+
 start(_Type, _Args) ->
     TypeFun = fun (_, Name) ->
                       case lists:member(Name, ?TYPES) of
@@ -13,8 +15,14 @@ start(_Type, _Args) ->
                           false -> {error, invalid_type}
                       end
               end,
-    Constraints = [{type, TypeFun},
-                   {id, int}],
+    PTypes = fun (_, Name) ->
+                     case lists:member(Name, ?P_TYPES) of
+                         true -> {ok, Name};
+                         false -> {error, invalid_type}
+                     end
+            end,
+    HConstraints = [{type, TypeFun}, {id, int}],
+    PConstraints = [{type, PTypes}, {id, int, -1}],
     IdConstraint = [{id, int}],
     Host = application:get_env(ecf, host, '_'),
     Base = application:get_env(ecf, base_url, ""),
@@ -29,7 +37,8 @@ start(_Type, _Args) ->
                {[Base, "/edit_profile"], ecf_edit_profile_handler, {}},
                {[Base, "/logout"], ecf_logout_handler, {}},
                {[Base, "/forum/:id/edit"], IdConstraint, ecf_edit_forum_handler, {}},
-               {[Base, "/[:type/:id]"], Constraints, ecf_handler, {}},
+               {[Base, "/:type/[:id/]perms"], PConstraints, ecf_perms_handler, {}},
+               {[Base, "/[:type/:id]"], HConstraints, ecf_handler, {}},
                {[Base, "/post"], ecf_post_handler, {}},
                {[Base, "/thread"], ecf_thread_handler, {}},
                {[Base, "/[...]"], ecf_404_handler, {}}]}

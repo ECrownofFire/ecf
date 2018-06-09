@@ -2,7 +2,7 @@
 
 -export_type([class/0, mode/0, perms/0]).
 
--export([create_table/1, edit_global_perm/1, remove_global_perm/1,
+-export([create_table/1, edit_global_perm/3, remove_global_perm/2,
          check_perm_global/2, check_perm_forum/3, check_perm_thread/3,
          check_perm_group/3,
          edit_perm/4, remove_perm/3]).
@@ -16,7 +16,7 @@
               | delete_forum | delete_thread | delete_post | delete_group
               | edit_forum | edit_thread | edit_post | edit_group | edit_user
               | move_thread | lock_thread | ban_user
-              | manage_group.
+              | edit_perms | manage_group.
 
 % class, allowed, denied
 -type perms() :: {class(), [mode()], [mode()]}.
@@ -36,24 +36,27 @@ create_table(Nodes) ->
         end,
     mnesia:activity(transaction, F).
 
-edit_global_perm(Perm = {Class, _, _}) ->
+-spec edit_global_perm(class(), mode(), allow | deny) -> ok.
+edit_global_perm(Class, Mode, Set) ->
     F = fun() ->
                 [Perms] = mnesia:wread({ecf_perm, 0}),
                 Old = Perms#ecf_perm.perms,
-                New = lists:keystore(Class, 1, Old, Perm),
+                New = edit_perm(Old, Class, Mode, Set),
                 mnesia:write(Perms#ecf_perm{perms=New})
         end,
     mnesia:activity(transaction, F).
 
-remove_global_perm(Class) ->
+-spec remove_global_perm(class(), mode()) -> ok.
+remove_global_perm(Class, Mode) ->
     F = fun() ->
                 [Perms] = mnesia:wread({ecf_perm, 0}),
                 Old = Perms#ecf_perm.perms,
-                New = lists:keydelete(Class, 1, Old),
+                New = remove_perm(Old, Class, Mode),
                 mnesia:write(Perms#ecf_perm{perms=New})
         end,
     mnesia:activity(transaction, F).
 
+-spec get_global_perms() -> [perms()].
 get_global_perms() ->
     F = fun() ->
                 [P] = mnesia:read({ecf_perm, 0}),

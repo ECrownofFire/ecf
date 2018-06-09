@@ -53,7 +53,7 @@ delete_group(Id) when is_integer(Id), Id >= 2 ->
     F = fun() ->
                 [G] = mnesia:wread({ecf_group, Id}),
                 [ecf_user:remove_group(U, Id) || U <- members(G)],
-                mnesia:delete(Id)
+                mnesia:delete({ecf_group, Id})
         end,
     mnesia:activity(transaction, F).
 
