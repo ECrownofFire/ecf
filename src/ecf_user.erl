@@ -285,7 +285,8 @@ enabled(User) ->
 
 -spec check_session(user(), binary()) -> boolean().
 check_session(User, Session) ->
-    User#ecf_user.session =:= Session.
+    Sess = User#ecf_user.session,
+    Sess =/= <<"">> andalso Sess =:= Session.
 
 -spec check_pass(user(), binary()) -> boolean().
 check_pass(User, Pass) ->
