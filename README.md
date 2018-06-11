@@ -38,10 +38,10 @@ So that ECF is reasonably useable, I'd like to add the following as well:
 * Searching (needs backend)
 
 The following may happen at some point, but I'm unsure about them:
-* Markdown for posts
+* Markdown for posts (could be done with clientside JS)
 * Using Argon2 for password hashing instead of PBKDF2
 * Possibly an expansion upon the current "template-ish" system, maybe a future
-switch to ErlyDTL or something else, but the current method works well enough
+switch to ErlyDTL or something else
 
 And these would be nice to eventually get:
 * Events calendar
