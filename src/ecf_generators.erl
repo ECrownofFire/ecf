@@ -141,8 +141,10 @@ generate_forum_element(Forum, String) ->
 -spec generate_thread_list(ecf_user:user(), ecf_forum:forum(),
                            [ecf_thread:thread()]) -> iodata().
 generate_thread_list(User, Forum, Threads) ->
-    Begin = read_priv_file("thread_list.html"),
-    Begin2 = replace_many(Begin, [{"forum", ecf_forum:name(Forum)},
+    Begin0 = read_priv_file("thread_list.html"),
+    Id = integer_to_list(ecf_forum:id(Forum)),
+    Begin = replace_many(Begin0, [{"forum_id", Id},
+                                  {"forum", ecf_forum:name(Forum)},
                                   {"forum_desc", ecf_forum:desc(Forum)}]),
     Elem = read_priv_file("thread_list_element.html"),
     EndFile = case ecf_perms:check_perm_forum(User, Forum, create_thread) of
@@ -152,7 +154,7 @@ generate_thread_list(User, Forum, Threads) ->
     ForumId = integer_to_list(ecf_forum:id(Forum)),
     End = replace(read_priv_file(EndFile), "forum_id", ForumId),
     Sorted = ecf_thread:visible_threads(Threads, User),
-    [Begin2, [generate_thread_element(X, Elem) || X <- Sorted], End].
+    [Begin, [generate_thread_element(X, Elem) || X <- Sorted], End].
 
 -spec generate_thread_element(ecf_thread:thread(), iodata()) -> iodata().
 generate_thread_element(Thread, String) ->
