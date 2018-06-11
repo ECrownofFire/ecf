@@ -36,6 +36,7 @@ start(_Type, _Args) ->
                {[Base, "/register"], ecf_register_handler, {}},
                {[Base, "/edit_profile"], ecf_edit_profile_handler, {}},
                {[Base, "/logout"], ecf_logout_handler, {}},
+               {[Base, "/groups"], ecf_groups_handler, {}},
                {[Base, "/forum/:id/edit"], IdConstraint, ecf_edit_forum_handler, {}},
                {[Base, "/:type/[:id/]perms"], PConstraints, ecf_perms_handler, {}},
                {[Base, "/[:type/:id]"], HConstraints, ecf_handler, {}},

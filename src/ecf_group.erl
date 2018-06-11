@@ -4,7 +4,8 @@
 
 -export([create_table/1,
          new_group/2, delete_group/1,
-         get_group/1,
+         get_groups/0, get_group/1,
+         filter_groups/2,
          edit_name/2, edit_desc/2,
          edit_perm/4, remove_perm/3,
          add_member/2, remove_member/2,
@@ -29,13 +30,16 @@ create_table(Nodes) ->
                         [{attributes, record_info(fields, ecf_group)},
                          {disc_copies, Nodes}]),
     F = fun() ->
+                % this one has to be manually created since the ID is 0, and the
+                % automatic stuff starts from 1
                 mnesia:write(#ecf_group{id=0,
                                         name = <<"Administrators">>,
                                         desc = <<"Administrator group">>})
         end,
     ok = mnesia:activity(transaction, F),
     1 = new_group(<<"Registered Users">>, <<"Default user group">>),
-    ok.
+    ok = edit_perm(0, others, join_group, deny),
+    ok = edit_perm(1, others, leave_group, deny).
 
 
 -spec new_group(binary(), binary()) -> id().
@@ -57,6 +61,15 @@ delete_group(Id) when is_integer(Id), Id >= 2 ->
         end,
     mnesia:activity(transaction, F).
 
+
+-spec get_groups() -> [group()].
+get_groups() ->
+    F = fun() ->
+                mnesia:read_lock_table(ecf_group),
+                mnesia:select(ecf_group, [{'_',[],['$_']}])
+        end,
+    mnesia:activity(transaction, F).
+
 -spec get_group(id()) -> group() | {error, group_not_found}.
 get_group(Id) ->
     F = fun() ->
@@ -66,6 +79,11 @@ get_group(Id) ->
                 end
         end,
     mnesia:activity(transaction, F).
+
+-spec filter_groups(ecf_user:user(), [group()]) -> [group()].
+filter_groups(User, Groups) ->
+    F = fun(X) -> ecf_perms:check_perm_group(User, X, view_group) end,
+    lists:filter(F, Groups).
 
 -spec edit_name(id(), binary()) -> ok.
 edit_name(Id, Name) when is_binary(Name) ->

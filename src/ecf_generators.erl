@@ -32,6 +32,11 @@ generate(user, User, Profile) ->
      generate_header(User),
      generate_user_profile(Self, Profile),
      generate_forum_end()];
+generate(groups, User, Groups) ->
+    [generate_head("Groups"),
+     generate_header(User),
+     generate_groups_list(User, Groups),
+     generate_forum_end()];
 generate(group, User, Group) ->
     [generate_head(["Group: ", ecf_group:name(Group)]),
      generate_header(User),
@@ -232,6 +237,38 @@ generate_user_profile(Self, Profile) ->
                   {"title", ecf_user:title(Profile)},
                   {"loc", ecf_user:loc(Profile)},
                   {"posts", integer_to_list(ecf_user:posts(Profile))}]).
+
+
+generate_groups_list(User, Groups) ->
+    Begin = read_priv_file("group_list.html"),
+    Elem = read_priv_file("group_list_element.html"),
+    End = read_priv_file("group_list_end.html"),
+    [Begin, [generate_groups_element(X, User, Elem) || X <- Groups], End].
+
+generate_groups_element(Group, User, String) ->
+    Id = ecf_group:id(Group),
+    Members = integer_to_list(length(ecf_group:members(Group))),
+    CanJoin = ecf_perms:check_perm_group(User, Group, join_group),
+    CanLeave = ecf_perms:check_perm_group(User, Group, leave_group),
+    JoinLeave = case lists:member(Id, ecf_user:groups(User)) of
+                    true ->
+                        case CanLeave andalso Id =/= 0 andalso Id =/= 1 of
+                            true -> "Leave";
+                            false -> ""
+                        end;
+                    false ->
+                        case CanJoin andalso Id =/= 0 andalso Id =/= 1 of
+                            true -> "Join";
+                            false -> ""
+                        end
+                end,
+    replace_many(String,
+                 [{"name", ecf_group:name(Group)},
+                  {"id", integer_to_list(Id)},
+                  {"desc", ecf_group:desc(Group)},
+                  {"members", Members},
+                  {"action", JoinLeave}]).
+
 
 generate_group(Group) ->
     Begin0 = read_priv_file("group.html"),

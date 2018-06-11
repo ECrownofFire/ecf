@@ -18,7 +18,7 @@
 -export([create_table/1,
          new_user/5,
          get_user/1, get_user_by_name/1, get_user_by_email/1,
-         edit_name/2, edit_email/2, edit_pass/2, new_session/1,
+         edit_name/2, edit_email/2, edit_pass/2, new_session/1, reset_session/1,
          enable_user/1, disable_user/1,
          add_group/2, remove_group/2,
          edit_bio/2, edit_bday/2,
@@ -183,6 +183,14 @@ new_session(Id) ->
         end,
     ok = mnesia:activity(transaction, F),
     New.
+
+-spec reset_session(id()) -> ok.
+reset_session(Id) ->
+    F = fun() ->
+                [User] = mnesia:wread({ecf_user, Id}),
+                mnesia:write(User#ecf_user{session = <<"">>})
+        end,
+    mnesia:activity(transaction, F).
 
 -spec enable_user(id()) -> ok.
 enable_user(Id) ->
