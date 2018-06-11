@@ -39,6 +39,8 @@ create_table(Nodes) ->
     ok = mnesia:activity(transaction, F),
     1 = new_group(<<"Registered Users">>, <<"Default user group">>),
     ok = edit_perm(0, others, join_group, deny),
+    ok = edit_perm(0, others, leave_group, deny),
+    ok = edit_perm(1, others, join_group, deny),
     ok = edit_perm(1, others, leave_group, deny).
 
 
