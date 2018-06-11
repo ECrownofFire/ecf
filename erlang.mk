@@ -17,7 +17,7 @@
 ERLANG_MK_FILENAME := $(realpath $(lastword $(MAKEFILE_LIST)))
 export ERLANG_MK_FILENAME
 
-ERLANG_MK_VERSION = dfe090d
+ERLANG_MK_VERSION = 208a116
 ERLANG_MK_WITHOUT = 
 
 # Make 3.81 and 3.82 are deprecated.
@@ -3910,9 +3910,9 @@ pkg_trie_commit = master
 PACKAGES += triq
 pkg_triq_name = triq
 pkg_triq_description = Trifork QuickCheck
-pkg_triq_homepage = https://github.com/triqng/triq
+pkg_triq_homepage = https://triq.gitlab.io
 pkg_triq_fetch = git
-pkg_triq_repo = https://github.com/triqng/triq.git
+pkg_triq_repo = https://gitlab.com/triq/triq.git
 pkg_triq_commit = master
 
 PACKAGES += tunctl
