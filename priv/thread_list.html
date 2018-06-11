@@ -2,6 +2,21 @@
 <a href="{{base}}/">Home</a>
 <h2>{{forum}}</h2>
 <p>{{forum_desc}}</p>
+<script>
+(function() {
+    var check = checkPermission('forum', {{forum_id}}, 'edit_forum',
+        function(response) {
+            if (response.success) {
+                var main = document.getElementById('thread-list');
+                var next = main.getElementsByTagName('h2')[0];
+                var link = document.createElement('a');
+                link.href = "{{base}}/forum/{{forum_id}}/edit";
+                link.innerHTML = "Edit";
+                main.insertBefore(link, next);
+            }
+        });
+})()
+</script>
 <table>
     <thead>
         <tr>
