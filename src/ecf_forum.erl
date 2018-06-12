@@ -55,19 +55,21 @@ get_forums() ->
         end,
     mnesia:activity(transaction, F).
 
-% should only be used for testing
--spec new_forum(binary(), binary(), id()) -> ok.
+
+-spec new_forum(binary(), binary(), non_neg_integer()) -> id().
 new_forum(Name, Desc, Order) ->
     new_forum(Name, Desc, Order, []).
 
--spec new_forum(binary(), binary(), id(), [ecf_perms:perms()]) -> ok.
+-spec new_forum(binary(), binary(), non_neg_integer(), [ecf_perms:perms()]) -> id().
 new_forum(Name, Desc, Order, Perms) ->
     F = fun() ->
                 Id = ecf_db:get_new_id(ecf_forum),
                 mnesia:write(#ecf_forum{id=Id, name=Name, desc=Desc,
-                                        order=Order, perms=Perms})
+                                        order=Order, perms=Perms}),
+                Id
         end,
     mnesia:activity(transaction, F).
+
 
 -spec delete_forum(id()) -> ok.
 delete_forum(Id) ->

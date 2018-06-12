@@ -4,7 +4,7 @@
 -export([start/2]).
 -export([stop/1]).
 
--define(TYPES, [<<"user">>, <<"group">>, <<"forum">>, <<"thread">>]).
+-define(TYPES, [<<"user">>, <<"group">>, <<"thread">>]).
 
 -define(P_TYPES, [<<"global">>, <<"forum">>, <<"thread">>, <<"group">>]).
 
@@ -23,7 +23,7 @@ start(_Type, _Args) ->
             end,
     HConstraints = [{type, TypeFun}, {id, int}],
     PConstraints = [{type, PTypes}, {id, int, -1}],
-    IdConstraint = [{id, int}],
+    IdConstraint = [{id, int, -1}],
     Host = application:get_env(ecf, host, '_'),
     Base = application:get_env(ecf, base_url, ""),
     Port = application:get_env(ecf, port, 8080),
@@ -37,9 +37,9 @@ start(_Type, _Args) ->
                {[Base, "/edit_profile"], ecf_edit_profile_handler, {}},
                {[Base, "/logout"], ecf_logout_handler, {}},
                {[Base, "/groups"], ecf_groups_handler, {}},
-               {[Base, "/forum/:id/edit"], IdConstraint, ecf_edit_forum_handler, {}},
                {[Base, "/:type/[:id/]perms"], PConstraints, ecf_perms_handler, {}},
                {[Base, "/[:type/:id]"], HConstraints, ecf_handler, {}},
+               {[Base, "/forum/[:id]"], IdConstraint, ecf_forum_handler, {}},
                {[Base, "/post"], ecf_post_handler, {}},
                {[Base, "/thread"], ecf_thread_handler, {}},
                {[Base, "/[...]"], ecf_404_handler, {}}]}

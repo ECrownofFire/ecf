@@ -14,8 +14,10 @@ At the bare minimum, ECF still needs the following:
 * Lots and lots of CSS/HTML/JS magic to make it look decent!
 * Terms of use and privacy policy?
 * Administration frontend
-    * Subforum creation
-    * Deleting threads/posts
+    * Subforum reordering
+    * Editing threads
+    * Deleting threads
+    * Deleting posts
     * Banning accounts
     * Editing permissions
     * Groups

@@ -1,3 +1,38 @@
 </ol>
+<button id='button-create' type="button" onclick="createForumForm();" style="visibility: hidden">Create Forum</button>
+<form id='form-create' onsubmit="return doCreateForum()" style="visibility: hidden">
+    <label>Name:<input id='create-name' type="text" name="name"></label>
+    <label>Description:<input id='create-desc' type="text" name="desc"></label>
+    <button>Submit</button>
+</form>
+<script>
+(function() {
+    checkPermission("global", 0, "create_forum",
+        function(resp) {
+            if(resp.success) {
+                var btn = document.getElementById('button-create');
+                btn.style.visibility = "visible";
+            }
+        });
+})()
+
+function createForumForm() {
+    var form = document.getElementById('form-create');
+    form.style.visibility = (form.style.visibility == "hidden") ? "visible" : "hidden";
+}
+
+function doCreateForum() {
+    var xhr = new XMLHttpRequest();
+    var name = encodeURIComponent(document.getElementById('create-name').value);
+    var desc = encodeURIComponent(document.getElementById('create-desc').value);
+    xhr.open("PUT", "{{base}}/forum");
+    var req = "name=" + name + "&desc=" + desc;
+    xhr.onload = function(e) {
+        location.href = xhr.getResponseHeader("content-location");
+    };
+    xhr.send(req);
+    return false;
+}
+</script>
 </main>
 

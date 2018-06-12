@@ -123,6 +123,7 @@ new_post(Id, Time) ->
 delete_thread(Id) ->
     F = fun() ->
                 [_] = mnesia:wread({ecf_thread, Id}),
+                ecf_post:delete_posts(Id),
                 mnesia:delete({ecf_thread, Id})
         end,
     mnesia:activity(transaction, F).
@@ -130,10 +131,9 @@ delete_thread(Id) ->
 -spec delete_forum_threads(ecf_forum:id()) -> ok.
 delete_forum_threads(Forum) ->
     F = fun() ->
-                ok = mnesia:write_lock_table(ecf_thread),
                 Threads = mnesia:index_read(ecf_thread, Forum,
                                             #ecf_thread.forum),
-                [mnesia:delete({ecf_thread,T#ecf_thread.id}) || T <- Threads]
+                [delete_thread(T#ecf_thread.id) || T <- Threads]
         end,
     mnesia:activity(transaction, F).
 

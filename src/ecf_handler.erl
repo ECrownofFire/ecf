@@ -47,23 +47,6 @@ init(Req, State) ->
                                                           view_group_403, Req)
                            end
                    end;
-               <<"forum">> ->
-                   case ecf_forum:get_forum(Id) of
-                       {error, forum_not_found} ->
-                           ecf_utils:reply_status(404, User, ignored, Req);
-                       Forum ->
-                           case ecf_perms:check_perm_forum(User, Forum,
-                                                           view_forum) of
-                               true ->
-                                   Threads = ecf_thread:get_forum_threads(Id),
-                                   Html = ecf_generators:generate(forum, User,
-                                                                  {Forum, Threads}),
-                                   reply_200(Html, Req);
-                               false ->
-                                   ecf_utils:reply_status(403, User,
-                                                          view_forum_403, Req)
-                           end
-                   end;
                <<"thread">> ->
                    case ecf_thread:get_thread(Id) of
                        {error, thread_not_found} ->
