@@ -4,7 +4,7 @@
 -export([start/2]).
 -export([stop/1]).
 
--define(TYPES, [<<"user">>, <<"group">>, <<"thread">>]).
+-define(TYPES, [<<"user">>, <<"group">>]).
 
 -define(P_TYPES, [<<"global">>, <<"forum">>, <<"thread">>, <<"group">>]).
 
@@ -40,8 +40,8 @@ start(_Type, _Args) ->
                {[Base, "/:type/[:id/]perms"], PConstraints, ecf_perms_handler, {}},
                {[Base, "/[:type/:id]"], HConstraints, ecf_handler, {}},
                {[Base, "/forum/[:id]"], IdConstraint, ecf_forum_handler, {}},
+               {[Base, "/thread/[:id]"], IdConstraint, ecf_thread_handler, {}},
                {[Base, "/post"], ecf_post_handler, {}},
-               {[Base, "/thread"], ecf_thread_handler, {}},
                {[Base, "/[...]"], ecf_404_handler, {}}]}
     ]),
     {ok, _Pid} = cowboy:start_clear(ecf_http_listener,
