@@ -35,17 +35,16 @@ replace_base_url([{response, Status, Headers, Body}|Tail], Base, Acc)
   when not is_tuple(Body) ->
     NewBody = string:replace(Body, <<"{{base}}">>, Base, all),
     NewSize = integer_to_binary(iolist_size(NewBody)),
-    NewResp = case maps:get(<<"Location">>, Headers, undefined) of
-                  undefined ->
-                      NewHeaders = Headers#{<<"content-length">> => NewSize},
-                      {response, Status, NewHeaders, NewBody};
-                  OldLoc ->
-                      NewLoc = string:replace(OldLoc, <<"{{base}}">>, Base),
-                      NewHeaders = Headers#{<<"content-length">> => NewSize,
-                                            <<"Location">> => NewLoc},
-                      {response, Status, NewHeaders, NewBody}
-              end,
+    Headers2 = Headers#{<<"content-length">> => NewSize},
+    NewHeaders = replace_headers(Headers2, Base),
+    NewResp = {response, Status, NewHeaders, NewBody},
     replace_base_url(Tail, Base, [NewResp|Acc]);
 replace_base_url([Head|Tail], Base, Acc) ->
     replace_base_url(Tail, Base, [Head|Acc]).
+
+replace_headers(Headers, Base) ->
+    F = fun(_K, V) ->
+                string:replace(V, <<"{{base}}">>, Base)
+        end,
+    maps:map(F, Headers).
 
