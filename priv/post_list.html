@@ -1,5 +1,55 @@
 <main id="post-list">
 <a href="{{base}}/forum/{{forum_id}}">{{forum_name}}</a>
+<button id='button-edit' type='button' onclick='showEditForm();' style="visibility: hidden">Edit</button>
+<form id='form-edit' onsubmit="return doEdit();" style="visibility: hidden">
+    <label>Title:<input id='edit-title' value="{{title}}"></label>
+    <button>Submit</button>
+</form>
+<button id='button-delete' type='button' onclick="if(confirm('Are you sure you want to delete this thread and every post in it?')) { doDelete(); }" style="visibility: hidden">Delete</button>
+<script>
+(function() {
+    checkPermission("thread", {{thread_id}}, "edit_thread",
+        function(resp) {
+            if (resp.success) {
+                var btn = document.getElementById('button-edit');
+                btn.style.visibility = "visible";
+            }
+        });
+    checkPermission("thread", {{thread_id}}, "delete_thread",
+        function(resp) {
+            if (resp.success) {
+                var btn = document.getElementById('button-delete');
+                btn.style.visibility = "visible";
+            }
+        });
+})()
+
+function showEditForm() {
+    var form = document.getElementById('form-edit');
+    form.style.visibility = (form.style.visibility == "hidden") ? "visible" : "hidden";
+}
+
+function doEdit() {
+    var xhr = new XMLHttpRequest();
+    var title = encodeURIComponent(document.getElementById('edit-title').value);
+    xhr.open("PATCH", "{{base}}/thread/{{thread_id}}");
+    var req = "title=" + title;
+    xhr.onload = function(e) {
+        location.reload();
+    }
+    xhr.send(req);
+    return false;
+}
+
+function doDelete() {
+    var xhr = new XMLHttpRequest();
+    xhr.open("DELETE", "{{base}}/thread/{{thread_id}}");
+    xhr.onload = function(e) {
+        location.href = "{{base}}/forum/{{forum_id}}";
+    }
+    xhr.send();
+}
+</script>
 <h2>{{title}}</h2>
 <ol>
 

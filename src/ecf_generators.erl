@@ -183,6 +183,7 @@ generate_post_list(User, Forum, Thread, Posts) ->
     ForumName = ecf_forum:name(Forum),
     Begin2 = replace_many(Begin,
                           [{"title", ecf_thread:title(Thread)},
+                           {"thread_id", integer_to_list(ecf_thread:id(Thread))},
                            {"forum_id", integer_to_list(ForumId)},
                            {"forum_name", ForumName}]),
     Elem = read_priv_file("post_list_element.html"),

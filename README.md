@@ -15,8 +15,6 @@ At the bare minimum, ECF still needs the following:
 * Terms of use and privacy policy?
 * Administration frontend
     * Subforum reordering
-    * Editing threads
-    * Deleting threads
     * Deleting posts
     * Banning accounts
     * Editing permissions
