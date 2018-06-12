@@ -2,8 +2,8 @@
 <a href="{{base}}/">Home</a>
 <button id="button-edit" type="button" onclick="return editForum();" style="visibility: hidden;">Edit</button>
 <form id="form-edit" style="visibility: hidden;" onsubmit="return doEditForum();">
-    <label>Name<input id='form-name' name="name" value="{{forum}}"></label>
-    <label>Description<input id='form-desc' name="desc" value="{{forum_desc}}"></label>
+    <label>Name:<input id='form-name' name="name" value="{{forum}}"></label>
+    <label>Description:<input id='form-desc' name="desc" value="{{forum_desc}}"></label>
     <button>Submit Changes</button>
 </form>
 <form id="form-delete" style="visibility: hidden;" onsubmit="return doDeleteForum();"><button onclick="return confirm('Are you sure you want to delete this forum and every thread and post in it?');">Delete</button></form>
