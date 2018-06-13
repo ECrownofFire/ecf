@@ -53,7 +53,8 @@ handle_reply(User, Id, Req = #{method := <<"GET">>}, Forum) ->
         false ->
             ecf_utils:reply_status(403, User, view_forum_403, Req);
         true ->
-            Threads = ecf_thread:get_forum_threads(Id),
+            Threads = ecf_thread:visible_threads(ecf_thread:get_forum_threads(Id),
+                                                 User),
             Html = ecf_generators:generate(forum, User, {Forum, Threads}),
             cowboy_req:reply(200, #{<<"content-type">> => <<"text/html">>},
                              Html, Req)

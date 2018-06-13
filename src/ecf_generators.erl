@@ -56,7 +56,7 @@ generate(group, User, Group) ->
 generate(forum, User, {Forum, Threads}) ->
     Vars = get_vars(User, ecf_forum:name(Forum)),
     ForumV = forum(Forum),
-    ThreadList = thread_list(ecf_thread:visible_threads(Threads, User)),
+    ThreadList = thread_list(Threads),
     CanEdit = ecf_perms:check_perm_forum(User, Forum, edit_forum),
     CanDelete = ecf_perms:check_perm_forum(User, Forum, delete_forum),
     CanCreate = ecf_perms:check_perm_forum(User, Forum, create_thread),
