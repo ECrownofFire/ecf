@@ -17,7 +17,7 @@ init(Req0, State) ->
                        {_, Bday0} -> iso8601:parse(Bday0);
                        _ -> undefined
                    end,
-            Bio = lists:keyfind(<<"bio">>, 1, KV),
+            {_, Bio} = lists:keyfind(<<"bio">>, 1, KV),
             Ip = ecf_utils:get_ip(Req),
             case ecf_captcha:check_captcha(Ip, KV) of
                 true ->

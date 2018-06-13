@@ -5,13 +5,18 @@
 
 -export([generate/3]).
 
--spec generate(atom() | integer, ecf_user:user() | undefined, term()) -> iodata().
+-spec generate(atom() | integer(), ecf_user:user() | undefined, term()) -> iodata().
 generate(main, User, Forums) ->
     Vars = get_vars(User),
     ForumList = forum_list(Forums),
     CanCreate = ecf_perms:check_perm_global(User, create_forum),
     Vars2 = [{forum_list, ForumList}, {create_forum, CanCreate}|Vars],
     {ok, Res} = ecf_main_dtl:render(Vars2),
+    Res;
+generate(admin, User, _) ->
+    % TODO: ecf_admin.dtl
+    Vars = get_vars(User, "Admin"),
+    {ok, Res} = ecf_admin_dtl:render(Vars),
     Res;
 generate(login, User, Url) ->
     Vars = get_vars(User, "Login"),
@@ -74,10 +79,14 @@ generate(thread, User, {Forum, Thread, Posts}) ->
     ThreadV = thread(Thread),
     PostList = post_list(Posts),
     CreatePost = ecf_perms:check_perm_thread(User, Thread, create_post),
+    EditThread = ecf_perms:check_perm_thread(User, Thread, edit_thread),
+    DeleteThread = ecf_perms:check_perm_thread(User, Thread, delete_thread),
     Vars2 = [{forum, ForumV},
              {thread, ThreadV},
              {post_list, PostList},
-             {can_create_post, CreatePost}
+             {can_create_post, CreatePost},
+             {can_edit_thread, EditThread},
+             {can_delete_thread, DeleteThread}
              | Vars],
     {ok, Res} = ecf_thread_dtl:render(Vars2),
     Res;

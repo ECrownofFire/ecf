@@ -6,9 +6,13 @@
 
 
 init(Req, State) ->
-    Id = cowboy_req:binding(id, Req, -1),
     User = ecf_utils:check_user_session(Req),
-    Req2 = handle_reply(User, Id, Req, ecf_forum:get_forum(Id)),
+    Req2 = case cowboy_req:binding(id, Req, -1) of
+               -1 ->
+                   handle_reply(User, -1, Req, {error, forum_not_found});
+               Id ->
+                   handle_reply(User, Id, Req, ecf_forum:get_forum(Id))
+           end,
     {ok, Req2, State}.
 
 
