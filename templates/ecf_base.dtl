@@ -33,8 +33,8 @@
             <li><a href="{{ base_url }}/user/{{ user.id }}">Profile</a></li>
             <li><form id="logout-form" method="post" action="{{ base_url }}/logout"><input type="hidden" name="logout" value="1"><a onclick="document.getElementById('logout-form').submit(); return false;" href="{{ base_url }}/logout">Logout</a></form></li>
             {% else %}
-            <li><a href="{{base}}/login" rel="nofollow">Login</a></li>
-            <li><a href="{{base}}/register" rel="nofollow">Register</a></li>
+            <li><a href="{{ base_url }}/login" rel="nofollow">Login</a></li>
+            <li><a href="{{ base_url }}/register" rel="nofollow">Register</a></li>
             {% endif %}
         </ul>
     </nav>

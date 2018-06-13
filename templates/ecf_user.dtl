@@ -20,7 +20,7 @@
     </script>
 </dl>
 {% if self %}
-<a href="{{base}}/edit_profile">Edit your profile</a>
+<a href="{{ base_url }}/edit_profile">Edit your profile</a>
 {% endif %}
 </main>
 {% endblock %}
