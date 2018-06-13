@@ -27,20 +27,6 @@ At the bare minimum, ECF still needs the following:
     * Email on registration (need `gen_smtp`)
     * Logging stuff (most likely through lager)
 
-The templating system is currently very inefficient, going over the entire
-document multiple times, once for each replacement variable. It would be better
-to scan for the next `{{`, look for what's between it and `}}`, and then replace
-and move on to the next set.
-
-A rework of the current templating system for conditional inclusion would be
-very useful. I don't think a full templating engine (e.g. ErlyDTL) is necessary,
-but it would reduce the number of round-trips to the server as well as reduce
-necessary JS on the client if conditions (mainly on permissions) were added.
-
-It would also probably be nice if including other files were possible, because
-the current system where the templates are split up between multiple files is
-kinda awkward.
-
 So that ECF is reasonably useable, I'd like to add the following as well:
 * Editing posts (and displaying time/user)
 * Messaging (needs backend)

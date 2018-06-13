@@ -19,7 +19,7 @@ init(Req, State) ->
                <<"user">> ->
                    case ecf_user:get_user(Id) of
                        {error, user_not_found} ->
-                           ecf_utils:reply_status(404, User, ignored, Req);
+                           ecf_utils:reply_status(404, User, false, Req);
                        Profile ->
                            case ecf_perms:check_perm_global(User, view_user) of
                                true ->
@@ -34,7 +34,7 @@ init(Req, State) ->
                <<"group">> ->
                    case ecf_group:get_group(Id) of
                        {error, group_not_found} ->
-                           ecf_utils:reply_status(404, User, ignored, Req);
+                           ecf_utils:reply_status(404, User, false, Req);
                        Group ->
                            case ecf_perms:check_perm_group(User, Group,
                                                            view_group) of

@@ -1,0 +1,10 @@
+{% extends "ecf_base.dtl" %}
+{# vim: set ft=htmldjango: #}
+{% block content %}
+<main id="logout">
+    <p>{{ message }}</p>
+    <script type="text/javascript">
+        window.setTimeout(function() { location.href = "{{ base_url }}/{{ url }}";}, 2000);
+    </script>
+</main>
+{% endblock %}

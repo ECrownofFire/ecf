@@ -7,157 +7,185 @@
 
 -spec generate(atom() | integer, ecf_user:user() | undefined, term()) -> iodata().
 generate(main, User, Forums) ->
-    [generate_head("Home"),
-     generate_header(User),
-     generate_forum_list(Forums, User),
-     generate_forum_end()];
+    Vars = get_vars(User),
+    ForumList = forum_list(Forums),
+    CanCreate = ecf_perms:check_perm_global(User, create_forum),
+    Vars2 = [{forum_list, ForumList}, {create_forum, CanCreate}|Vars],
+    {ok, Res} = ecf_main_dtl:render(Vars2),
+    Res;
 generate(login, User, Url) ->
-    [generate_head("Login"),
-     generate_header(User),
-     generate_login(User, Url),
-     generate_forum_end()];
+    Vars = get_vars(User, "Login"),
+    Message = login_message(User),
+    {ok, Key} = application:get_env(ecf, recaptcha_key),
+    Vars2 = [{message, Message}, {recaptcha_key, Key}, {url, Url}|Vars],
+    {ok, Res} = ecf_login_dtl:render(Vars2),
+    Res;
 generate(logout, User, Url) ->
-    [generate_head("Logout"),
-     generate_header(User),
-     generate_logout(Url),
-     generate_forum_end()];
-generate(register, _, Message) ->
-    [generate_head("Register"),
-     generate_header(undefined),
-     generate_register(Message),
-     generate_forum_end()];
+    Vars = get_vars(User, "Logout"),
+    Message = application:get_env(ecf, logout_message,
+                                  <<"You've successfully been logged out.">>),
+    Vars2 = [{message, Message}, {url, Url}|Vars],
+    {ok, Res} = ecf_logout_dtl:render(Vars2),
+    Res;
+generate(register, _, Type) ->
+    Vars = get_vars(undefined, "Register"),
+    Message = application:get_env(ecf, Type, <<"Please register.">>),
+    {ok, Key} = application:get_env(ecf, recaptcha_key),
+    Vars2 = [{message, Message}, {recaptcha_key, Key} | Vars],
+    {ok, Res} = ecf_register_dtl:render(Vars2),
+    Res;
 generate(user, User, Profile) ->
+    Vars = get_vars(User, ["Profile of ", ecf_user:name(Profile)]),
     Self = User =/= undefined andalso ecf_user:id(User) =:= ecf_user:id(Profile),
-    [generate_head(["Profile of ", ecf_user:name(Profile)]),
-     generate_header(User),
-     generate_user_profile(Self, Profile),
-     generate_forum_end()];
+    Vars2 = [{self, Self}|Vars],
+    {ok, Res} = ecf_user_dtl:render(Vars2),
+    Res;
 generate(groups, User, Groups) ->
-    [generate_head("Groups"),
-     generate_header(User),
-     generate_groups_list(User, Groups),
-     generate_forum_end()];
+    Vars = get_vars(User, "Groups"),
+    GroupList = group_list(User, Groups),
+    Vars2 = [{group_list, GroupList}|Vars],
+    {ok, Res} = ecf_groups_dtl:render(Vars2),
+    Res;
 generate(group, User, Group) ->
-    [generate_head(["Group: ", ecf_group:name(Group)]),
-     generate_header(User),
-     generate_group(Group),
-     generate_forum_end()];
+    Vars = get_vars(User, ["Group: ", ecf_group:name(Group)]),
+    MemberList = users(ecf_group:members(Group)),
+    GroupV = [{member_list, MemberList}|group(Group)],
+    Vars2 = [{group, GroupV}|Vars],
+    {ok, Res} = ecf_group_dtl:render(Vars2),
+    Res;
 generate(forum, User, {Forum, Threads}) ->
-    [generate_head(ecf_forum:name(Forum)),
-     generate_header(User),
-     generate_thread_list(User, Forum, Threads),
-     generate_forum_end()];
+    Vars = get_vars(User, ecf_forum:name(Forum)),
+    ForumV = forum(Forum),
+    ThreadList = thread_list(ecf_thread:visible_threads(Threads, User)),
+    CanEdit = ecf_perms:check_perm_forum(User, Forum, edit_forum),
+    CanDelete = ecf_perms:check_perm_forum(User, Forum, delete_forum),
+    CanCreate = ecf_perms:check_perm_forum(User, Forum, create_thread),
+    Vars2 = [{forum, ForumV},
+             {thread_list, ThreadList},
+             {can_edit, CanEdit},
+             {can_delete, CanDelete},
+             {can_create_thread, CanCreate}
+             | Vars],
+    {ok, Res} = ecf_forum_dtl:render(Vars2),
+    Res;
 generate(thread, User, {Forum, Thread, Posts}) ->
-    [generate_head(ecf_thread:title(Thread)),
-     generate_header(User),
-     generate_post_list(User, Forum, Thread, Posts),
-     generate_forum_end()];
-generate(admin, User, Forums) ->
-    [generate_head("Administration"),
-     generate_header(User),
-     generate_admin(Forums),
-     generate_forum_end()];
+    Vars = get_vars(User, ecf_thread:title(Thread)),
+    ForumV = forum(Forum),
+    ThreadV = thread(Thread),
+    PostList = post_list(Posts),
+    CreatePost = ecf_perms:check_perm_thread(User, Thread, create_post),
+    Vars2 = [{forum, ForumV},
+             {thread, ThreadV},
+             {post_list, PostList},
+             {can_create_post, CreatePost}
+             | Vars],
+    {ok, Res} = ecf_thread_dtl:render(Vars2),
+    Res;
 generate(edit_profile, User, _) ->
-    [generate_head("Edit Profile"),
-     generate_header(User),
-     generate_edit_profile(User),
-     generate_forum_end()];
-generate(edit_forum, User, Forum) ->
-    [generate_head(["Edit ", ecf_forum:name(Forum)]),
-     generate_header(User),
-     generate_edit_forum(Forum),
-     generate_forum_end()];
-generate(400, User, _) ->
-    [generate_head("400 - Bad Request"),
-     generate_header(User),
-     generate_400_error(),
-     generate_forum_end()];
-generate(401, User, Type) ->
-    [generate_head("401 - Unauthorized"),
-     generate_header(User),
-     generate_401_error(Type),
-     generate_forum_end()];
-generate(403, User, Type) ->
-    [generate_head("403 - Forbidden"),
-     generate_header(User),
-     generate_403_error(Type),
-     generate_forum_end()];
-generate(404, User, _) ->
-    [generate_head("404 - Not Found"),
-     generate_header(User),
-     generate_404_error(),
-     generate_forum_end()];
-generate(405, User, _Context) ->
-    [generate_head("405 - Method Not Allowed"),
-     generate_header(User),
-     generate_405_error(),
-     generate_forum_end()];
-generate(429, User, Type) ->
-    [generate_head("429 - Too Many Requests"),
-     generate_header(User),
-     generate_429_error(Type),
-     generate_forum_end()].
+    Vars = get_vars(User, "Edit Profile"),
+    UserV = user(User),
+    Vars2 = [{user, UserV}|Vars],
+    {ok, Res} = ecf_edit_profile_dtl:render(Vars2),
+    Res;
+generate(Status, User, Type)
+  when is_integer(Status), Status >= 400, Status =< 499 ->
+    Desc = status_desc(Status),
+    Vars = get_vars(User, [integer_to_list(Status), " - ", Desc]),
+    Message = case Type of false -> false; _ -> application:get_env(ecf, Type) end,
+    Vars2 = [{code, integer_to_list(Status)},
+             {desc, Desc},
+             {message, Message}
+             | Vars],
+    {ok, Res} = ecf_error_dtl:render(Vars2),
+    Res.
 
 
+get_vars(User) ->
+    [{base, get_base()},
+     {title, get_title()},
+     {user, user(User)}].
 
--spec generate_head(iodata()) -> iodata().
-generate_head(Title) ->
+get_vars(User, Title) ->
+    [{base, get_base()},
+     {title, get_title(Title)},
+     {user, user(User)}].
+
+get_base() ->
+    {ok, Base} = application:get_env(ecf, base_url),
+    Base.
+
+-spec get_title() -> iodata().
+get_title() ->
     {ok, ForumName} = application:get_env(ecf, forum_name),
-    Title2 = [ForumName, " - ", Title],
-    String = read_priv_file("head.html"),
-    replace(String, "title", Title2).
+    ForumName.
+
+-spec get_title(iodata()) -> iodata().
+get_title(String) ->
+    [get_title(), " - ", String].
+
+users(Users) ->
+    [user(ecf_user:get_user(X)) || X <- Users].
+
+user(undefined) ->
+    false;
+user(User) ->
+    Bday = case ecf_user:bday(User) of
+               undefined -> false;
+               B -> iso8601:format(B)
+           end,
+    [{id, ecf_user:id(User)},
+     {name, ecf_user:name(User)},
+     {email, ecf_user:email(User)},
+     {joined, iso8601:format(ecf_user:joined(User))},
+     {birthday, Bday},
+     {bio, ecf_user:bio(User)},
+     {title, ecf_user:title(User)},
+     {loc, ecf_user:loc(User)},
+     {posts, integer_to_list(ecf_user:posts(User))}].
 
 
--spec generate_header(undefined | ecf_user:user()) -> iodata().
-generate_header(undefined) ->
-    String = read_priv_file("header_guest.html"),
-    {ok, ForumName} = application:get_env(ecf, forum_name),
-    replace(String, "forum_name", ForumName);
-generate_header(User) ->
-    String = read_priv_file("header_user.html"),
-    Id = ecf_user:id(User),
-    {ok, ForumName} = application:get_env(ecf, forum_name),
-    replace_many(String, [{"forum_name", ForumName},
-                          {"user_id", integer_to_list(Id)},
-                          {"username", ecf_user:name(User)}]).
+login_message(undefined) ->
+    application:get_env(ecf, login_message, <<"Please login.">>);
+login_message(_User) ->
+    application:get_env(ecf, already_logged_in,
+                        <<"You're already logged in!">>).
 
 
--spec generate_forum_list([ecf_forum:forum()], ecf_user:user()) -> iodata().
-generate_forum_list(Forums, User) ->
-    Begin = read_priv_file("forum_list.html"),
-    Elem = read_priv_file("forum_list_element.html"),
-    End = read_priv_file("forum_list_end.html"),
-    Sorted = ecf_forum:visible_forums(Forums, User),
-    [Begin, [generate_forum_element(X, Elem) || X <- Sorted], End].
+forum_list(Forums) ->
+    [forum(X) || X <- Forums].
+
+forum(Forum) ->
+    [{id, integer_to_list(ecf_forum:id(Forum))},
+     {name, ecf_forum:name(Forum)},
+     {desc, ecf_forum:desc(Forum)}].
+
+group_list(User, Groups) ->
+    [group(User, X) || X <- Groups].
+
+group(User, Group) ->
+    Id = ecf_group:id(Group),
+    In = lists:member(Id, ecf_user:groups(User)),
+    CanJoin = Id > 1
+              andalso not In
+              andalso ecf_perms:check_perm_group(User, Group, join_group),
+    CanLeave = Id > 1
+               andalso In
+               andalso ecf_perms:check_perm_group(User, Group, leave_group),
+     [{can_leave, CanLeave},
+      {can_join, CanJoin}
+      | group(Group)].
+
+group(Group) ->
+    [{id, integer_to_list(ecf_group:id(Group))},
+     {name, ecf_group:name(Group)},
+     {desc, ecf_group:desc(Group)},
+     {members, integer_to_list(length(ecf_group:members(Group)))}].
 
 
--spec generate_forum_element(ecf_forum:forum(), iodata()) -> iodata().
-generate_forum_element(Forum, String) ->
-    replace_many(String, [{"id", integer_to_binary(ecf_forum:id(Forum))},
-                          {"name", ecf_forum:name(Forum)},
-                          {"desc", ecf_forum:desc(Forum)}]).
+thread_list(Threads) ->
+    [thread(X) || X <- Threads].
 
-
--spec generate_thread_list(ecf_user:user(), ecf_forum:forum(),
-                           [ecf_thread:thread()]) -> iodata().
-generate_thread_list(User, Forum, Threads) ->
-    Begin0 = read_priv_file("thread_list.html"),
-    Id = integer_to_list(ecf_forum:id(Forum)),
-    Begin = replace_many(Begin0, [{"forum_id", Id},
-                                  {"forum", ecf_forum:name(Forum)},
-                                  {"forum_desc", ecf_forum:desc(Forum)}]),
-    Elem = read_priv_file("thread_list_element.html"),
-    EndFile = case ecf_perms:check_perm_forum(User, Forum, create_thread) of
-                  false -> "thread_list_end_guest.html";
-                  true -> "thread_list_end.html"
-              end,
-    ForumId = integer_to_list(ecf_forum:id(Forum)),
-    End = replace(read_priv_file(EndFile), "forum_id", ForumId),
-    Sorted = ecf_thread:visible_threads(Threads, User),
-    [Begin, [generate_thread_element(X, Elem) || X <- Sorted], End].
-
--spec generate_thread_element(ecf_thread:thread(), iodata()) -> iodata().
-generate_thread_element(Thread, String) ->
+thread(Thread) ->
     Id = ecf_thread:id(Thread),
     LastId = ecf_thread:last(Thread),
     LastPost = ecf_post:get_post(Id, LastId),
@@ -167,222 +195,45 @@ generate_thread_element(Thread, String) ->
     LastPosterName = ecf_user:name(LastPoster),
     CreatorId = ecf_thread:creator(Thread),
     Creator = ecf_user:get_user(CreatorId),
-    Name = ecf_user:name(Creator),
-    replace_many(String, [{"id", integer_to_binary(Id)},
-                          {"title", ecf_thread:title(Thread)},
-                          {"creator_id", integer_to_binary(CreatorId)},
-                          {"creator_name", Name},
-                          {"replies", integer_to_list(LastId)},
-                          {"last_post_time", iso8601:format(LastPostTime)},
-                          {"last_poster_id", integer_to_binary(LastPosterId)},
-                          {"last_poster_name", LastPosterName}]).
+    CreatorName = ecf_user:name(Creator),
+    [{id, integer_to_list(Id)},
+     {title, ecf_thread:title(Thread)},
+     {replies, integer_to_list(LastId)},
+     {creator_id, integer_to_list(CreatorId)},
+     {creator_name, CreatorName},
+     {last_time, iso8601:format(LastPostTime)},
+     {last_poster_id, integer_to_list(LastPosterId)},
+     {last_poster_name, LastPosterName}].
 
-generate_post_list(User, Forum, Thread, Posts) ->
-    Begin = read_priv_file("post_list.html"),
-    ForumId = ecf_forum:id(Forum),
-    ForumName = ecf_forum:name(Forum),
-    Begin2 = replace_many(Begin,
-                          [{"title", ecf_thread:title(Thread)},
-                           {"thread_id", integer_to_list(ecf_thread:id(Thread))},
-                           {"forum_id", integer_to_list(ForumId)},
-                           {"forum_name", ForumName}]),
-    Elem = read_priv_file("post_list_element.html"),
-    EndFile = case ecf_perms:check_perm_thread(User, Thread, create_post) of
-                  false -> "post_list_end_guest.html";
-                  true -> "post_list_end.html"
-              end,
-    End = replace(read_priv_file(EndFile),
-                  "thread", integer_to_list(ecf_thread:id(Thread))),
-    [Begin2, [generate_post_element(X, Elem) || X <- Posts], End].
+post_list(Posts) ->
+    [post(X) || X <- Posts].
 
-generate_post_element(Post, String) ->
+post(Post) ->
     Id = ecf_post:id(Post),
     PosterId = ecf_post:poster(Post),
     Poster = ecf_user:get_user(PosterId),
-    PosterName = ecf_user:name(Poster),
     Gravatar = gravatar(Poster),
-    PosterTitle = ecf_user:title(Poster),
-    PosterPosts = integer_to_list(ecf_user:posts(Poster)),
     Time = iso8601:format(ecf_post:time(Post)),
     Text = ecf_post:text(Post),
-    % TODO: edited by/time
-    replace_many(String,
-                 [{"id", integer_to_list(Id)},
-                  {"gravatar", Gravatar},
-                  {"user_id", integer_to_list(PosterId)},
-                  {"username", PosterName},
-                  {"user_title", PosterTitle},
-                  {"user_posts", PosterPosts},
-                  {"time", Time},
-                  {"text", Text}]).
+    [{id, integer_to_list(Id)},
+     {gravatar, Gravatar},
+     {poster, user(Poster)},
+     {time, Time},
+     {text, Text}].
 
+status_desc(400) ->
+    "Bad Request";
+status_desc(401) ->
+    "Unauthorized";
+status_desc(403) ->
+    "Forbidden";
+status_desc(404) ->
+    "Not Found";
+status_desc(405) ->
+    "Bad Method";
+status_desc(429) ->
+    "Too Many Requests".
 
-generate_admin(Forums) ->
-    Forums.
-
-
-generate_user_profile(Self, Profile) ->
-    File = case Self of
-               true -> "user_profile_self.html";
-               false -> "user_profile.html" end,
-    String = read_priv_file(File),
-    Joined = iso8601:format(ecf_user:joined(Profile)),
-    Bday = case ecf_user:bday(Profile) of
-               undefined -> <<"">>;
-               B -> iso8601:format(B)
-           end,
-    replace_many(String,
-                 [{"username", ecf_user:name(Profile)},
-                  {"email", ecf_user:email(Profile)},
-                  {"joined", Joined},
-                  {"birthday", Bday},
-                  {"bio", ecf_user:bio(Profile)},
-                  {"title", ecf_user:title(Profile)},
-                  {"loc", ecf_user:loc(Profile)},
-                  {"posts", integer_to_list(ecf_user:posts(Profile))}]).
-
-
-generate_groups_list(User, Groups) ->
-    Begin = read_priv_file("group_list.html"),
-    Elem = read_priv_file("group_list_element.html"),
-    End = read_priv_file("group_list_end.html"),
-    [Begin, [generate_groups_element(X, User, Elem) || X <- Groups], End].
-
-generate_groups_element(Group, User, String) ->
-    Id = ecf_group:id(Group),
-    Members = integer_to_list(length(ecf_group:members(Group))),
-    CanJoin = ecf_perms:check_perm_group(User, Group, join_group),
-    CanLeave = ecf_perms:check_perm_group(User, Group, leave_group),
-    JoinLeave = case lists:member(Id, ecf_user:groups(User)) of
-                    true ->
-                        case CanLeave andalso Id =/= 0 andalso Id =/= 1 of
-                            true -> "Leave";
-                            false -> ""
-                        end;
-                    false ->
-                        case CanJoin andalso Id =/= 0 andalso Id =/= 1 of
-                            true -> "Join";
-                            false -> ""
-                        end
-                end,
-    replace_many(String,
-                 [{"name", ecf_group:name(Group)},
-                  {"id", integer_to_list(Id)},
-                  {"desc", ecf_group:desc(Group)},
-                  {"members", Members},
-                  {"action", JoinLeave}]).
-
-
-generate_group(Group) ->
-    Begin0 = read_priv_file("group.html"),
-    Name = ecf_group:name(Group),
-    Desc = ecf_group:desc(Group),
-    Begin = replace_many(Begin0, [{"name", Name}, {"desc", Desc}]),
-    Members = ecf_group:members(Group),
-    Elem = read_priv_file("group_member.html"),
-    End = read_priv_file("group_end.html"),
-    [Begin, [generate_group_member(X, Elem) || X <- Members], End].
-
-generate_group_member(Id, Elem) ->
-    User = ecf_user:get_user(Id),
-    Name = ecf_user:name(User),
-    replace_many(Elem, [{"id", integer_to_list(Id)},
-                        {"name", Name}]).
-
-generate_login(undefined, Url) ->
-    Message = application:get_env(ecf, login_message, <<"Please login.">>),
-    String = read_priv_file("login.html"),
-    {ok, Key} = application:get_env(ecf, recaptcha_key),
-    replace_many(String, [{"url", Url},
-                          {"message", Message},
-                          {"recaptcha_key", Key}]);
-generate_login(_User, Url) ->
-    Message = application:get_env(ecf, already_logged_in,
-                                  <<"You're already logged in!">>),
-    replace_many(read_priv_file("already_logged_in.html"),
-                 [{"url", Url},
-                  {"message", Message}]).
-
-generate_logout(Url) ->
-    Message = application:get_env(ecf, logout_message,
-                                  <<"You've successfully been logged out.">>),
-    replace_many(read_priv_file("logout.html"),
-                 [{"url", Url},
-                  {"message", Message}]).
-
-generate_register(Type) ->
-    Message = application:get_env(ecf, Type, <<"Please register.">>),
-    {ok, Key} = application:get_env(ecf, recaptcha_key),
-    String = read_priv_file("register.html"),
-    replace_many(String, [{"message", Message},
-                          {"recaptcha_key", Key}]).
-
-generate_edit_profile(User) ->
-    Bday = case ecf_user:bday(User) of
-               {{Y, M, D}, _} ->
-                   FmtStr = "~4.10.0B-~2.10.0B-~2.10.0B",
-                   io_lib:format(FmtStr, [Y, M, D]);
-               _ -> <<"">>
-           end,
-    String = read_priv_file("edit_profile.html"),
-    replace_many(String, [{"username", ecf_user:name(User)},
-                          {"bday", Bday},
-                          {"bio", ecf_user:bio(User)},
-                          {"title", ecf_user:title(User)},
-                          {"loc", ecf_user:loc(User)}]).
-
-generate_edit_forum(Forum) ->
-    String = read_priv_file("edit_forum.html"),
-    replace_many(String, [{"id", integer_to_list(ecf_forum:id(Forum))},
-                          {"name", ecf_forum:name(Forum)},
-                          {"desc", ecf_forum:desc(Forum)}]).
-
-generate_400_error() ->
-    read_priv_file("400.html").
-
-generate_401_error(Type) ->
-    Message = application:get_env(ecf, Type, <<"You need to log in first.">>),
-    replace(read_priv_file("401.html"), "message", Message).
-
-generate_403_error(Type) ->
-    Message = application:get_env(ecf, Type,
-                                  <<"You don't have permission to do that.">>),
-    replace(read_priv_file("403.html"), "message", Message).
-
-generate_404_error() ->
-    read_priv_file("404.html").
-
-generate_405_error() ->
-    read_priv_file("405.html").
-
-generate_429_error(Type) ->
-    Message = application:get_env(ecf, Type,
-                      <<"You're making too many requests, please slow down!">>),
-    replace(read_priv_file("429.html"), "message", Message).
-
-generate_forum_end() ->
-    read_priv_file("forum_end.html").
-
-
-
-%% Utility functions
-
--spec read_priv_file(string()) -> binary().
-read_priv_file(Filename) ->
-    {ok, String, _} = erl_prim_loader:get_file(filename:join(code:priv_dir(ecf),
-                                                             Filename)),
-    String.
-
--spec replace_many(iodata(), [{iodata(),iodata()}]) -> iodata().
-replace_many(String, List) ->
-    R = fun({Search, Rep}, Str) ->
-                replace(Str, Search, Rep)
-        end,
-    lists:foldl(R, String, List).
-
--spec replace(iodata(), iodata(), iodata()) -> iodata().
-replace(String, Search, Replace) ->
-    string:replace(String, ["{{",Search,"}}"], Replace, all).
 
 -spec gravatar(ecf_user:user()) -> iodata().
 gravatar(User) ->

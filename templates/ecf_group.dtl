@@ -1,0 +1,23 @@
+{% extends "ecf_base.dtl" %}
+{# vim: set ft=htmldjango: #}
+{% block content %}
+<main id="group">
+<a href="{{ base_url }}/">Home</a>
+<h2>{{ group.name }}</h2>
+<p>{{ group.desc }}</p>
+<table>
+    <thead>
+        <tr>
+            <th>User</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in group.member_list %}
+        <tr>
+            <td class="username"><a href="{{ base_url }}/user/{{ user.id }}">{{ user.name }}</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</main>
+{% endblock %}

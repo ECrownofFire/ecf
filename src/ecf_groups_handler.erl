@@ -30,7 +30,7 @@ do_reply(User, Req = #{method := <<"POST">>}) ->
         Id ->
             {_, Action} = lists:keyfind(<<"action">>, 1, KV),
             case Action of
-                <<"Join">> ->
+                <<"join">> ->
                     case ecf_perms:check_perm_group(User,
                                                     ecf_group:get_group(Id),
                                                     join_group) of
@@ -40,7 +40,7 @@ do_reply(User, Req = #{method := <<"POST">>}) ->
                         false ->
                             cowboy_req:reply(403, Req2)
                     end;
-                <<"Leave">> ->
+                <<"leave">> ->
                     case ecf_perms:check_perm_group(User,
                                                     ecf_group:get_group(Id),
                                                     leave_group) of

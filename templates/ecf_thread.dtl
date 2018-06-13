@@ -1,0 +1,65 @@
+{% extends "ecf_base.dtl" %}
+{# vim: set ft=htmldjango: #}
+{% block content %}
+<main id="post-list">
+<a href="{{ base_url }}/forum/{{ forum.id }}">{{ forum.name }}</a>
+<button id='button-edit' type='button' onclick='showEditForm();' style="visibility: hidden">Edit</button>
+<form id='form-edit' onsubmit="return doEdit();" style="visibility: hidden">
+    <label>Title:<input id='edit-title' value="{{ thread.title }}"></label>
+    <button>Submit</button>
+</form>
+<button id='button-delete' type='button' onclick="if(confirm('Are you sure you want to delete this thread and every post in it?')) { doDelete(); }" style="visibility: hidden">Delete</button>
+<script>
+function showEditForm() {
+    var form = document.getElementById('form-edit');
+    form.style.visibility = (form.style.visibility == "hidden") ? "visible" : "hidden";
+}
+
+function doEdit() {
+    var xhr = new XMLHttpRequest();
+    var title = encodeURIComponent(document.getElementById('edit-title').value);
+    xhr.open("PATCH", "{{ base_url }}/thread/{{ thread.id }}");
+    var req = "title=" + title;
+    xhr.onload = function(e) {
+        location.reload();
+    }
+    xhr.send(req);
+    return false;
+}
+
+function doDelete() {
+    var xhr = new XMLHttpRequest();
+    xhr.open("DELETE", "{{ base_url }}/thread/{{ thread.id }}");
+    xhr.onload = function(e) {
+        location.href = "{{ base_url }}/forum/{{ forum.id }}";
+    }
+    xhr.send();
+}
+</script>
+<h2>{{ thread.title }}</h2>
+<ol>
+    {% for post in post_list %}
+    <li class="post">
+        <section class="poster">
+            <h4><a href="{{ base_url }}/user/{{ post.poster.id }}">{{ post.poster.name }}</a></h4>
+            <p class="user-title">{{ post.poster.title }}</p>
+            <img src="{{ post.gravatar|safe }}" alt="">
+            <p class="user-posts">Posts: {{ post.poster.posts }}</p>
+        </section>
+        <article id="post-{{ post.id }}" class="post-content">
+            <h4><a href="#post-{{ post.id }}">Reply #{{ post.id }}</a> on: <time class="format-time post-time" datetime="{{ post.time }}"></time></h4>
+            <p>{{ post.text }}</p>
+        </article>
+    </li>
+    {% endfor %}
+</ol>
+{% if can_create_post %}
+<form id="form-post" action="{{ base_url }}/post" method="post">
+    <h3>Reply:</h3>
+    <input type="hidden" name="thread" value="{{ thread.id }}">
+    <textarea id="text" type="text" autocomplete="off" name="text"></textarea>
+    <input id="submit-post" type="submit" value="Post">
+</form>
+{% endif %}
+</main>
+{% endblock %}

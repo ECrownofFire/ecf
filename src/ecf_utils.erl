@@ -1,7 +1,6 @@
 -module(ecf_utils).
 
--export([check_user_session/1, sanitize/1, get_and_sanitize/2, get_ip/1,
-         reply_status/4]).
+-export([check_user_session/1, get_ip/1, reply_status/4]).
 
 %%% Contains a few utility functions
 
@@ -35,29 +34,8 @@ check_user_session(ID, SessionEncoded) ->
     end.
 
 
-sanitize(Document) ->
-    Replace = fun({Char, Rep}, String) ->
-                      string:replace(String, Char, Rep, all)
-              end,
-    Replacements = [{<<"\x00">>, <<"\x{FFFD}">>},
-                    {<<"&">>,<<"&amp;">>},
-                    {<<"{{">>,<<"&#123;&#123;">>}, % for template safety
-                    {<<"<">>,<<"&lt;">>},
-                    {<<">">>,<<"&gt;">>},
-                    {<<"\"">>,<<"&quot;">>},
-                    {<<"\'">>,<<"&#39;">>},
-                    {<<"/">>,<<"&#47;">>}],
-    lists:foldl(Replace, Document, Replacements).
-
-get_and_sanitize(KV, Target) ->
-    case lists:keyfind(Target, 1, KV) of
-        {_, S} ->
-            iolist_to_binary(sanitize(S));
-        _ ->
-            <<"">>
-    end.
-
 % wrapper to get IP in case reverse proxying is in use
+% TODO: support x-forwarded-for in case of multiple forwards
 -spec get_ip(cowboy_req:req()) -> inet:ip_address().
 get_ip(Req) ->
     case cowboy_req:header(<<"x-forwarded-for">>, Req) of

@@ -1,0 +1,26 @@
+{% extends "ecf_base.dtl" %}
+{# vim: set ft=htmldjango: #}
+{% block content %}
+<dl>
+    <dt>Username<dd id="username">{{ user.name }}</dd>
+    {% if self %}
+    <dt>Email<dd id="email">{{ user.email }}</dd>
+    {% endif %}
+    <dt>Posts<dd id="post-count">{{ user.posts }}</dd>
+    <dt>Joined<dd id="joined"><time class="format-time" datetime="{{ user.joined }}"></time></dd>
+    <dt>Birthday<dd id="bday"><time class="format-date" datetime="{{ user.bday }}"></time></dd>
+    <dt>Biography<dd id="bio">{{ user.bio }}</dd>
+    <dt>Location<dd id="loc">{{ user.loc }}</dd>
+    <script language="javascript" type="text/javascript">
+        (function() {
+            var B = document.getElementById('bday').children[0];
+            var D = new Date(B.dateTime);
+            B.innerHTML = new Date(D.getTime() + D.getTimezoneOffset() * 60000).toDateString();
+        })();
+    </script>
+</dl>
+{% if self %}
+<a href="{{base}}/edit_profile">Edit your profile</a>
+{% endif %}
+</main>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "ecf_base.dtl" %}
+{# vim: set ft=htmldjango: #}
+{% block content %}
+<main id="edit-profile">
+    <form id="form-edit-profile" action="{{ base_url }}/edit_profile" method="post">
+        <label><h3>Username:</h3><input id="username" type="text" autocomplete="username" name="username" disabled value="{{ user.name }}"></label>
+        <label><h3>Birthday:</h3><input id="bday" type="date" autocomplete="bday" name="bday" value="{{ user.bday }}"></label>
+        <label><h3>Biography:</h3><textarea id="bio" type="text" name="bio" autocomplete="off">{{ user.bio }}</textarea></label>
+        <label><h3>Location:</h3><input id="loc" type="text" name="loc" value="{{ user.loc }}"></label>
+        <input id="submit" type="submit" value="Submit Changes">
+    </form>
+</main>
+{% endblock %}

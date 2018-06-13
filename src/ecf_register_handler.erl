@@ -17,7 +17,7 @@ init(Req0, State) ->
                        {_, Bday0} -> iso8601:parse(Bday0);
                        _ -> undefined
                    end,
-            Bio = ecf_utils:get_and_sanitize(KV, <<"bio">>),
+            Bio = lists:keyfind(<<"bio">>, 1, KV),
             Ip = ecf_utils:get_ip(Req),
             case ecf_captcha:check_captcha(Ip, KV) of
                 true ->
@@ -35,7 +35,7 @@ init(Req0, State) ->
                     {ok, Req2, State}
             end;
         <<"GET">> ->
-            Html = ecf_generators:generate(register, ignored, register_message),
+            Html = ecf_generators:generate(register, undefined, register_message),
             Req = cowboy_req:reply(200,
                                    #{<<"content-type">> => <<"text/html">>},
                                    Html,

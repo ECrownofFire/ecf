@@ -1,0 +1,46 @@
+{# vim: set ft=htmldjango: #}
+{% spaceless %}
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="{{ base_url }}/static/main.css">
+    <link rel="icon" type="image/x-icon" href="{{ base_url }}/favicon.ico">
+    <title>{{ title }}</title>
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{{ title }}">
+    <meta property="og:description" content="Simple BEAM-powered forum software">
+    <script>var BASE_URL = "{{ base_url }}";</script>
+    <script src="{{ base_url }}/static/perms.js"></script>
+</head>
+<body>
+<header>
+    <h1>{{ name }}</h2>
+    {% if user %}
+    <section id="welcome-user" class="welcome">
+        <p>Welcome {{ user.name }}!</p>
+    {% else %}
+    <section id="welcome-guest" class="welcome">
+        <p>Welcome, Guest!<br>Please login or register.</p>
+    {% endif %}
+    </section>
+    <hr>
+    <nav id="main-menu">
+        <ul>
+            <li><a href="{{ base_url }}/">Home</a></li>
+            {% if user %}
+            <li><a href="{{ base_url }}/user/{{ user.id }}">Profile</a></li>
+            <li><form id="logout-form" method="post" action="{{ base_url }}/logout"><input type="hidden" name="logout" value="1"><a onclick="document.getElementById('logout-form').submit(); return false;" href="{{ base_url }}/logout">Logout</a></form></li>
+            {% else %}
+            <li><a href="{{base}}/login" rel="nofollow">Login</a></li>
+            <li><a href="{{base}}/register" rel="nofollow">Register</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+</header>
+{% block content %}{% endblock %}
+<script src="{{ base_url }}/static/format_dates.js"></script>
+</body>
+</html>
+{% endspaceless %}

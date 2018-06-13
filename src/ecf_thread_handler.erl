@@ -24,8 +24,8 @@ handle_reply(Req = #{method := <<"POST">>}, User) ->
             Time = timer:now_diff(erlang:timestamp(), ecf_user:last_post(User)),
             case Time > Limit of
                 true ->
-                    Title = ecf_utils:get_and_sanitize(KV, <<"title">>),
-                    Text = ecf_utils:get_and_sanitize(KV, <<"text">>),
+                    {_, Title} = lists:keyfind(<<"title">>, 1, KV),
+                    {_, Text} = lists:keyfind(<<"text">>, 1, KV),
                     Thread = ecf_thread:create_thread(Forum, Title,
                                                       erlang:timestamp(),
                                                       ecf_user:id(User),
@@ -52,7 +52,7 @@ handle_reply(Req = #{method := <<"PATCH">>}, User) ->
                     cowboy_req:reply(403, Req);
                 true ->
                     {ok, KV, Req2} = cowboy_req:read_urlencoded_body(Req),
-                    Title = ecf_utils:get_and_sanitize(KV, <<"title">>),
+                    {_, Title} = lists:keyfind(<<"title">>, 1, KV),
                     ok = ecf_thread:edit_title(Id, Title),
                     cowboy_req:reply(204, Req2)
             end
@@ -75,7 +75,7 @@ handle_reply(Req = #{method := <<"GET">>}, User) ->
     Id = cowboy_req:binding(id, Req, -1),
     case ecf_thread:get_thread(Id) of
         {error, thread_not_found} ->
-            ecf_utils:reply_status(404, User, ignored, Req);
+            ecf_utils:reply_status(404, User, false, Req);
         Thread ->
             case ecf_perms:check_perm_thread(User, Thread,
                                              view_thread) of
@@ -91,5 +91,5 @@ handle_reply(Req = #{method := <<"GET">>}, User) ->
             end
     end;
 handle_reply(Req, User) ->
-    ecf_utils:reply_status(404, User, ignored, Req).
+    ecf_utils:reply_status(404, User, false, Req).
 

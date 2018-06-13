@@ -151,7 +151,8 @@ filter_threads(Threads, User) ->
 
 -spec order_threads([thread()]) -> [thread()].
 order_threads(Threads) ->
-    lists:keysort(#ecf_thread.last, Threads).
+    F = fun(A, B) -> A#ecf_thread.last_time >= B#ecf_thread.last_time end,
+    lists:sort(F, Threads).
 
 %% Wrapper functions
 

@@ -29,7 +29,7 @@ try_post(Req, User, State, true) ->
                                              ecf_thread:get_thread(Thread),
                                              create_post) of
                 true ->
-                    Text = ecf_utils:get_and_sanitize(KV, <<"text">>),
+                    {_, Text} = lists:keyfind(<<"text">>, 1, KV),
                     Post = ecf_post:new_post(Thread, ecf_user:id(User),
                                              erlang:timestamp(), Text),
                     Thread2 = integer_to_list(Thread),
@@ -45,7 +45,7 @@ try_post(Req, User, State, true) ->
                     {ok, Req2, State}
             end;
         _ ->
-            Req2 = ecf_utils:reply_status(404, User, ignored, Req),
+            Req2 = ecf_utils:reply_status(404, User, false, Req),
             {ok, Req2, State}
     end;
 try_post(Req, User, State, false) ->

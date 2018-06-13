@@ -21,8 +21,8 @@ handle_reply(User, -1, Req = #{method := <<"PUT">>}, _) ->
             cowboy_req:reply(403, Req);
         true ->
             {ok, KV, Req2} = cowboy_req:read_urlencoded_body(Req),
-            Name = ecf_utils:get_and_sanitize(KV, <<"name">>),
-            Desc = ecf_utils:get_and_sanitize(KV, <<"desc">>),
+            {_, Name} = lists:keyfind(<<"name">>, 1, KV),
+            {_, Desc} = lists:keyfind(<<"desc">>, 1, KV),
             Id = ecf_forum:new_forum(Name, Desc, 0),
             cowboy_req:reply(201,
                              #{<<"content-location">>
@@ -37,8 +37,8 @@ handle_reply(User, Id, Req = #{method := <<"PATCH">>}, Forum) ->
             cowboy_req:reply(403, Req);
         true ->
             {ok, KV, Req2} = cowboy_req:read_urlencoded_body(Req),
-            Name = ecf_utils:get_and_sanitize(KV, <<"name">>),
-            Desc = ecf_utils:get_and_sanitize(KV, <<"desc">>),
+            {_, Name} = lists:keyfind(<<"name">>, 1, KV),
+            {_, Desc} = lists:keyfind(<<"desc">>, 1, KV),
             ok = ecf_forum:edit_name(Id, Name),
             ok = ecf_forum:edit_desc(Id, Desc),
             cowboy_req:reply(204,
@@ -47,7 +47,7 @@ handle_reply(User, Id, Req = #{method := <<"PATCH">>}, Forum) ->
                              Req2)
     end;
 handle_reply(User, _Id, Req, {error, forum_not_found}) ->
-    ecf_utils:reply_status(404, User, ignored, Req);
+    ecf_utils:reply_status(404, User, false, Req);
 handle_reply(User, Id, Req = #{method := <<"GET">>}, Forum) ->
     case ecf_perms:check_perm_forum(User, Forum, view_forum) of
         false ->

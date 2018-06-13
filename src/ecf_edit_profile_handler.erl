@@ -18,8 +18,8 @@ init(Req0, State) ->
                                {_, Bday0} -> iso8601:parse(Bday0);
                                _ -> undefined
                            end,
-                    Bio = ecf_utils:get_and_sanitize(KV, <<"bio">>),
-                    Loc = ecf_utils:get_and_sanitize(KV, <<"loc">>),
+                    {_, Bio} = lists:keyfind(<<"bio">>, 1, KV),
+                    {_, Loc} = lists:keyfind(<<"loc">>, 1, KV),
                     ecf_user:edit_bday(Id, Bday),
                     ecf_user:edit_bio(Id, Bio),
                     ecf_user:edit_loc(Id, Loc),
