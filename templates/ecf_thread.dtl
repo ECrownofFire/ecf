@@ -2,8 +2,9 @@
 {# vim: set ft=htmldjango: #}
 {% block content %}
 <main id="post-list">
-{% if can_edit_thread %}
 <a href="{{ base_url }}/forum/{{ forum.id }}">{{ forum.name }}</a>
+<h2>{{ thread.title }}</h2>
+{% if can_edit_thread %}
 <button id='button-edit' type='button' onclick='showEditForm();'>Edit</button>
 <form id='form-edit' onsubmit="return doEdit();" style="visibility: hidden">
     <label>Title:<input id='edit-title' value="{{ thread.title }}"></label>
@@ -56,7 +57,6 @@ function deletePost(id) {
 }
 </script>
 {% endif %}
-<h2>{{ thread.title }}</h2>
 <ol>
     {% for post in post_list %}
     <li id="post-{{ post.id }}" class="post">

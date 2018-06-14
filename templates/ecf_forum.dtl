@@ -3,6 +3,9 @@
 {% block content %}
 <main id="thread-list">
 <a href="{{ base_url }}/">Home</a>
+<h2>{{ forum.name }}</h2>
+<p>{{ forum.desc }}</p>
+
 {% if can_edit %}
 <button id="button-edit" type="button" onclick="return editForum();">Edit</button>
 <form id="form-edit" style="visibility: hidden;" onsubmit="return doEditForum();">
@@ -10,14 +13,7 @@
     <label>Description:<input id='form-desc' name="desc" value="{{ forum.desc }}"></label>
     <button>Submit Changes</button>
 </form>
-{% endif %}
-{% if can_delete %}
-<form id="form-delete" onsubmit="return doDeleteForum();"><button onclick="return confirm('Are you sure you want to delete this forum and every thread and post in it?');">Delete</button></form>
-{% endif %}
-<h2>{{ forum.name }}</h2>
-<p>{{ forum.desc }}</p>
 <script>
-{% if can_edit %}
 function editForum() {
     var form = document.getElementById('form-edit');
     form.style.visibility = (form.style.visibility === "hidden") ? "visible" : "hidden";
@@ -34,8 +30,12 @@ function doEditForum() {
     xhr.send(req);
     return false;
 }
+</script>
 {% endif %}
+
 {% if can_delete %}
+<form id="form-delete" onsubmit="return doDeleteForum();"><button onclick="return confirm('Are you sure you want to delete this forum and every thread and post in it?');">Delete</button></form>
+<script>
 function doDeleteForum() {
     var xhr = new XMLHttpRequest();
     xhr.open("DELETE", "{{ base_url }}/forum/{{ forum.id }}");
@@ -45,8 +45,9 @@ function doDeleteForum() {
     xhr.send();
     return false;
 }
-{% endif %}
 </script>
+{% endif %}
+
 <table>
     <thead>
         <tr>
