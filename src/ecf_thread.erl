@@ -13,6 +13,7 @@
          edit_perms/2, edit_perm/4, remove_perm/3, lock_thread/1,
          new_post/2,
          delete_thread/1, delete_forum_threads/1,
+         delete_post/2,
          visible_threads/2,
          filter_threads/2, order_threads/1,
          id/1, forum/1, title/1, time/1, last/1, last_time/1, creator/1,
@@ -116,6 +117,31 @@ new_post(Id, Time) ->
                 Last = last(Thread),
                 mnesia:write(Thread#ecf_thread{last=Last+1,last_time=Time}),
                 Last + 1
+        end,
+    mnesia:activity(transaction, F).
+
+% when removing posts if the last post is removed it needs to be changed here
+-spec delete_post(id(), ecf_post:id()) -> ok.
+delete_post(Id, Post) ->
+    F = fun() ->
+                [Thread] = mnesia:wread({ecf_thread, Id}),
+                case last(Thread) of
+                    Post ->
+                        delete_post2(Thread, Post);
+                    _ ->
+                        ok
+                end
+        end,
+    mnesia:activity(transaction, F).
+% walk backwards until a post that exists is found... dumb but it works
+delete_post2(Thread, Post) ->
+    F = fun() ->
+                case ecf_post:get_post(id(Thread), Post-1) of
+                    {error, post_not_found} ->
+                        delete_post2(Thread, Post-2);
+                    _ ->
+                        mnesia:write(Thread#ecf_thread{last=Post-1})
+                end
         end,
     mnesia:activity(transaction, F).
 

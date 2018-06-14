@@ -41,27 +41,42 @@ function doDelete() {
 }
 </script>
 {% endif %}
+{% if can_delete_posts %}
+<script>
+function deletePost(id) {
+    if (!confirm("Are you sure you want to delete this post?")) {
+        return false;
+    }
+    var xhr = new XMLHttpRequest();
+    xhr.open("DELETE", "{{ base_url }}/thread/{{ thread.id }}/" + id);
+    xhr.onload = function(e) {
+        location.reload();
+    }
+    xhr.send();
+}
+</script>
+{% endif %}
 <h2>{{ thread.title }}</h2>
 <ol>
     {% for post in post_list %}
-    <li class="post">
+    <li id="post-{{ post.id }}" class="post">
         <section class="poster">
             <h4><a href="{{ base_url }}/user/{{ post.poster.id }}">{{ post.poster.name }}</a></h4>
             <p class="user-title">{{ post.poster.title }}</p>
             <img src="{{ post.gravatar|safe }}" alt="">
             <p class="user-posts">Posts: {{ post.poster.posts }}</p>
         </section>
-        <article id="post-{{ post.id }}" class="post-content">
+        <article class="post-content">
             <h4><a href="#post-{{ post.id }}">Reply #{{ post.id }}</a> on: <time class="format-time post-time" datetime="{{ post.time }}"></time></h4>
+            {% if can_delete_posts %}<button class='post-delete' type="button" onclick="deletePost({{ post.id }});">Delete Post</button>{% endif %}
             <p>{{ post.text }}</p>
         </article>
     </li>
     {% endfor %}
 </ol>
 {% if can_create_post %}
-<form id="form-post" action="{{ base_url }}/post" method="post">
+<form id="form-post" action="{{ base_url }}/thread/{{ thread.id }}" method="post">
     <h3>Reply:</h3>
-    <input type="hidden" name="thread" value="{{ thread.id }}">
     <textarea id="text" type="text" autocomplete="off" name="text"></textarea>
     <input id="submit-post" type="submit" value="Post">
 </form>

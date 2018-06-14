@@ -22,8 +22,9 @@ start(_Type, _Args) ->
                      end
             end,
     HConstraints = [{type, TypeFun}, {id, int}],
-    PConstraints = [{type, PTypes}, {id, int, -1}],
-    IdConstraint = [{id, int, -1}],
+    PConstraints = [{type, PTypes}, {id, int}],
+    IdConstraint = [{id, int}],
+    TConstraints = [{id, int}, {post, int}],
     Host = application:get_env(ecf, host, '_'),
     Base = application:get_env(ecf, base_url, ""),
     Port = application:get_env(ecf, port, 8080),
@@ -40,7 +41,7 @@ start(_Type, _Args) ->
                {[Base, "/:type/[:id/]perms"], PConstraints, ecf_perms_handler, {}},
                {[Base, "/[:type/:id]"], HConstraints, ecf_handler, {}},
                {[Base, "/forum/[:id]"], IdConstraint, ecf_forum_handler, {}},
-               {[Base, "/thread/[:id]"], IdConstraint, ecf_thread_handler, {}},
+               {[Base, "/thread/[:id[/:post]]"], TConstraints, ecf_thread_handler, {}},
                {[Base, "/post"], ecf_post_handler, {}},
                {[Base, "/[...]"], ecf_404_handler, {}}]}
     ]),
