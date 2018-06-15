@@ -8,6 +8,9 @@ to SMF or vBulletin or the like, but very lightweight and fast. It's still very
 early in development so it's missing a lot of features, and I would (currently)
 recommend against using it. Feel free to take a look around the code though!
 
+Just keep in mind that this is a big giant mess of testing random junk so
+everything is super inconsistent and weird :P
+
 At the bare minimum, ECF still needs the following:
 * Documentation
 * Tests

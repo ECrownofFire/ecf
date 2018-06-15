@@ -72,11 +72,11 @@ get_groups() ->
         end,
     mnesia:activity(transaction, F).
 
--spec get_group(id()) -> group() | {error, group_not_found}.
+-spec get_group(id()) -> group() | undefined.
 get_group(Id) ->
     F = fun() ->
                 case mnesia:read({ecf_group, Id}) of
-                    [] -> {error, group_not_found};
+                    [] -> undefined;
                     [Group] -> Group
                 end
         end,
