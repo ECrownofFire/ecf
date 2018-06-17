@@ -39,8 +39,17 @@ replace_base_url([Head|Tail], Base, Acc) ->
     replace_base_url(Tail, Base, [Head|Acc]).
 
 replace_headers(Headers, Base) ->
-    F = fun(_K, V) ->
-                string:replace(V, <<"{{base}}">>, Base)
-        end,
-    maps:map(F, Headers).
+    replace_cloc(replace_loc(Headers, Base), Base).
+
+replace_loc(Headers = #{<<"location">> := Old}, Base) ->
+    New = string:replace(Old, "{{base}}", Base),
+    Headers#{<<"location">> := New};
+replace_loc(Headers, _) ->
+    Headers.
+
+replace_cloc(Headers = #{<<"content-location">> := Old}, Base) ->
+    New = string:replace(Old, "{{base}}", Base),
+    Headers#{<<"content-location">> := New};
+replace_cloc(Headers, _) ->
+    Headers.
 

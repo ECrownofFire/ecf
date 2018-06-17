@@ -18,7 +18,7 @@ init(Req, State) ->
                    reply_200(Html, Req);
                <<"user">> ->
                    case ecf_user:get_user(Id) of
-                       {error, user_not_found} ->
+                       undefined ->
                            ecf_utils:reply_status(404, User, false, Req);
                        Profile ->
                            case ecf_perms:check_perm_global(User, view_user) of

@@ -18,11 +18,13 @@ generate(admin, User, _) ->
     Vars = get_vars(User, "Admin"),
     {ok, Res} = ecf_admin_dtl:render(Vars),
     Res;
-generate(login, User, Url) ->
+generate(login, User, {Captcha, Url, Type}) ->
     Vars = get_vars(User, "Login"),
-    Message = login_message(User),
+    Message = login_message(User, Type),
     {ok, Key} = application:get_env(ecf, recaptcha_key),
-    Vars2 = [{message, Message}, {recaptcha_key, Key}, {url, Url}|Vars],
+    Vars2 = [{captcha, Captcha}, {message, Message},
+             {recaptcha_key, Key}, {url, Url}
+             | Vars],
     {ok, Res} = ecf_login_dtl:render(Vars2),
     Res;
 generate(logout, User, Url) ->
@@ -155,9 +157,9 @@ user(User) ->
      {posts, integer_to_list(ecf_user:posts(User))}].
 
 
-login_message(undefined) ->
-    application:get_env(ecf, login_message, <<"Please login.">>);
-login_message(_User) ->
+login_message(undefined, Type) ->
+    application:get_env(ecf, Type, <<"Please login.">>);
+login_message(_User, _) ->
     application:get_env(ecf, already_logged_in,
                         <<"You're already logged in!">>).
 

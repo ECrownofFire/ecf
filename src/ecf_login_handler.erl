@@ -8,46 +8,37 @@
 
 -define(SESSION_TIME, 604800). % one week
 
-init(Req0, State) ->
+init(Req = #{method := <<"GET">>}, State) ->
+    #{url := Url} = cowboy_req:match_qs([{url, [], <<"">>}], Req),
+    User = ecf_utils:check_user_session(Req),
+    Html = ecf_generators:generate(login, User,
+                                   {ecf_log:check_log("", ecf_utils:get_ip(Req)),
+                                    Url, login_message}),
+    Req2 = cowboy_req:reply(200, #{<<"content-type">> => <<"text/html">>},
+                            Html, Req),
+    {ok, Req2, State};
+init(Req0 = #{method := <<"POST">>}, State) ->
     #{url := Url} = cowboy_req:match_qs([{url, [], <<"">>}], Req0),
-    case maps:get(method, Req0) of
-        <<"POST">> ->
-            {ok, KeyValues, Req} = cowboy_req:read_urlencoded_body(Req0),
-            {_, Email} = lists:keyfind(<<"email">>, 1, KeyValues),
-            {_, Password} = lists:keyfind(<<"password">>, 1, KeyValues),
-            Ip = ecf_utils:get_ip(Req),
-            case ecf_log:check_log(Email, Ip) of
+    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
+    {_, Email} = lists:keyfind(<<"email">>, 1, KV),
+    {_, Password} = lists:keyfind(<<"password">>, 1, KV),
+    Ip = ecf_utils:get_ip(Req),
+    case ecf_log:check_log(Email, Ip) of
+        true ->
+            case ecf_captcha:check_captcha(Ip, KV) of
                 true ->
-                    case ecf_captcha:check_captcha(Ip, KeyValues) of
-                        true ->
-                            try_login(Email, Password, Url, Req, State);
-                        false ->
-                            Text = application:get_env(ecf, login_fail_captcha,
-                                               <<"You need to solve a CAPTCHA">>),
-                            Map = #{<<"result">> => <<"captcha">>,
-                                    <<"text">> => Text},
-                            Json = jiffy:encode(Map),
-                            Req2 = cowboy_req:reply(400,
-                                                    #{<<"content-type">>
-                                                      => <<"application/json">>},
-                                                    Json,
-                                                    Req),
-                            {ok, Req2, State}
-                    end;
+                    try_login(Email, Password, Url, Req, State);
                 false ->
-                    try_login(Email, Password, Url, Req, State)
+                    Html = ecf_generators:generate(login, undefined,
+                                                   {true, Url, login_fail_captcha}),
+                    Req2 = cowboy_req:reply(429,
+                                            #{<<"content-type">>
+                                              => <<"text/html">>},
+                                            Html, Req),
+                    {ok, Req2, State}
             end;
-        <<"GET">> ->
-            User = ecf_utils:check_user_session(Req0),
-            Html = ecf_generators:generate(login, User, Url),
-            Req = cowboy_req:reply(200,
-                                   #{<<"content-type">> => <<"text/html">>},
-                                   Html,
-                                   Req0),
-            {ok, Req, State};
-        _ ->
-            Req = ecf_utils:reply_status(405, undefined, login, Req0),
-            {ok, Req, State}
+        false ->
+            try_login(Email, Password, Url, Req, State)
     end.
 
 terminate(_Reason, _Req, _State) ->
@@ -58,7 +49,7 @@ try_login(Email, Password, Url, Req, State) ->
     try_login(User, Password, Url, Req, State, Email).
 
 
-try_login({error, user_not_found}, _, _, Req, State, Email) ->
+try_login(undefined, _, _, Req, State, Email) ->
     ok = ecf_user:fake_hash(),
     login_fail(Req, State, Email);
 try_login(User, Password, Url, Req, State, Email) ->
@@ -67,12 +58,8 @@ try_login(User, Password, Url, Req, State, Email) ->
             ecf_log:clear_log(Email, ecf_utils:get_ip(Req)),
             Session = ecf_user:new_session(ecf_user:id(User)),
             Req2 = set_login_cookies(Req, ecf_user:id(User), Session),
-            Map = #{<<"result">> => <<"success">>,
-                    <<"newLocation">> => list_to_binary([<<"{{base}}/">>, Url])},
-            Json = jiffy:encode(Map),
-            Req3 = cowboy_req:reply(200,
-                                    #{<<"content-type">> => <<"application/json">>},
-                                    Json,
+            Base = application:get_env(ecf, base_url, ""),
+            Req3 = cowboy_req:reply(303, #{<<"location">> => [Base, "/", Url]},
                                     Req2),
             {ok, Req3, State};
         false ->
@@ -80,16 +67,14 @@ try_login(User, Password, Url, Req, State, Email) ->
     end.
 
 login_fail(Req, State, Email) ->
-    ecf_log:log(Email, ecf_utils:get_ip(Req)),
-    Text = application:get_env(ecf, login_fail_message,
-                               <<"Invalid email or password, try again.">>),
-    Map = #{<<"result">> => <<"failed">>,
-            <<"text">> => Text},
-    Json = jiffy:encode(Map),
-    Req2 = cowboy_req:reply(400,
-                            #{<<"content-type">> => <<"application/json">>},
-                            Json,
-                            Req),
+    #{url := Url} = cowboy_req:match_qs([{url, [], <<"">>}], Req),
+    Ip = ecf_utils:get_ip(Req),
+    ecf_log:log(Email, Ip),
+    Html = ecf_generators:generate(login, undefined, {ecf_log:check_log(Email, Ip),
+                                                      Url,
+                                                      login_fail}),
+    Req2 = cowboy_req:reply(400, #{<<"content-type">> => <<"text/html">>},
+                            Html, Req),
     {ok, Req2, State}.
 
 set_login_cookies(Req, Id, Session) ->

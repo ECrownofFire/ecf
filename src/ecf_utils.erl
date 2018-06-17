@@ -19,15 +19,14 @@ check_user_session(_, undefined) ->
 check_user_session(-1, _) ->
     undefined;
 check_user_session(ID, SessionEncoded) ->
-    U = ecf_user:get_user(ID),
-    case U of
-        {error, user_not_found} ->
+    case ecf_user:get_user(ID) of
+        undefined ->
             undefined;
-        _ ->
+        User ->
             Session = base64:decode(SessionEncoded),
-            case ecf_user:check_session(U, Session) of
+            case ecf_user:check_session(User, Session) of
                 true ->
-                    U;
+                    User;
                 false ->
                     undefined
             end

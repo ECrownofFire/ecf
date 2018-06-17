@@ -65,9 +65,9 @@ new_user(Name, Pass, Email0, Time, Bday) ->
     Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
     F = fun() ->
                 case get_user_by_name(Name) of
-                    {error, user_not_found} ->
+                    undefined ->
                         case get_user_by_email(Email) of
-                            {error, user_not_found} ->
+                            undefined ->
                                 Id = ecf_db:get_new_id(ecf_user),
                                 ok = mnesia:write(
                                        #ecf_user{
@@ -87,7 +87,7 @@ new_user(Name, Pass, Email0, Time, Bday) ->
         end,
     mnesia:activity(transaction, F).
 
--spec get_user(id()) -> user() | {error, user_not_found}.
+-spec get_user(id()) -> user() | undefined.
 get_user(Id) ->
     F = fun() ->
                 mnesia:read({ecf_user, Id})
@@ -96,11 +96,11 @@ get_user(Id) ->
         [User] ->
             User;
         _ ->
-            {error, user_not_found}
+            undefined
     end.
 
 % Case insensitive search
--spec get_user_by_name(binary()) -> user() | {error, user_not_found}.
+-spec get_user_by_name(binary()) -> user() | undefined.
 get_user_by_name(Name) ->
     F = fun() ->
             qlc:e(qlc:q(
@@ -111,11 +111,11 @@ get_user_by_name(Name) ->
         [User] ->
             User;
         _ ->
-            {error, user_not_found}
+            undefined
     end.
 
 % Case insensitive search
--spec get_user_by_email(binary()) -> user() | {error, user_not_found}.
+-spec get_user_by_email(binary()) -> user() | undefined.
 get_user_by_email(Email) ->
     F = fun() ->
             qlc:e(qlc:q(
@@ -126,7 +126,7 @@ get_user_by_email(Email) ->
         [User] ->
             User;
         _ ->
-            {error, user_not_found}
+            undefined
     end.
 
 
@@ -135,7 +135,7 @@ edit_name(Id, Name) ->
     Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
     F = fun() ->
                 case get_user_by_name(Name) of
-                    {error, user_not_found} ->
+                    undefined ->
                         [User] = mnesia:wread({ecf_user, Id}),
                         ok = mnesia:write(User#ecf_user{name=Name}),
                         Session;
@@ -150,7 +150,7 @@ edit_email(Id, Email) ->
     Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
     F = fun() ->
                 case get_user_by_email(Email) of
-                    {error, user_not_found} ->
+                    undefined ->
                         [User] = mnesia:wread({ecf_user, Id}),
                         ok = mnesia:write(User#ecf_user{email=Email,session=Session}),
                         Session;
