@@ -4,26 +4,22 @@
 -export([start/2]).
 -export([stop/1]).
 
--define(TYPES, [<<"user">>, <<"group">>]).
+-define(TYPES, [<<"user">>]).
 
 -define(P_TYPES, [<<"global">>, <<"forum">>, <<"thread">>, <<"group">>]).
 
+-define(G_ACTIONS, [<<"create">>, <<"delete">>, <<"edit">>,
+                    <<"join">>, <<"leave">>,
+                    <<"add">>, <<"remove">>]).
+
 start(_Type, _Args) ->
-    TypeFun = fun (_, Name) ->
-                      case lists:member(Name, ?TYPES) of
-                          true -> {ok, Name};
-                          false -> {error, invalid_type}
-                      end
-              end,
-    PTypes = fun (_, Name) ->
-                     case lists:member(Name, ?P_TYPES) of
-                         true -> {ok, Name};
-                         false -> {error, invalid_type}
-                     end
-            end,
+    GActions = make_fun(?G_ACTIONS),
+    TypeFun = make_fun(?TYPES),
+    PTypes = make_fun(?P_TYPES),
+    GroupActions = [{action, GActions}],
     HConstraints = [{type, TypeFun}, {id, int}],
     PConstraints = [{type, PTypes}, {id, int}],
-    IdConstraint = [{id, int}],
+    IdC = [{id, int}],
     TConstraints = [{id, int}, {post, int}],
     Host = application:get_env(ecf, host, '_'),
     Base = application:get_env(ecf, base_url, ""),
@@ -37,10 +33,11 @@ start(_Type, _Args) ->
                {[Base, "/register"], ecf_register_handler, {}},
                {[Base, "/edit_profile"], ecf_edit_profile_handler, {}},
                {[Base, "/logout"], ecf_logout_handler, {}},
-               {[Base, "/groups"], ecf_groups_handler, {}},
+               {[Base, "/group[/:id]"], IdC, ecf_group_handler, {}},
+               {[Base, "/group[/:action]"], GroupActions, ecf_group_handler, {}},
                {[Base, "/:type/[:id/]perms"], PConstraints, ecf_perms_handler, {}},
                {[Base, "/[:type/:id]"], HConstraints, ecf_handler, {}},
-               {[Base, "/forum/[:id]"], IdConstraint, ecf_forum_handler, {}},
+               {[Base, "/forum/[:id]"], IdC, ecf_forum_handler, {}},
                {[Base, "/thread/[:id[/:post]]"], TConstraints, ecf_thread_handler, {}},
                {[Base, "/post"], ecf_post_handler, {}},
                {[Base, "/[...]"], ecf_404_handler, {}}]}
@@ -55,4 +52,12 @@ start(_Type, _Args) ->
 
 stop(_State) ->
     ok.
+
+make_fun(List) ->
+    fun(_, Name) ->
+            case lists:member(Name, List) of
+                true -> {ok, Name};
+                false -> {error, invalid_type}
+            end
+    end.
 
