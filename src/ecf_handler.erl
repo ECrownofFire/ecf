@@ -17,18 +17,24 @@ init(Req, State) ->
                    Html = ecf_generators:generate(main, User, Forums),
                    reply_200(Html, Req);
                <<"user">> ->
-                   case ecf_user:get_user(Id) of
-                       undefined ->
-                           ecf_utils:reply_status(404, User, false, Req);
-                       Profile ->
-                           case ecf_perms:check_perm_global(User, view_user) of
-                               true ->
-                                   Html = ecf_generators:generate(user, User,
-                                                                  Profile),
-                                   reply_200(Html, Req);
-                               false ->
-                                   ecf_utils:reply_status(403, User,
-                                                          view_user_403, Req)
+                   case ecf_user:id(User) of
+                       Id ->
+                           Html = ecf_generators:generate(user, User, User),
+                           reply_200(Html, Req);
+                       _ ->
+                           case ecf_user:get_user(Id) of
+                               undefined ->
+                                   ecf_utils:reply_status(404, User, false, Req);
+                               Profile ->
+                                   case ecf_perms:check_perm_global(User, view_user) of
+                                       true ->
+                                           Html = ecf_generators:generate(user, User,
+                                                                          Profile),
+                                           reply_200(Html, Req);
+                                       false ->
+                                           ecf_utils:reply_status(403, User,
+                                                                  view_user_403, Req)
+                                   end
                            end
                    end
            end,

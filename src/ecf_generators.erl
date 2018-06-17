@@ -34,8 +34,8 @@ generate(logout, User, Url) ->
     Vars2 = [{message, Message}, {url, Url}|Vars],
     {ok, Res} = ecf_logout_dtl:render(Vars2),
     Res;
-generate(register, _, Type) ->
-    Vars = get_vars(undefined, "Register"),
+generate(register, _, {Type, BaseVars}) ->
+    Vars = [get_vars(undefined, "Register") | BaseVars],
     Message = application:get_env(ecf, Type, <<"Please register.">>),
     {ok, Key} = application:get_env(ecf, recaptcha_key),
     Vars2 = [{message, Message}, {recaptcha_key, Key} | Vars],
@@ -104,7 +104,7 @@ generate(Status, User, Type)
   when is_integer(Status), Status >= 400, Status =< 499 ->
     Desc = status_desc(Status),
     Vars = get_vars(User, [integer_to_list(Status), " - ", Desc]),
-    Message = case Type of false -> false; _ -> application:get_env(ecf, Type) end,
+    Message = case Type of false -> false; _ -> application:get_env(ecf, Type, Desc) end,
     Vars2 = [{code, integer_to_list(Status)},
              {desc, Desc},
              {message, Message}
