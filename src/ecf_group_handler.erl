@@ -47,8 +47,9 @@ handle_post(User, Req, <<"create">>) ->
             {_, Name} = lists:keyfind(<<"name">>, 1, KV),
             {_, Desc} = lists:keyfind(<<"desc">>, 1, KV),
             Id = ecf_group:new_group(Name, Desc),
+            Base = application:get_env(ecf, base_url, ""),
             cowboy_req:reply(303, #{<<"location">>
-                                    => ["{{base}}/group/", integer_to_list(Id)]},
+                                    => [Base, "/group/", integer_to_list(Id)]},
                              Req2);
         false ->
             ecf_utils:reply_status(403, User, create_group_403, Req)
@@ -64,8 +65,9 @@ handle_post(User, Req0, <<"delete">>) ->
             case ecf_perms:check_perm_group(User, Group, delete_group) of
                 true ->
                     ok = ecf_group:delete_group(Id),
+                    Base = application:get_env(ecf, base_url, ""),
                     cowboy_req:reply(303, #{<<"location">>
-                                            => <<"{{base}}/group">>},
+                                            => [Base, "/group"]},
                                      Req);
                 false ->
                     ecf_utils:reply_status(403, User, delete_group_403, Req)
@@ -85,8 +87,9 @@ handle_post(User, Req0, <<"edit">>) ->
                 true ->
                     ok = ecf_group:edit_name(Id, Name),
                     ok = ecf_group:edit_desc(Id, Desc),
+                    Base = application:get_env(ecf, base_url, ""),
                     cowboy_req:reply(303, #{<<"location">>
-                                            => ["{{base}}/group/", Id0]},
+                                            => [Base, "/", Id0]},
                                      Req);
                 false ->
                     ecf_utils:reply_status(403, User, edit_group_403, Req)
@@ -103,8 +106,9 @@ handle_post(User, Req0, <<"join">>) ->
             case ecf_perms:check_perm_group(User, Group, join_group) of
                 true ->
                     ok = ecf_group:add_member(Id, ecf_user:id(User)),
+                    Base = application:get_env(ecf, base_url, ""),
                     cowboy_req:reply(303, #{<<"location">>
-                                            => ["{{base}}/group/", Id0]},
+                                            => [Base, "/", Id0]},
                                      Req);
                 false ->
                     ecf_utils:reply_status(403, User, join_group_403, Req)
@@ -127,6 +131,57 @@ handle_post(User, Req0, <<"leave">>) ->
                 false ->
                     ecf_utils:reply_status(403, User, leave_group_403, Req)
             end
+    end;
+handle_post(User, Req0, <<"add">>) ->
+    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
+    {_, Id0} = lists:keyfind(<<"id">>, 1, KV),
+    Id = binary_to_integer(Id0),
+    {_, U0} = lists:keyfind(<<"user">>, 1, KV),
+    U = binary_to_integer(U0),
+    case ecf_group:get_group(Id) of
+        undefined ->
+            ecf_utils:reply_status(400, User, invalid_group, Req);
+        Group ->
+            case ecf_perms:check_perm_group(User, Group, manage_group) of
+                true ->
+                    case ecf_user:get_user(U) of
+                        undefined ->
+                            ecf_utils:reply_status(400, User, invalid_user, Req);
+                        _ ->
+                            ok = ecf_group:add_member(Id, U),
+                            Base = application:get_env(ecf, base_url, ""),
+                            cowboy_req:reply(303, #{<<"location">>
+                                                    => [Base, "/", Id0]},
+                                             Req)
+                    end;
+                false ->
+                    ecf_utils:reply_status(403, User, manage_group_403, Req)
+            end
+    end;
+handle_post(User, Req0, <<"remove">>) ->
+    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
+    {_, Id0} = lists:keyfind(<<"id">>, 1, KV),
+    Id = binary_to_integer(Id0),
+    {_, U0} = lists:keyfind(<<"user">>, 1, KV),
+    U = binary_to_integer(U0),
+    case ecf_group:get_group(Id) of
+        undefined ->
+            ecf_utils:reply_status(400, User, invalid_group, Req);
+        Group ->
+            case ecf_perms:check_perm_group(User, Group, manage_group) of
+                true ->
+                    case ecf_user:get_user(U) of
+                        undefined ->
+                            ecf_utils:reply_status(400, User, invalid_user, Req);
+                        _ ->
+                            ok = ecf_group:remove_member(Id, U),
+                            Base = application:get_env(ecf, base_url, ""),
+                            cowboy_req:reply(303, #{<<"location">>
+                                                    => [Base, "/", Id0]},
+                                             Req)
+                    end;
+                false ->
+                    ecf_utils:reply_status(403, User, manage_group_403, Req)
+            end
     end.
-% TODO: add, remove
 
