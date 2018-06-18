@@ -44,7 +44,8 @@ generate(register, _, {Type, BaseVars}) ->
 generate(user, User, Profile) ->
     Vars = get_vars(User, ["Profile of ", ecf_user:name(Profile)]),
     Self = User =/= undefined andalso ecf_user:id(User) =:= ecf_user:id(Profile),
-    Vars2 = [{self, Self}|Vars],
+    CanEdit = Self orelse ecf_perms:check_perm_global(User, edit_user),
+    Vars2 = [{can_edit, CanEdit}, {profile, user(Profile)} | Vars],
     {ok, Res} = ecf_user_dtl:render(Vars2),
     Res;
 generate(groups, User, Groups) ->
@@ -94,11 +95,11 @@ generate(thread, User, {Forum, Thread, Posts}) ->
              | Vars],
     {ok, Res} = ecf_thread_dtl:render(Vars2),
     Res;
-generate(edit_profile, User, _) ->
+generate(user_edit, User, Profile) ->
     Vars = get_vars(User, "Edit Profile"),
-    UserV = user(User),
-    Vars2 = [{user, UserV}|Vars],
-    {ok, Res} = ecf_edit_profile_dtl:render(Vars2),
+    ProfileV = user(Profile),
+    Vars2 = [{profile, ProfileV} | Vars],
+    {ok, Res} = ecf_user_edit_dtl:render(Vars2),
     Res;
 generate(Status, User, Type)
   when is_integer(Status), Status >= 400, Status =< 499 ->

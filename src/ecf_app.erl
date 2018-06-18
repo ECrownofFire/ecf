@@ -12,11 +12,15 @@
                     <<"join">>, <<"leave">>,
                     <<"add">>, <<"remove">>]).
 
+-define(U_ACTIONS, [<<"edit">>]).
+
 start(_Type, _Args) ->
     GActions = make_fun(?G_ACTIONS),
+    UActions = make_fun(?U_ACTIONS),
     TypeFun = make_fun(?TYPES),
     PTypes = make_fun(?P_TYPES),
     GroupActions = [{action, GActions}],
+    UConstraints = [{id, int}, {action, UActions}],
     HConstraints = [{type, TypeFun}, {id, int}],
     PConstraints = [{type, PTypes}, {id, int}],
     IdC = [{id, int}],
@@ -35,6 +39,7 @@ start(_Type, _Args) ->
                {[Base, "/logout"], ecf_logout_handler, {}},
                {[Base, "/group[/:id]"], IdC, ecf_group_handler, {}},
                {[Base, "/group[/:action]"], GroupActions, ecf_group_handler, {}},
+               {[Base, "/user[/:id][/:action]"], UConstraints, ecf_user_handler, {}},
                {[Base, "/:type/[:id/]perms"], PConstraints, ecf_perms_handler, {}},
                {[Base, "/[:type/:id]"], HConstraints, ecf_handler, {}},
                {[Base, "/forum/[:id]"], IdC, ecf_forum_handler, {}},
