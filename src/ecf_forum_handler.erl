@@ -9,7 +9,7 @@ init(Req, State) ->
     User = ecf_utils:check_user_session(Req),
     Req2 = case cowboy_req:binding(id, Req, -1) of
                -1 ->
-                   handle_reply(User, -1, Req, {error, forum_not_found});
+                   handle_reply(User, -1, Req, undefined);
                Id ->
                    handle_reply(User, Id, Req, ecf_forum:get_forum(Id))
            end,
@@ -50,7 +50,7 @@ handle_reply(User, Id, Req = #{method := <<"PATCH">>}, Forum) ->
                                => [<<"{{base}}/forum/">>,integer_to_list(Id)]},
                              Req2)
     end;
-handle_reply(User, _Id, Req, {error, forum_not_found}) ->
+handle_reply(User, _Id, Req, undefined) ->
     ecf_utils:reply_status(404, User, false, Req);
 handle_reply(User, Id, Req = #{method := <<"GET">>}, Forum) ->
     case ecf_perms:check_perm_forum(User, Forum, view_forum) of

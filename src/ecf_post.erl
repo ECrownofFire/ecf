@@ -64,14 +64,14 @@ delete_post(Thread, Id) ->
         end,
     mnesia:activity(transaction, F).
 
--spec get_post(ecf_thread:id(), id()) -> post() | {error, post_not_found}.
+-spec get_post(ecf_thread:id(), id()) -> post() | undefined.
 get_post(Thread, Id) ->
     F = fun() ->
                 case qlc:eval(qlc:q([X || X = #ecf_post{thread=T, id=I}
                                           <- mnesia:table(ecf_post),
                                           T =:= Thread, I =:= Id])) of
                     [Post] -> Post;
-                    _ -> {error, post_not_found}
+                    _ -> undefined
                 end
         end,
     mnesia:activity(transaction, F).

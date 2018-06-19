@@ -69,13 +69,32 @@ function doDeleteForum() {
     </tbody>
 </table>
 {% if can_create_thread %}
-<form id="form-thread" action="{{ base_url }}/thread/create" method="post">
+<form id="form-thread" action="{{ base_url }}/thread/create" method="post" onsubmit="saveThread();">
     <h3>Create New Thread</h3>
     <input type="hidden" name="forum" value="{{ forum.id }}">
-    <label><h4>Title:</h4><input type="text" name="title" required></label>
-    <label><h4>Text:</h4><textarea name="text"></textarea></label>
+    <label><h4>Title:</h4><input id="thread-title" type="text" name="title" required></label>
+    <label><h4>Text:</h4><textarea id="thread-text" name="text"></textarea></label>
     <input id="submit-thread" type="submit" value="Create">
 </form>
+<script>
+if(sessionStorage.getItem('restore')
+    && sessionStorage.getItem('loc') == "forum"
+    && sessionStorage.getItem('id') == {{ forum.id }}) {
+    var form = JSON.parse(sessionStorage.getItem('form'));
+    document.getElementById('thread-title').value = form.title;
+    document.getElementById('thread-text').value = form.text;
+}
+sessionStorage.removeItem('restore');
+sessionStorage.removeItem('form');
+sessionStorage.removeItem('loc');
+sessionStorage.removeItem('id');
+function saveThread() {
+    var form = {title: document.getElementById('thread-title').value, text: document.getElementById('thread-text').value};
+    sessionStorage.setItem('form', JSON.stringify(form));
+    sessionStorage.setItem('loc', 'forum');
+    sessionStorage.setItem('id', {{ forum.id }});
+}
+</script>
 {% endif %}
 </main>
 {% endblock %}

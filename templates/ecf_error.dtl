@@ -7,6 +7,16 @@
 {% if message %}
 <p>{{message}}</p>
 {% endif %}
+{% if storage %}
+<script>sessionStorage.setItem('restore', true);</script>
+{% else %}
+<script>
+sessionStorage.removeItem('restore');
+sessionStorage.removeItem('form');
+sessionStorage.removeItem('loc');
+sessionStorage.removeItem('id');
+</script>
+{% endif %}
 <a href="javascript:window.history.back();">Go back</a>
 </main>
 {% endblock %}

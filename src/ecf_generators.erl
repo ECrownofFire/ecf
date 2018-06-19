@@ -101,14 +101,18 @@ generate(user_edit, User, Profile) ->
     Vars2 = [{profile, ProfileV} | Vars],
     {ok, Res} = ecf_user_edit_dtl:render(Vars2),
     Res;
-generate(Status, User, Type)
+generate(Status, User, {Type, Storage})
   when is_integer(Status), Status >= 400, Status =< 499 ->
     Desc = status_desc(Status),
     Vars = get_vars(User, [integer_to_list(Status), " - ", Desc]),
-    Message = case Type of false -> false; _ -> application:get_env(ecf, Type, Desc) end,
+    Message = case Type of
+                  false -> false;
+                  _ -> application:get_env(ecf, Type, Desc)
+              end,
     Vars2 = [{code, integer_to_list(Status)},
              {desc, Desc},
-             {message, Message}
+             {message, Message},
+             {storage, Storage}
              | Vars],
     {ok, Res} = ecf_error_dtl:render(Vars2),
     Res.

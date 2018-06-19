@@ -137,8 +137,8 @@ delete_post(Id, Post) ->
 delete_post2(Thread, Post) ->
     F = fun() ->
                 case ecf_post:get_post(id(Thread), Post-1) of
-                    {error, post_not_found} ->
-                        delete_post2(Thread, Post-2);
+                    undefined ->
+                        delete_post2(Thread, Post-1);
                     _ ->
                         mnesia:write(Thread#ecf_thread{last=Post-1})
                 end

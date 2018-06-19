@@ -20,7 +20,7 @@ terminate(_Reason, _Req, _State) ->
 
 handle_get(Req, User, Id) ->
     case ecf_thread:get_thread(Id) of
-        {error, thread_not_found} ->
+        undefined ->
             ecf_utils:reply_status(404, User, false, Req);
         Thread ->
             case ecf_perms:check_perm_thread(User, Thread, view_thread) of
@@ -65,7 +65,7 @@ handle_post(Req0, User, <<"create">>) ->
                                                           integer_to_list(Id)]},
                                      Req);
                 false ->
-                    ecf_utils:reply_status(429, User, create_thread_429, Req)
+                    ecf_utils:reply_status(429, User, create_thread_429, Req, true)
             end;
         false ->
             ecf_utils:reply_status(403, User, create_thread_403, Req)

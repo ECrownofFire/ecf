@@ -4,8 +4,6 @@
 -export([start/2]).
 -export([stop/1]).
 
--define(TYPES, [<<"user">>]).
-
 -define(P_TYPES, [<<"global">>, <<"forum">>, <<"thread">>, <<"group">>]).
 
 -define(G_ACTIONS, [<<"create">>, <<"delete">>, <<"edit">>,
@@ -16,17 +14,19 @@
 
 -define(T_ACTIONS, [<<"create">>, <<"delete">>, <<"edit">>]).
 
+-define(PO_ACTIONS, [<<"create">>, <<"delete">>, <<"edit">>]).
+
 start(_Type, _Args) ->
     GActions = make_fun(?G_ACTIONS),
     UActions = make_fun(?U_ACTIONS),
     TActions = make_fun(?T_ACTIONS),
-    TypeFun = make_fun(?TYPES),
+    PoActions = make_fun(?PO_ACTIONS),
     PTypes = make_fun(?P_TYPES),
     IdC = [{id, int}],
     GCon = [{action, GActions}],
     UCon = [{action, UActions}],
     TCon = [{action, TActions}],
-    HConstraints = [{type, TypeFun}, {id, int}],
+    PoCon = [{action, PoActions}],
     PConstraints = [{type, PTypes}, {id, int}],
     Host = application:get_env(ecf, host, '_'),
     Base = application:get_env(ecf, base_url, ""),
@@ -40,16 +40,16 @@ start(_Type, _Args) ->
                {[Base, "/register"], ecf_register_handler, {}},
                {[Base, "/edit_profile"], ecf_edit_profile_handler, {}},
                {[Base, "/logout"], ecf_logout_handler, {}},
-               {[Base, "/group[/:id]"], IdC, ecf_group_handler, {}},
-               {[Base, "/group[/:action]"], GCon, ecf_group_handler, {}},
+               {[Base, "/group/:id"], IdC, ecf_group_handler, {}},
+               {[Base, "/group/:action"], GCon, ecf_group_handler, {}},
                {[Base, "/user/:id"], IdC, ecf_user_handler, {}},
                {[Base, "/user/:action"], UCon, ecf_user_handler, {}},
                {[Base, "/thread/:id"], IdC, ecf_thread_handler, {}},
                {[Base, "/thread/:action"], TCon, ecf_thread_handler, {}},
+               {[Base, "/post/:action"], PoCon, ecf_post_handler, {}},
                {[Base, "/:type/[:id/]perms"], PConstraints, ecf_perms_handler, {}},
-               {[Base, "/[:type/:id]"], HConstraints, ecf_handler, {}},
+               {[Base, "/"], ecf_handler, {}},
                {[Base, "/forum/[:id]"], IdC, ecf_forum_handler, {}},
-               {[Base, "/post"], ecf_post_handler, {}},
                {[Base, "/[...]"], ecf_404_handler, {}}]}
     ]),
     {ok, _Pid} = cowboy:start_clear(ecf_http_listener,

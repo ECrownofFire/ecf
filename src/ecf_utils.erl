@@ -1,6 +1,6 @@
 -module(ecf_utils).
 
--export([check_user_session/1, get_ip/1, reply_status/4]).
+-export([check_user_session/1, get_ip/1, reply_status/4, reply_status/5]).
 
 %%% Contains a few utility functions
 
@@ -49,7 +49,12 @@ get_ip(Req) ->
 -spec reply_status(integer(), ecf_user:user() | undefined, atom(),
                    cowboy_req:req()) -> cowboy_req:req().
 reply_status(Status, User, Type, Req) ->
-    Html = ecf_generators:generate(Status, User, Type),
+    reply_status(Status, User, Type, Req, false).
+
+-spec reply_status(integer(), ecf_user:user() | undefined, atom(),
+                   cowboy_req:req(), boolean()) -> cowboy_req:req().
+reply_status(Status, User, Type, Req, Storage) ->
+    Html = ecf_generators:generate(Status, User, {Type, Storage}),
     Map = case Status of
               401 ->
                   #{<<"content-type">> => <<"text/html">>,

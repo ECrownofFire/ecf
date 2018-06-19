@@ -37,11 +37,11 @@ create_table(Nodes) ->
 
 %% Forum actions
 
--spec get_forum(id()) -> forum() | {error, forum_not_found}.
+-spec get_forum(id()) -> forum() | undefined.
 get_forum(Id) ->
     F = fun() ->
                 case mnesia:read({ecf_forum, Id}) of
-                    [] -> {error, forum_not_found};
+                    [] -> undefined;
                     [Forum] -> Forum
                 end
         end,
