@@ -39,11 +39,11 @@ create_table(Nodes) ->
                          {disc_copies, Nodes}]),
     ok.
 
--spec get_thread(id()) -> thread() | {error, thread_not_found}.
+-spec get_thread(id()) -> thread() | undefined.
 get_thread(Id) ->
     F = fun() ->
                 case mnesia:read({ecf_thread, Id}) of
-                    [] -> {error, thread_not_found};
+                    [] -> undefined;
                     [T] -> T
                 end
         end,
@@ -58,7 +58,7 @@ get_forum_threads(Forum) ->
 
 %% Thread actions
 -spec create_thread(ecf_forum:id(), binary(), erlang:timestamp(),
-                    ecf_user:id(), binary()) -> thread().
+                    ecf_user:id(), binary()) -> id().
 create_thread(Forum, Title, Time, Creator, Text) ->
     F = fun() ->
                 Id = ecf_db:get_new_id(ecf_thread),
@@ -66,7 +66,7 @@ create_thread(Forum, Title, Time, Creator, Text) ->
                                          time=Time,last_time=Time,
                                          creator=Creator,perms=[]}),
                 ecf_post:new_post(Id, Creator, Time, Text),
-                get_thread(Id)
+                Id
         end,
     mnesia:activity(transaction, F).
 

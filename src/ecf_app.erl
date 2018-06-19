@@ -14,17 +14,20 @@
 
 -define(U_ACTIONS, [<<"edit">>]).
 
+-define(T_ACTIONS, [<<"create">>, <<"delete">>, <<"edit">>]).
+
 start(_Type, _Args) ->
     GActions = make_fun(?G_ACTIONS),
     UActions = make_fun(?U_ACTIONS),
+    TActions = make_fun(?T_ACTIONS),
     TypeFun = make_fun(?TYPES),
     PTypes = make_fun(?P_TYPES),
     GroupActions = [{action, GActions}],
-    UConstraints = [{id, int}, {action, UActions}],
+    UCon = [{id, int}, {action, UActions}],
+    TCon = [{action, TActions}],
     HConstraints = [{type, TypeFun}, {id, int}],
     PConstraints = [{type, PTypes}, {id, int}],
     IdC = [{id, int}],
-    TConstraints = [{id, int}, {post, int}],
     Host = application:get_env(ecf, host, '_'),
     Base = application:get_env(ecf, base_url, ""),
     Port = application:get_env(ecf, port, 8080),
@@ -39,11 +42,12 @@ start(_Type, _Args) ->
                {[Base, "/logout"], ecf_logout_handler, {}},
                {[Base, "/group[/:id]"], IdC, ecf_group_handler, {}},
                {[Base, "/group[/:action]"], GroupActions, ecf_group_handler, {}},
-               {[Base, "/user[/:id][/:action]"], UConstraints, ecf_user_handler, {}},
+               {[Base, "/user[/:id][/:action]"], UCon, ecf_user_handler, {}},
+               {[Base, "/thread/:id"], IdC, ecf_thread_handler, {}},
+               {[Base, "/thread/:action"], TCon, ecf_thread_handler, {}},
                {[Base, "/:type/[:id/]perms"], PConstraints, ecf_perms_handler, {}},
                {[Base, "/[:type/:id]"], HConstraints, ecf_handler, {}},
                {[Base, "/forum/[:id]"], IdC, ecf_forum_handler, {}},
-               {[Base, "/thread/[:id[/:post]]"], TConstraints, ecf_thread_handler, {}},
                {[Base, "/post"], ecf_post_handler, {}},
                {[Base, "/[...]"], ecf_404_handler, {}}]}
     ]),
