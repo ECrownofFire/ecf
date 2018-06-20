@@ -76,7 +76,7 @@ handle_post(Req0, User, <<"delete">>) ->
     Id = binary_to_integer(Id0),
     case ecf_thread:get_thread(Id) of
         undefined ->
-            ecf_utils:reply(400, User, thread_400, Req);
+            ecf_utils:reply_status(400, User, thread_400, Req);
         Thread ->
             case ecf_perms:check_perm_thread(User, Thread, delete_thread) of
                 true ->
@@ -89,7 +89,7 @@ handle_post(Req0, User, <<"delete">>) ->
                                            integer_to_list(Forum)]},
                                      Req);
                 false ->
-                    ecf_utils:reply(403, User, delete_thread_403, Req)
+                    ecf_utils:reply_status(403, User, delete_thread_403, Req)
             end
     end;
 handle_post(Req0, User, <<"edit">>) ->
@@ -98,7 +98,7 @@ handle_post(Req0, User, <<"edit">>) ->
     Id = binary_to_integer(Id0),
     case ecf_thread:get_thread(Id) of
         undefined ->
-            ecf_utils:reply(400, User, thread_400, Req);
+            ecf_utils:reply_status(400, User, thread_400, Req);
         Thread ->
             case ecf_perms:check_perm_thread(User, Thread, edit_thread) of
                 true ->
@@ -110,7 +110,7 @@ handle_post(Req0, User, <<"edit">>) ->
                                                           Id0]},
                                      Req);
                 false ->
-                    ecf_utils:reply(403, User, edit_thread_403, Req)
+                    ecf_utils:reply_status(403, User, edit_thread_403, Req)
             end
     end.
 

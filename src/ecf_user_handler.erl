@@ -40,7 +40,7 @@ handle_get(Req, User, _, <<"edit">>) ->
             case ecf_user:id(User) =:= Id
                  orelse ecf_perms:check_perm_global(User, edit_user) of
                 false ->
-                    ecf_utils:reply(403, User, edit_user_403, Req);
+                    ecf_utils:reply_status(403, User, edit_user_403, Req);
                 true ->
                     Html = ecf_generators:generate(user_edit, User, Profile),
                     cowboy_req:reply(200,

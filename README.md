@@ -16,6 +16,7 @@ At the bare minimum, ECF still needs the following:
 * Tests
 * Lots and lots of CSS/HTML/JS magic to make it look decent!
 * Terms of use and privacy policy?
+* Limit lengths on various things
 * Administration frontend
     * Subforum reordering
     * Banning accounts
