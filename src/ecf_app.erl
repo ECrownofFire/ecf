@@ -16,17 +16,16 @@
 
 -define(PO_ACTIONS, [<<"create">>, <<"delete">>, <<"edit">>]).
 
+-define(F_ACTIONS, [<<"create">>, <<"delete">>, <<"edit">>]).
+
 start(_Type, _Args) ->
-    GActions = make_fun(?G_ACTIONS),
-    UActions = make_fun(?U_ACTIONS),
-    TActions = make_fun(?T_ACTIONS),
-    PoActions = make_fun(?PO_ACTIONS),
     PTypes = make_fun(?P_TYPES),
     IdC = [{id, int}],
-    GCon = [{action, GActions}],
-    UCon = [{action, UActions}],
-    TCon = [{action, TActions}],
-    PoCon = [{action, PoActions}],
+    GCon = [{action, make_fun(?G_ACTIONS)}],
+    UCon = [{action, make_fun(?U_ACTIONS)}],
+    TCon = [{action, make_fun(?T_ACTIONS)}],
+    PoCon = [{action, make_fun(?PO_ACTIONS)}],
+    FCon = [{action, make_fun(?F_ACTIONS)}],
     PConstraints = [{type, PTypes}, {id, int}],
     Host = application:get_env(ecf, host, '_'),
     Base = application:get_env(ecf, base_url, ""),
@@ -47,9 +46,10 @@ start(_Type, _Args) ->
                {[Base, "/thread/:id"], IdC, ecf_thread_handler, {}},
                {[Base, "/thread/:action"], TCon, ecf_thread_handler, {}},
                {[Base, "/post/:action"], PoCon, ecf_post_handler, {}},
+               {[Base, "/forum/:id"], IdC, ecf_forum_handler, {}},
+               {[Base, "/forum/:action"], FCon, ecf_forum_handler, {}},
                {[Base, "/:type/[:id/]perms"], PConstraints, ecf_perms_handler, {}},
                {[Base, "/"], ecf_handler, {}},
-               {[Base, "/forum/[:id]"], IdC, ecf_forum_handler, {}},
                {[Base, "/[...]"], ecf_404_handler, {}}]}
     ]),
     {ok, _Pid} = cowboy:start_clear(ecf_http_listener,

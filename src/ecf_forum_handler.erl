@@ -5,70 +5,100 @@
 -export([init/2, terminate/3]).
 
 
-init(Req, State) ->
+init(Req = #{method := <<"GET">>}, State) ->
     User = ecf_utils:check_user_session(Req),
-    Req2 = case cowboy_req:binding(id, Req, -1) of
-               -1 ->
-                   handle_reply(User, -1, Req, undefined);
-               Id ->
-                   handle_reply(User, Id, Req, ecf_forum:get_forum(Id))
-           end,
+    Id = cowboy_req:binding(id, Req, -1),
+    Req2 = handle_get(Req, User, Id),
+    {ok, Req2, State};
+init(Req = #{method := <<"POST">>}, State) ->
+    User = ecf_utils:check_user_session(Req),
+    Action = cowboy_req:binding(action, Req),
+    Req2 = handle_post(Req, User, Action),
     {ok, Req2, State}.
 
 
 terminate(_Reason, _Req, _State) ->
     ok.
 
-handle_reply(User, -1, Req = #{method := <<"PUT">>}, _) ->
+handle_get(Req, User, -1) ->
+    ecf_utils:reply(404, User, false, Req);
+handle_get(Req, User, Id) ->
+    case ecf_forum:get_forum(Id) of
+        undefined ->
+            ecf_utils:reply_status(404, User, false, Req);
+        Forum ->
+            case ecf_perms:check_perm_forum(User, Forum, view_forum) of
+                false ->
+                    ecf_utils:reply_status(403, User, view_forum_403, Req);
+                true ->
+                    Threads0 = ecf_thread:get_forum_threads(Id),
+                    Threads = ecf_thread:visible_threads(Threads0, User),
+                    Html = ecf_generators:generate(forum, User, {Forum, Threads}),
+                    cowboy_req:reply(200, #{<<"content-type">> => <<"text/html">>},
+                                     Html, Req)
+            end
+    end.
+
+
+handle_post(Req, User, undefined) ->
+    ecf_utils:reply(400, User, forum_400, Req);
+handle_post(Req, User, <<"create">>) ->
     case ecf_perms:check_perm_global(User, create_forum) of
         false ->
-            cowboy_req:reply(403, Req);
+            ecf_utils:reply_status(403, User, create_forum_403, Req);
         true ->
             {ok, KV, Req2} = cowboy_req:read_urlencoded_body(Req),
             {_, Name} = lists:keyfind(<<"name">>, 1, KV),
             {_, Desc} = lists:keyfind(<<"desc">>, 1, KV),
             Id = ecf_forum:new_forum(Name, Desc, 0),
-            cowboy_req:reply(201,
-                             #{<<"content-location">>
-                               => [<<"{{base}}/forum/">>,integer_to_list(Id)]},
+            Base = application:get_env(ecf, base_url, ""),
+            cowboy_req:reply(303,
+                             #{<<"location">>
+                               => [Base, <<"/forum/">>, integer_to_list(Id)]},
                              Req2)
     end;
-handle_reply(_User, _Id, Req = #{method := <<"PUT">>}, _) ->
-    cowboy_req:reply(409, Req);
-handle_reply(User, Id, Req = #{method := <<"PATCH">>}, Forum) ->
-    case ecf_perms:check_perm_forum(User, Forum, edit_forum) of
-        false ->
-            cowboy_req:reply(403, Req);
-        true ->
-            {ok, KV, Req2} = cowboy_req:read_urlencoded_body(Req),
-            {_, Name} = lists:keyfind(<<"name">>, 1, KV),
-            {_, Desc} = lists:keyfind(<<"desc">>, 1, KV),
-            ok = ecf_forum:edit_name(Id, Name),
-            ok = ecf_forum:edit_desc(Id, Desc),
-            cowboy_req:reply(204,
-                             #{<<"content-location">>
-                               => [<<"{{base}}/forum/">>,integer_to_list(Id)]},
-                             Req2)
+handle_post(Req0, User, <<"delete">>) ->
+    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
+    {_, Id0} = lists:keyfind(<<"id">>, 1, KV),
+    Id = binary_to_integer(Id0),
+    case ecf_forum:get_forum(Id) of
+        undefined ->
+            ecf_utils:reply_status(400, User, forum_400, Req);
+        Forum ->
+            case ecf_perms:check_perm_forum(User, Forum, delete_forum) of
+                false ->
+                    ecf_utils:reply_status(403, User, delete_forum_403, Req);
+                true ->
+                    ok = ecf_forum:delete_forum(Id),
+                    Base = application:get_env(ecf, base_url, ""),
+                    cowboy_req:reply(303,
+                                     #{<<"location">> => [Base, "/"]},
+                                     Req)
+            end
     end;
-handle_reply(User, _Id, Req, undefined) ->
-    ecf_utils:reply_status(404, User, false, Req);
-handle_reply(User, Id, Req = #{method := <<"GET">>}, Forum) ->
-    case ecf_perms:check_perm_forum(User, Forum, view_forum) of
-        false ->
-            ecf_utils:reply_status(403, User, view_forum_403, Req);
-        true ->
-            Threads = ecf_thread:visible_threads(ecf_thread:get_forum_threads(Id),
-                                                 User),
-            Html = ecf_generators:generate(forum, User, {Forum, Threads}),
-            cowboy_req:reply(200, #{<<"content-type">> => <<"text/html">>},
-                             Html, Req)
+handle_post(Req0, User, <<"edit">>) ->
+    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
+    {_, Id0} = lists:keyfind(<<"id">>, 1, KV),
+    Id = binary_to_integer(Id0),
+    case ecf_forum:get_forum(Id) of
+        undefined ->
+            ecf_utils:reply_status(400, User, forum_400, Req);
+        Forum ->
+            case ecf_perms:check_perm_forum(User, Forum, edit_forum) of
+                false ->
+                    ecf_utils:reply_status(403, User, edit_forum_403, Req);
+                true ->
+                    {_, Name} = lists:keyfind(<<"name">>, 1, KV),
+                    {_, Desc} = lists:keyfind(<<"desc">>, 1, KV),
+                    ok = ecf_forum:edit_name(Id, Name),
+                    ok = ecf_forum:edit_desc(Id, Desc),
+                    Base = application:get_env(ecf, base_url, ""),
+                    cowboy_req:reply(303,
+                                     #{<<"location">>
+                                       => [Base, <<"/forum/">>, Id0]},
+                                     Req)
+            end
     end;
-handle_reply(User, Id, Req = #{method := <<"DELETE">>}, Forum) ->
-    case ecf_perms:check_perm_forum(User, Forum, delete_forum) of
-        false ->
-            cowboy_req:reply(403, Req);
-        true ->
-            ok = ecf_forum:delete_forum(Id),
-            cowboy_req:reply(204, Req)
-    end.
+handle_post(Req, User, _) ->
+    ecf_utils:reply_status(400, User, forum_400, Req).
 
