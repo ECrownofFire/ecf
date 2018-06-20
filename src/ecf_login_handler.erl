@@ -12,7 +12,7 @@ init(Req = #{method := <<"GET">>}, State) ->
     #{url := Url} = cowboy_req:match_qs([{url, [], <<"">>}], Req),
     User = ecf_utils:check_user_session(Req),
     Html = ecf_generators:generate(login, User,
-                                   {ecf_log:check_log("", ecf_utils:get_ip(Req)),
+                                   {ecf_log:check_log(<<>>, ecf_utils:get_ip(Req)),
                                     Url, login_message}),
     Req2 = cowboy_req:reply(200, #{<<"content-type">> => <<"text/html">>},
                             Html, Req),

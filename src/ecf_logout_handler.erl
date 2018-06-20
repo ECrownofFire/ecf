@@ -8,7 +8,9 @@ init(Req, State) ->
     #{url := Url} = cowboy_req:match_qs([{url, [], <<"">>}], Req),
     case maps:get(method, Req) of
         <<"POST">> ->
-            ok = ecf_user:reset_session(ecf_user:id(User)),
+            #{session := SessEnc} = cowboy_req:match_cookies([session], Req),
+            Sess = base64:decode(SessEnc),
+            ok = ecf_user:reset_session(ecf_user:id(User), Sess),
             Req2 = cowboy_req:set_resp_cookie(<<"session">>, <<"0">>, Req,
                                               #{max_age => 0}),
             Req3 = cowboy_req:set_resp_cookie(<<"user">>, <<"0">>, Req2,

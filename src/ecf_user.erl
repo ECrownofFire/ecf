@@ -18,7 +18,7 @@
 -export([create_table/1,
          new_user/5,
          get_user/1, get_user_by_name/1, get_user_by_email/1,
-         edit_name/2, edit_email/2, edit_pass/2, new_session/1, reset_session/1,
+         edit_name/2, edit_email/2, edit_pass/2, new_session/1, reset_session/2,
          enable_user/1, disable_user/1,
          add_group/2, remove_group/2,
          edit_bio/2, edit_bday/2,
@@ -33,7 +33,7 @@
         {id     :: id(),
          name   :: binary(),
          enabled:: boolean(),
-         session:: binary(),
+         session:: [{binary(), erlang:timestamp()}],
          salt   :: binary(),
          pass   :: binary(),
          email  :: binary(),
@@ -63,6 +63,7 @@ new_user(Name, Pass, Email0, Time, Bday) ->
     {ok, Hash} = pbkdf2:pbkdf2(?HMAC, Pass, Salt,
                                ?HASH_ITERATIONS, ?HASH_LENGTH),
     Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
+    Sess = {Session, Time},
     F = fun() ->
                 case get_user_by_name(Name) of
                     undefined ->
@@ -72,7 +73,7 @@ new_user(Name, Pass, Email0, Time, Bday) ->
                                 ok = mnesia:write(
                                        #ecf_user{
                                           id=Id, name=Name, enabled=true,
-                                          salt=Salt, pass=Hash, session=Session,
+                                          salt=Salt, pass=Hash, session=[Sess],
                                           email=Email, joined=Time, bday=Bday,
                                           last_post=Time}),
                                 % All users are in the basic group
@@ -133,11 +134,12 @@ get_user_by_email(Email) ->
 -spec edit_name(id(), binary()) -> binary() | {error, username_taken}.
 edit_name(Id, Name) ->
     Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
+    Sess = {Session, erlang:timestamp()},
     F = fun() ->
                 case get_user_by_name(Name) of
                     undefined ->
                         [User] = mnesia:wread({ecf_user, Id}),
-                        ok = mnesia:write(User#ecf_user{name=Name}),
+                        ok = mnesia:write(User#ecf_user{name=Name,session=[Sess]}),
                         Session;
                     _ ->
                         {error, username_taken}
@@ -148,11 +150,12 @@ edit_name(Id, Name) ->
 -spec edit_email(id(), binary()) -> binary() | {error, email_taken}.
 edit_email(Id, Email) ->
     Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
+    Sess = {Session, erlang:timestamp()},
     F = fun() ->
                 case get_user_by_email(Email) of
                     undefined ->
                         [User] = mnesia:wread({ecf_user, Id}),
-                        ok = mnesia:write(User#ecf_user{email=Email,session=Session}),
+                        ok = mnesia:write(User#ecf_user{email=Email,session=[Sess]}),
                         Session;
                     _ ->
                         {error, email_taken}
@@ -166,9 +169,10 @@ edit_pass(Id, NewPass) ->
     {ok, Hash} = pbkdf2:pbkdf2(?HMAC, NewPass, Salt,
                                ?HASH_ITERATIONS, ?HASH_LENGTH),
     Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
+    Sess = {Session, erlang:timestamp()},
     F = fun() ->
                 [User] = mnesia:wread({ecf_user, Id}),
-                ok = mnesia:write(User#ecf_user{pass=Hash,salt=Salt,session=Session}),
+                ok = mnesia:write(User#ecf_user{pass=Hash,salt=Salt,session=[Sess]}),
                 Session
         end,
     mnesia:activity(transaction, F).
@@ -176,21 +180,39 @@ edit_pass(Id, NewPass) ->
 
 -spec new_session(id()) -> binary().
 new_session(Id) ->
-    New = crypto:strong_rand_bytes(?SESSION_LENGTH),
+    Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
     F = fun() ->
                 [User] = mnesia:wread({ecf_user, Id}),
+                New = [{Session, erlang:timestamp()}|User#ecf_user.session],
                 mnesia:write(User#ecf_user{session=New})
         end,
     ok = mnesia:activity(transaction, F),
-    New.
+    Session.
 
--spec reset_session(id()) -> ok.
-reset_session(Id) ->
+-spec reset_session(id(), binary()) -> ok.
+reset_session(Id, Session) ->
     F = fun() ->
                 [User] = mnesia:wread({ecf_user, Id}),
-                mnesia:write(User#ecf_user{session = <<"">>})
+                New = lists:keydelete(Session, 1, User#ecf_user.session),
+                mnesia:write(User#ecf_user{session=New})
         end,
     mnesia:activity(transaction, F).
+
+-spec clean_sessions(id()) -> ok.
+clean_sessions(Id) ->
+    F = fun() ->
+                [User] = mnesia:wread({ecf_user, Id}),
+                Old = User#ecf_user.session,
+                New = lists:filter(fun clean_sess/1, Old),
+                mnesia:write(User#ecf_user{session=New})
+        end,
+    mnesia:activity(transaction, F).
+
+clean_sess({_, Time}) ->
+    Limit = application:get_env(ecf, session_time, 604800) * 1000000,
+    Diff = timer:now_diff(erlang:timestamp(), Time),
+    Diff < Limit.
+
 
 -spec enable_user(id()) -> ok.
 enable_user(Id) ->
@@ -293,8 +315,13 @@ enabled(User) ->
 
 -spec check_session(user(), binary()) -> boolean().
 check_session(User, Session) ->
-    Sess = User#ecf_user.session,
-    Sess =/= <<"">> andalso Sess =:= Session.
+    ok = clean_sessions(id(User)),
+    case lists:keyfind(Session, 1, User#ecf_user.session) of
+        {_, _} ->
+            enabled(User);
+        false ->
+            false
+    end.
 
 -spec check_pass(user(), binary()) -> boolean().
 check_pass(User, Pass) ->
