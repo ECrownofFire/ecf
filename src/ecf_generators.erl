@@ -51,14 +51,22 @@ generate(user, User, Profile) ->
 generate(groups, User, Groups) ->
     Vars = get_vars(User, "Groups"),
     GroupList = group_list(User, Groups),
-    Vars2 = [{group_list, GroupList}|Vars],
+    CanCreate = ecf_perms:check_perm_global(User, create_group),
+    Vars2 = [{group_list, GroupList},
+             {can_create, CanCreate}
+             | Vars],
     {ok, Res} = ecf_groups_dtl:render(Vars2),
     Res;
 generate(group, User, Group) ->
     Vars = get_vars(User, ["Group: ", ecf_group:name(Group)]),
     MemberList = users(ecf_group:members(Group)),
     GroupV = [{member_list, MemberList}|group(Group)],
-    Vars2 = [{group, GroupV}|Vars],
+    CanEdit = ecf_perms:check_perm_group(User, Group, edit_group),
+    CanDelete = ecf_perms:check_perm_group(User, Group, delete_group),
+    Vars2 = [{group, GroupV},
+             {can_edit, CanEdit},
+             {can_delete, CanDelete}
+             | Vars],
     {ok, Res} = ecf_group_dtl:render(Vars2),
     Res;
 generate(forum, User, {Forum, Threads}) ->

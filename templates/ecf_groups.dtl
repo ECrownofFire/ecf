@@ -33,6 +33,14 @@
         {% endfor %}
     </tbody>
 </table>
+{% if can_create %}
+<form action="/group/create" method="post">
+    <h3>Create Group</h3>
+    <label>Name:<input name="name" value="{{ group.name }}"></label>
+    <label>Description:<input name="desc" value="{{ group.desc }}"></label>
+    <button>Create Group</button>
+</form>
+{% endif %}
 </main>
 {% endblock %}
 

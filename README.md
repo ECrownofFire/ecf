@@ -22,8 +22,6 @@ At the bare minimum, ECF still needs the following:
     * Banning accounts
     * Editing permissions
     * Groups
-        * Creation
-        * Editing
         * Adding/removing members
 * Security
     * HTTPS (works fine behind nginx reverse proxy though)
