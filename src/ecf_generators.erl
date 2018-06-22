@@ -167,6 +167,7 @@ user(User) ->
      {bio, ecf_user:bio(User)},
      {title, ecf_user:title(User)},
      {loc, ecf_user:loc(User)},
+     {group_list, [group(X) || X <- ecf_user:groups(User)]},
      {posts, integer_to_list(ecf_user:posts(User))}].
 
 
@@ -201,6 +202,8 @@ group(User, Group) ->
       {can_join, CanJoin}
       | group(Group)].
 
+group(Id) when is_integer(Id) ->
+    group(ecf_group:get_group(Id));
 group(Group) ->
     [{id, integer_to_list(ecf_group:id(Group))},
      {name, ecf_group:name(Group)},

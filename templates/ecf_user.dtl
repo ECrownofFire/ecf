@@ -11,6 +11,10 @@
     <dt>Birthday<dd id="bday"><time class="format-date" datetime="{{ profile.bday }}"></time></dd>
     <dt>Biography<dd id="bio">{{ profile.bio }}</dd>
     <dt>Location<dd id="loc">{{ profile.loc }}</dd>
+    <dt>Groups<dd id="groups">
+    <ul>{% for group in profile.group_list %}
+        <li><a href="{{ base_url }}/group/{{ group.id }}">{{ group.name }}</a></li>
+        {% endfor %}</ul></dd>
     <script language="javascript" type="text/javascript">
         (function() {
             var B = document.getElementById('bday').children[0];
