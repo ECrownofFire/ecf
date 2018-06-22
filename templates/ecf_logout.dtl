@@ -1,10 +1,19 @@
 {% extends "ecf_base.dtl" %}
 {# vim: set ft=htmldjango: #}
 {% block content %}
+{% if user %}
 <main id="logout">
+    <p>Click here to logout</p>
+    <form action="{{ base_url }}/logout" method="post">
+        <button>Logout</button>
+    </form>
+</main>
+{% else %}
+<main id="logged-out">
     <p>{{ message }}</p>
     <script type="text/javascript">
         window.setTimeout(function() { location.href = "{{ base_url }}/{{ url }}";}, 2000);
     </script>
 </main>
+{% endif %}
 {% endblock %}

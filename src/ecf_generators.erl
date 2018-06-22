@@ -27,11 +27,16 @@ generate(login, User, {Captcha, Url, Type}) ->
              | Vars],
     {ok, Res} = ecf_login_dtl:render(Vars2),
     Res;
-generate(logout, User, Url) ->
-    Vars = get_vars(User, "Logout"),
+generate(logout, undefined, Url) ->
+    Vars = get_vars(undefined, "Logout"),
     Message = application:get_env(ecf, logout_message,
                                   <<"You've successfully been logged out.">>),
     Vars2 = [{message, Message}, {url, Url}|Vars],
+    {ok, Res} = ecf_logout_dtl:render(Vars2),
+    Res;
+generate(logout, User, Url) ->
+    Vars = get_vars(User, "Logout"),
+    Vars2 = [{url, Url} | Vars],
     {ok, Res} = ecf_logout_dtl:render(Vars2),
     Res;
 generate(register, _, {Type, BaseVars}) ->
