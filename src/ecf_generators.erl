@@ -161,15 +161,16 @@ users(Users) ->
 user(undefined) ->
     false;
 user(User) ->
+    FormatStr = "~4.10.0B-~2.10.0B-~2.10.0B",
     Bday = case ecf_user:bday(User) of
-               undefined -> false;
-               B -> iso8601:format(B)
+               {{Y,M,D},_} -> io_lib:format(FormatStr, [Y, M, D]);
+               _ -> ""
            end,
     [{id, ecf_user:id(User)},
      {name, ecf_user:name(User)},
      {email, ecf_user:email(User)},
      {joined, iso8601:format(ecf_user:joined(User))},
-     {birthday, Bday},
+     {bday, Bday},
      {bio, ecf_user:bio(User)},
      {title, ecf_user:title(User)},
      {loc, ecf_user:loc(User)},
