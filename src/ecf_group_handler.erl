@@ -62,7 +62,8 @@ handle_post(User, Req0, <<"delete">>) ->
         undefined ->
             ecf_utils:reply_status(400, User, invalid_group, Req);
         Group ->
-            case ecf_perms:check_perm_group(User, Group, delete_group) of
+            case Id >= 2
+                 andalso ecf_perms:check_perm_group(User, Group, delete_group) of
                 true ->
                     ok = ecf_group:delete_group(Id),
                     Base = application:get_env(ecf, base_url, ""),

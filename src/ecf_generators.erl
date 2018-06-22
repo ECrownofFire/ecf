@@ -62,7 +62,8 @@ generate(group, User, Group) ->
     MemberList = users(ecf_group:members(Group)),
     GroupV = [{member_list, MemberList}|group(Group)],
     CanEdit = ecf_perms:check_perm_group(User, Group, edit_group),
-    CanDelete = ecf_perms:check_perm_group(User, Group, delete_group),
+    CanDelete = ecf_group:id(Group) >= 2
+                andalso ecf_perms:check_perm_group(User, Group, delete_group),
     Vars2 = [{group, GroupV},
              {can_edit, CanEdit},
              {can_delete, CanDelete}
