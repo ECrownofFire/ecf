@@ -54,8 +54,7 @@ start(_Type, _Args) ->
     ]),
     {ok, _Pid} = cowboy:start_clear(ecf_http_listener,
         [{port, Port}],
-        #{env => #{dispatch => Dispatch},
-          stream_handlers => [ecf_stream, cowboy_stream_h]
+        #{env => #{dispatch => Dispatch}
          }
     ),
     ecf_sup:start_link().
