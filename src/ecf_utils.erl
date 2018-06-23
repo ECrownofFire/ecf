@@ -37,12 +37,12 @@ check_user_session(ID, SessionEncoded) ->
 % TODO: support x-forwarded-for in case of multiple forwards
 -spec get_ip(cowboy_req:req()) -> inet:ip_address().
 get_ip(Req) ->
-    case cowboy_req:header(<<"x-forwarded-for">>, Req) of
+    case cowboy_req:parse_header(<<"x-forwarded-for">>, Req) of
         undefined ->
             {Addr, _} = cowboy_req:peer(Req),
             Addr;
-        I ->
-            {ok, Ip} = inet:parse_address(binary_to_list(I)),
+        List ->
+            {ok, Ip} = inet:parse_address(binary_to_list(lists:last(List))),
             Ip
     end.
 

@@ -21,7 +21,7 @@ terminate(_Reason, _Req, _State) ->
     ok.
 
 handle_get(Req, User, -1) ->
-    ecf_utils:reply(404, User, false, Req);
+    ecf_utils:reply_status(404, User, false, Req);
 handle_get(Req, User, Id) ->
     case ecf_forum:get_forum(Id) of
         undefined ->
@@ -41,7 +41,7 @@ handle_get(Req, User, Id) ->
 
 
 handle_post(Req, User, undefined) ->
-    ecf_utils:reply(400, User, forum_400, Req);
+    ecf_utils:reply_status(400, User, forum_400, Req);
 handle_post(Req, User, <<"create">>) ->
     case ecf_perms:check_perm_global(User, create_forum) of
         false ->
