@@ -1,3 +1,20 @@
+#main-menu ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+#main-menu ul li {
+    display: inline-block;
+    padding: 0 8px;
+}
+
+#thread-table {
+    width: 100%;
+}
+
+.thread-title {
+    width: 60%;
+}
 
 #post-list ol {
     list-style-type: none;
