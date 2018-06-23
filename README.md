@@ -21,8 +21,6 @@ At the bare minimum, ECF still needs the following:
     * Subforum reordering
     * Banning accounts
     * Editing permissions
-    * Groups
-        * Adding/removing members
 * Security
     * HTTPS (works fine behind nginx reverse proxy though)
     * Email on registration (need `gen_smtp`)

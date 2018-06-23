@@ -50,7 +50,13 @@ generate(user, User, Profile) ->
     Vars = get_vars(User, ["Profile of ", ecf_user:name(Profile)]),
     Self = User =/= undefined andalso ecf_user:id(User) =:= ecf_user:id(Profile),
     CanEdit = Self orelse ecf_perms:check_perm_global(User, edit_user),
-    Vars2 = [{can_edit, CanEdit}, {profile, user(Profile)} | Vars],
+    AddList = groups_add(User, Profile),
+    RemList = groups_rem(User, Profile),
+    Vars2 = [{can_edit, CanEdit},
+             {profile, user(Profile)},
+             {add_list, AddList},
+             {rem_list, RemList}
+             | Vars],
     {ok, Res} = ecf_user_dtl:render(Vars2),
     Res;
 generate(groups, User, Groups) ->
@@ -216,6 +222,25 @@ group(Group) ->
      {name, ecf_group:name(Group)},
      {desc, ecf_group:desc(Group)},
      {members, integer_to_list(length(ecf_group:members(Group)))}].
+
+
+groups_add(User, Profile) ->
+    Gs = ecf_user:groups(Profile),
+    F1 = fun(G) -> not lists:member(ecf_group:id(G), Gs)
+                   andalso ecf_group:id(G) =/= 1
+         end,
+    Groups = lists:filter(F1, ecf_group:get_groups()),
+    F2 = fun(G) -> ecf_perms:check_perm_group(User, G, manage_group) end,
+    lists:filter(F2, Groups).
+
+groups_rem(User, Profile) ->
+    Gs = ecf_user:groups(Profile),
+    F1 = fun(G) -> lists:member(ecf_group:id(G), Gs)
+                   andalso ecf_group:id(G) =/= 1
+         end,
+    Groups = lists:filter(F1, ecf_group:get_groups()),
+    F2 = fun(G) -> ecf_perms:check_perm_group(User, G, manage_group) end,
+    lists:filter(F2, Groups).
 
 
 thread_list(Threads) ->

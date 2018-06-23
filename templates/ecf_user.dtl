@@ -16,6 +16,30 @@
         <li><a href="{{ base_url }}/group/{{ group.id }}">{{ group.name }}</a></li>
         {% endfor %}</ul></dd>
 </dl>
+{% if add_list %}
+<form action="/group/add" method="post">
+    <input type="hidden" name="user" value="{{ profile.id }}">
+    <select name="id" required>
+        <option value="">Add to Group
+        {% for group in add_list %}
+        <option value="{{ group.id }}">{{ group.name }}
+        {% endfor %}
+    </select>
+    <button>Add</button>
+</form>
+{% endif %}
+{% if rem_list %}
+<form action="/group/remove" method="post">
+    <input type="hidden" name="user" value="{{ profile.id }}">
+    <select name="id" required>
+        <option value="">Remove from Group
+        {% for group in rem_list %}
+        <option value="{{ group.id }}">{{ group.name }}
+        {% endfor %}
+    </select>
+    <button>Remove</button>
+</form>
+{% endif %}
 {% if can_edit %}
 <a href="{{ base_url }}/user/edit?id={{ profile.id }}">Edit profile</a>
 {% endif %}

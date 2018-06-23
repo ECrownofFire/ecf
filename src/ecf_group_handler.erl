@@ -104,7 +104,8 @@ handle_post(User, Req0, <<"join">>) ->
         undefined ->
             ecf_utils:reply_status(400, User, invalid_group, Req);
         Group ->
-            case ecf_perms:check_perm_group(User, Group, join_group) of
+            case Id =/= 1
+                 andalso ecf_perms:check_perm_group(User, Group, join_group) of
                 true ->
                     ok = ecf_group:add_member(Id, ecf_user:id(User)),
                     Base = application:get_env(ecf, base_url, ""),
@@ -123,7 +124,8 @@ handle_post(User, Req0, <<"leave">>) ->
         undefined ->
             ecf_utils:reply_status(400, User, invalid_group, Req);
         Group ->
-            case ecf_perms:check_perm_group(User, Group, leave_group) of
+            case Id =/= 1
+                 andalso ecf_perms:check_perm_group(User, Group, leave_group) of
                 true ->
                     ok = ecf_group:remove_member(Id, ecf_user:id(User)),
                     Base = application:get_env(ecf, base_url, ""),
@@ -144,7 +146,8 @@ handle_post(User, Req0, <<"add">>) ->
         undefined ->
             ecf_utils:reply_status(400, User, invalid_group, Req);
         Group ->
-            case ecf_perms:check_perm_group(User, Group, manage_group) of
+            case Id =/= 1
+                 andalso ecf_perms:check_perm_group(User, Group, manage_group) of
                 true ->
                     case ecf_user:get_user(U) of
                         undefined ->
@@ -153,7 +156,7 @@ handle_post(User, Req0, <<"add">>) ->
                             ok = ecf_group:add_member(Id, U),
                             Base = application:get_env(ecf, base_url, ""),
                             cowboy_req:reply(303, #{<<"location">>
-                                                    => [Base, "/group/", Id0]},
+                                                    => [Base, "/user/", U0]},
                                              Req)
                     end;
                 false ->
@@ -170,7 +173,8 @@ handle_post(User, Req0, <<"remove">>) ->
         undefined ->
             ecf_utils:reply_status(400, User, invalid_group, Req);
         Group ->
-            case ecf_perms:check_perm_group(User, Group, manage_group) of
+            case Id =/= 1
+                 andalso ecf_perms:check_perm_group(User, Group, manage_group) of
                 true ->
                     case ecf_user:get_user(U) of
                         undefined ->
@@ -179,7 +183,7 @@ handle_post(User, Req0, <<"remove">>) ->
                             ok = ecf_group:remove_member(Id, U),
                             Base = application:get_env(ecf, base_url, ""),
                             cowboy_req:reply(303, #{<<"location">>
-                                                    => [Base, "/group/", Id0]},
+                                                    => [Base, "/user/", U0]},
                                              Req)
                     end;
                 false ->
