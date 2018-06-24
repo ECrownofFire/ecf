@@ -38,10 +38,15 @@ create_table(Nodes) ->
         end,
     ok = mnesia:activity(transaction, F),
     1 = new_group(<<"Registered Users">>, <<"Default user group">>),
+    2 = new_group(<<"Confirmed Email Users">>, <<"Users with a confirmed email">>),
     ok = edit_perm(0, others, join_group, deny),
     ok = edit_perm(0, others, leave_group, deny),
+    ok = edit_perm(0, others, manage_group, deny),
     ok = edit_perm(1, others, join_group, deny),
-    ok = edit_perm(1, others, leave_group, deny).
+    ok = edit_perm(1, others, leave_group, deny),
+    ok = edit_perm(1, others, manage_group, deny),
+    ok = edit_perm(2, others, join_group, deny),
+    ok = edit_perm(2, others, leave_group, deny).
 
 
 -spec new_group(binary(), binary()) -> id().
@@ -55,7 +60,7 @@ new_group(Name, Desc) when is_binary(Name), is_binary(Desc) ->
 
 % TODO: search for group in permissions to delete it
 -spec delete_group(id()) -> ok.
-delete_group(Id) when is_integer(Id), Id >= 2 ->
+delete_group(Id) when is_integer(Id), Id >= 3 ->
     F = fun() ->
                 [G] = mnesia:wread({ecf_group, Id}),
                 [ecf_user:remove_group(U, Id) || U <- members(G)],

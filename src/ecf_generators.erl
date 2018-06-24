@@ -204,12 +204,12 @@ group_list(User, Groups) ->
 
 group(User, Group) ->
     Id = ecf_group:id(Group),
-    In = lists:member(Id, ecf_user:groups(User)),
-    CanJoin = Id > 1
-              andalso not In
+    InGroup = lists:member(Id, ecf_user:groups(User)),
+    CanJoin = Id >= 3
+              andalso not InGroup
               andalso ecf_perms:check_perm_group(User, Group, join_group),
-    CanLeave = Id > 1
-               andalso In
+    CanLeave = Id >= 3
+               andalso InGroup
                andalso ecf_perms:check_perm_group(User, Group, leave_group),
      [{can_leave, CanLeave},
       {can_join, CanJoin}

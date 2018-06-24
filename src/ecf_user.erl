@@ -26,8 +26,8 @@
          add_post/2,
          delete_user/1,
          check_session/2, check_pass/2, fake_hash/0,
-         id/1, name/1, enabled/1, email/1, joined/1, groups/1, bday/1,
-         title/1, bio/1, loc/1, posts/1, last_post/1]).
+         id/1, name/1, enabled/1, email/1, email_confirmed/1, joined/1,
+         groups/1, bday/1, title/1, bio/1, loc/1, posts/1, last_post/1]).
 
 -record(ecf_user,
         {id     :: id(),
@@ -342,6 +342,10 @@ fake_hash() ->
 -spec email(user()) -> binary().
 email(User) ->
     User#ecf_user.email.
+
+-spec email_confirmed(user()) -> boolean().
+email_confirmed(User) ->
+    lists:member(2, groups(User)).
 
 -spec joined(user()) -> erlang:timestamp().
 joined(User) ->
