@@ -23,59 +23,59 @@ init(Req0 = #{method := <<"POST">>}, State) ->
     {_, Email} = lists:keyfind(<<"email">>, 1, KV),
     {_, Password} = lists:keyfind(<<"password">>, 1, KV),
     Ip = ecf_utils:get_ip(Req),
-    case ecf_log:check_log(Email, Ip) of
-        true ->
-            case ecf_captcha:check_captcha(Ip, KV) of
-                true ->
-                    try_login(Email, Password, Url, Req, State);
-                false ->
-                    Html = ecf_generators:generate(login, undefined,
-                                                   {true, Url, login_fail_captcha}),
-                    Req2 = cowboy_req:reply(429,
-                                            #{<<"content-type">>
-                                              => <<"text/html">>},
-                                            Html, Req),
-                    {ok, Req2, State}
-            end;
-        false ->
-            try_login(Email, Password, Url, Req, State)
-    end.
+    Req2 = case ecf_log:check_log(Email, Ip) of
+               true ->
+                   case ecf_captcha:check_captcha(Ip, KV) of
+                       true ->
+                           try_login(Email, Password, Url, Req);
+                       false ->
+                           Html = ecf_generators:generate(login, undefined,
+                                                          {true, Url,
+                                                           login_fail_captcha}),
+                           cowboy_req:reply(429, #{<<"content-type">>
+                                                   => <<"text/html">>},
+                                            Html, Req)
+                   end;
+               false ->
+                   try_login(Email, Password, Url, Req)
+           end,
+    {ok, Req2, State}.
 
 terminate(_Reason, _Req, _State) ->
     ok.
 
-try_login(Email, Password, Url, Req, State) ->
+try_login(Email, Password, Url, Req) ->
     User = ecf_user:get_user_by_email(Email),
-    try_login(User, Password, Url, Req, State, Email).
+    try_login(User, Password, Url, Req, Email).
 
 
-try_login(undefined, _, _, Req, State, Email) ->
+try_login(undefined, _, _, Req, Email) ->
     ok = ecf_user:fake_hash(),
-    login_fail(Req, State, Email);
-try_login(User, Password, Url, Req, State, Email) ->
-    case ecf_user:check_pass(User, Password) of
-        true ->
+    login_fail(Req, Email, login_fail);
+try_login(User, Password, Url, Req, Email) ->
+    case {ecf_user:enabled(User), ecf_user:check_pass(User, Password)} of
+        {true, true} ->
             ecf_log:clear_log(Email, ecf_utils:get_ip(Req)),
             Session = ecf_user:new_session(ecf_user:id(User)),
             Req2 = set_login_cookies(Req, ecf_user:id(User), Session),
             Base = application:get_env(ecf, base_url, ""),
-            Req3 = cowboy_req:reply(303, #{<<"location">> => [Base, "/", Url]},
-                                    Req2),
-            {ok, Req3, State};
-        false ->
-            login_fail(Req, State, Email)
+            cowboy_req:reply(303,
+                             #{<<"location">> => [Base, "/", Url]},
+                             Req2);
+        {true, false} ->
+            login_fail(Req, Email, login_fail);
+        {false, _} ->
+            login_fail(Req, Email, login_disabled)
     end.
 
-login_fail(Req, State, Email) ->
+login_fail(Req, Email, Type) ->
     #{url := Url} = cowboy_req:match_qs([{url, [], <<"">>}], Req),
     Ip = ecf_utils:get_ip(Req),
     ecf_log:log(Email, Ip),
     Html = ecf_generators:generate(login, undefined, {ecf_log:check_log(Email, Ip),
                                                       Url,
-                                                      login_fail}),
-    Req2 = cowboy_req:reply(400, #{<<"content-type">> => <<"text/html">>},
-                            Html, Req),
-    {ok, Req2, State}.
+                                                      Type}),
+    cowboy_req:reply(400, #{<<"content-type">> => <<"text/html">>}, Html, Req).
 
 set_login_cookies(Req, Id, Session) ->
     SessionEncoded = base64:encode(Session),
