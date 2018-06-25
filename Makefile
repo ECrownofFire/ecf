@@ -5,9 +5,9 @@ PROJECT_VERSION = 0.0.1
 DEPS = cowboy iso8601 jiffy erlydtl
 dep_cowboy_commit = 2.4.0
 
-LOCAL_DEPS = mnesia crypto public_key ssl inets runtime_tools
+LOCAL_DEPS = mnesia crypto public_key ssl inets runtime_tools sasl
 
-DEP_PLUGINS = cowboy erlydtl
+DEP_PLUGINS = cowboy
 
 # workaround for dialyzer bug with PIC
 DIALYZER_OPTS = --no_native
