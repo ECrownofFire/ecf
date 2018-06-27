@@ -39,6 +39,7 @@ start(_Type, _Args) ->
                {[Base, "/register"], ecf_register_handler, {}},
                {[Base, "/edit_profile"], ecf_edit_profile_handler, {}},
                {[Base, "/logout"], ecf_logout_handler, {}},
+               {[Base, "/confirm"], ecf_confirm_handler, {}},
                {[Base, "/group[/:id]"], IdC, ecf_group_handler, {}},
                {[Base, "/group/:action"], GCon, ecf_group_handler, {}},
                {[Base, "/user[/:id]"], IdC, ecf_user_handler, {}},

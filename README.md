@@ -23,7 +23,6 @@ At the bare minimum, ECF still needs the following:
     * Editing permissions
 * Security
     * HTTPS (works fine behind nginx reverse proxy though)
-    * Email on registration (need `gen_smtp`)
     * Logging stuff (most likely through lager)
 
 So that ECF is reasonably useable, I'd like to add the following as well:
@@ -52,20 +51,25 @@ Erlang/OTP 20
 
 ### Installation
 Currently there is no real installation process. However, testing ECF is very
-simple since it uses [erlang.mk](https://erlang.mk). Simple `make run` and it
+simple since it uses [erlang.mk](https://erlang.mk). Simply `make run` and it
 will start it listening on port 8080 and drop you into an Erlang REPL. The first
 time you start it up, be sure to use `ecf_db:install().` to create and setup the
 database. After that if you change the backing records you will need to either
 delete and recreate the Mnesia database, or call `mnesia:transform_table/3`.
 
-You will need to set the following app env variables in rel/private.config:
-* `captcha_key`: reCAPTCHA site key
-* `captcha_secret`: reCAPTCHA site secret
-
 ### Configuration
 I'd recommend leaving sys.config alone and editing private.config with all of
 your needed configuration.
 
-TODO: Describe all configuration options. Most of them are just simple messages
-in case you want to customize them, but a few are actually important.
+TODO: Describe all configuration options.
+
+You will need to set the following app env variables:
+* `captcha_key`: reCAPTCHA site key
+* `captcha_secret`: reCAPTCHA site secret
+* `host`: The FQDN that the forum is hosted on
+* `base_url`: The "base" url of the forum, use a leading slash but no trailing
+* `email_addr`: The address to send email as
+* `email_relay`: The host to use as a relay
+* `email_host`: The host to EHLO as when sending email
+* `forum_name`: The name of your forum
 

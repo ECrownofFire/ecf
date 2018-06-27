@@ -88,7 +88,13 @@ new_user(Name, Pass, Email0, Time, Bday) ->
                         {error, username_taken}
                 end
         end,
-    mnesia:activity(transaction, F).
+    case mnesia:activity(transaction, F) of
+        {error, _} = Err ->
+            Err;
+        {Id, _} = Res ->
+            ok = ecf_email:send_confirmation_email(get_user(Id)),
+            Res
+    end.
 
 -spec get_user(id()) -> user() | undefined.
 get_user(Id) ->
@@ -164,7 +170,13 @@ edit_email(Id, Email) ->
                         {error, email_taken}
                 end
         end,
-    mnesia:activity(transaction, F).
+    case mnesia:activity(transaction, F) of
+        {error, _} = Err ->
+            Err;
+        Res ->
+            ok = ecf_email:send_confirmation_email(get_user(Id)),
+            Res
+    end.
 
 -spec edit_pass(id(), binary()) -> binary().
 edit_pass(Id, NewPass) ->

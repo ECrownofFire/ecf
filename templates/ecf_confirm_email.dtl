@@ -1,0 +1,8 @@
+{% extends "ecf_base.dtl" %}
+{# vim: set ft=htmldjango: #}
+{% block content %}
+<main id="confirmed-email">
+<p>Thanks for confirming your email, {{ user.name }}!</p>
+<a href="{{ base_url }}/">Home</a>
+</main>
+{% endblock %}
