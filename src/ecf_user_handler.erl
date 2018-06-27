@@ -79,7 +79,34 @@ handle_post(Req0, User, <<"edit">>) ->
                                => [Base, "/user/", integer_to_list(Id)]},
                              Req);
         false ->
-            ecf_utils:reply_status(403, User, edit_user_403, Req0)
+            ecf_utils:reply_status(403, User, edit_user_403, Req)
+    end;
+handle_post(Req0, User, <<"ban">>) ->
+    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
+    {_, Id0} = lists:keyfind(<<"id">>, 1, KV),
+    Id = binary_to_integer(Id0),
+    case ecf_perms:check_perm_global(User, ban_user) of
+        true ->
+            ok = ecf_group:add_member(3, Id),
+            Base = application:get_env(ecf, base_url, ""),
+            cowboy_req:reply(303,
+                             #{<<"location">> => [Base, "/user/", Id0]},
+                             Req);
+        false ->
+            ecf_utils:reply_status(403, User, ban_user_403, Req)
+    end;
+handle_post(Req0, User, <<"unban">>) ->
+    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
+    {_, Id0} = lists:keyfind(<<"id">>, 1, KV),
+    Id = binary_to_integer(Id0),
+    case ecf_perms:check_perm_global(User, ban_user) of
+        true ->
+            ok = ecf_group:remove_member(3, Id),
+            Base = application:get_env(ecf, base_url, ""),
+            cowboy_req:reply(303,
+                             #{<<"location">> => [Base, "/user/", Id0]},
+                             Req);
+        false ->
+            ecf_utils:reply_status(403, User, unban_user_403, Req)
     end.
-
 

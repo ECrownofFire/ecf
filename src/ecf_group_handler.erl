@@ -62,7 +62,7 @@ handle_post(User, Req0, <<"delete">>) ->
         undefined ->
             ecf_utils:reply_status(400, User, invalid_group, Req);
         Group ->
-            case Id >= 3
+            case Id >= 4
                  andalso ecf_perms:check_perm_group(User, Group, delete_group) of
                 true ->
                     ok = ecf_group:delete_group(Id),
@@ -104,7 +104,7 @@ handle_post(User, Req0, <<"join">>) ->
         undefined ->
             ecf_utils:reply_status(400, User, invalid_group, Req);
         Group ->
-            case Id >= 3
+            case Id >= 4
                  andalso ecf_perms:check_perm_group(User, Group, join_group) of
                 true ->
                     ok = ecf_group:add_member(Id, ecf_user:id(User)),
@@ -124,7 +124,7 @@ handle_post(User, Req0, <<"leave">>) ->
         undefined ->
             ecf_utils:reply_status(400, User, invalid_group, Req);
         Group ->
-            case Id >= 3
+            case Id >= 4
                  andalso ecf_perms:check_perm_group(User, Group, leave_group) of
                 true ->
                     ok = ecf_group:remove_member(Id, ecf_user:id(User)),
@@ -146,7 +146,7 @@ handle_post(User, Req0, <<"add">>) ->
         undefined ->
             ecf_utils:reply_status(400, User, invalid_group, Req);
         Group ->
-            case Id =/= 1
+            case Id =/= 1 andalso Id =/= 3
                  andalso ecf_perms:check_perm_group(User, Group, manage_group) of
                 true ->
                     case ecf_user:get_user(U) of
@@ -173,7 +173,7 @@ handle_post(User, Req0, <<"remove">>) ->
         undefined ->
             ecf_utils:reply_status(400, User, invalid_group, Req);
         Group ->
-            case Id =/= 1
+            case Id =/= 1 andalso Id =/= 3
                  andalso ecf_perms:check_perm_group(User, Group, manage_group) of
                 true ->
                     case ecf_user:get_user(U) of

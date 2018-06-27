@@ -10,7 +10,7 @@
                     <<"join">>, <<"leave">>,
                     <<"add">>, <<"remove">>]).
 
--define(U_ACTIONS, [<<"edit">>]).
+-define(U_ACTIONS, [<<"edit">>, <<"ban">>, <<"unban">>]).
 
 -define(T_ACTIONS, [<<"create">>, <<"delete">>, <<"edit">>]).
 
