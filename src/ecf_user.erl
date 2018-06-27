@@ -26,6 +26,7 @@
          add_post/2,
          delete_user/1,
          check_session/2, check_pass/2, fake_hash/0,
+         confirm_email/1, ban_user/1, unban_user/1,
          id/1, name/1, enabled/1, email/1, email_confirmed/1, banned/1,
          joined/1, groups/1, bday/1, title/1, bio/1, loc/1, posts/1,
          last_post/1]).
@@ -157,6 +158,7 @@ edit_email(Id, Email) ->
                     undefined ->
                         [User] = mnesia:wread({ecf_user, Id}),
                         ok = mnesia:write(User#ecf_user{email=Email,session=[Sess]}),
+                        ok = ecf_group:remove_member(2, Id),
                         Session;
                     _ ->
                         {error, email_taken}
@@ -339,6 +341,18 @@ fake_hash() ->
     {ok, Hash} = pbkdf2:pbkdf2(?HMAC, Pass, Salt, ?HASH_ITERATIONS, ?HASH_LENGTH),
     _ = pbkdf2:compare_secure(Hash, Hash),
     ok.
+
+-spec confirm_email(id()) -> ok.
+confirm_email(Id) ->
+    ecf_group:add_member(2, Id).
+
+-spec ban_user(id()) -> ok.
+ban_user(Id) ->
+    ecf_group:add_member(3, Id).
+
+-spec unban_user(id()) -> ok.
+unban_user(Id) ->
+    ecf_group:remove_member(3, Id).
 
 -spec email(user()) -> binary().
 email(User) ->

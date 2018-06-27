@@ -87,7 +87,7 @@ handle_post(Req0, User, <<"ban">>) ->
     Id = binary_to_integer(Id0),
     case ecf_perms:check_perm_global(User, ban_user) of
         true ->
-            ok = ecf_group:add_member(3, Id),
+            ok = ecf_user:ban_user(Id),
             Base = application:get_env(ecf, base_url, ""),
             cowboy_req:reply(303,
                              #{<<"location">> => [Base, "/user/", Id0]},
@@ -101,7 +101,7 @@ handle_post(Req0, User, <<"unban">>) ->
     Id = binary_to_integer(Id0),
     case ecf_perms:check_perm_global(User, ban_user) of
         true ->
-            ok = ecf_group:remove_member(3, Id),
+            ok = ecf_user:unban_user(Id),
             Base = application:get_env(ecf, base_url, ""),
             cowboy_req:reply(303,
                              #{<<"location">> => [Base, "/user/", Id0]},
