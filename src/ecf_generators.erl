@@ -48,7 +48,7 @@ generate(register, _, {Type, BaseVars}) ->
     Res;
 generate(confirmed_email, User, _) ->
     Vars = get_vars(User, "Confirm Email"),
-    {ok, Res} = ecf_confirm_email_dtl:render(Vars),
+    {ok, Res} = ecf_confirmed_email_dtl:render(Vars),
     Res;
 generate(user, User, Profile) ->
     Vars = get_vars(User, ["Profile of ", ecf_user:name(Profile)]),
