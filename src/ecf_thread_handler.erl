@@ -25,10 +25,15 @@ handle_get(Req, User, Id) ->
         Thread ->
             case ecf_perms:check_perm_thread(User, Thread, view_thread) of
                 true ->
-                    Forum = ecf_forum:get_forum( ecf_thread:forum(Thread)),
-                    Posts = ecf_post:get_posts(Id),
+                    #{page := Page} = cowboy_req:match_qs([{page, int, 1}], Req),
+                    PerPage = application:get_env(ecf, posts_per_page, 40),
+                    Forum = ecf_forum:get_forum(ecf_thread:forum(Thread)),
+                    First = (Page-1) * PerPage + 1,
+                    Posts = ecf_post:get_posts(Id, First, First + PerPage),
+                    LastPage = ecf_thread:last(Thread) div PerPage + 1,
                     Html = ecf_generators:generate(thread, User,
-                                                   {Forum, Thread, Posts}),
+                                                   {Forum, Thread, Posts,
+                                                    Page, LastPage}),
                     cowboy_req:reply(200,
                                      #{<<"content-type">> => <<"text/html">>},
                                      Html, Req);

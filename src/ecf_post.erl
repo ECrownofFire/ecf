@@ -5,6 +5,7 @@
 -export([create_table/1,
          new_post/4,
          get_posts/1, delete_posts/1,
+         get_posts/3,
          get_post/2, delete_post/2,
          edit_post/5,
          id/1, thread/1, poster/1, time/1, text/1, edited/1]).
@@ -81,7 +82,18 @@ get_posts(Thread) ->
     F = fun() ->
                 mnesia:read({ecf_post, Thread})
         end,
-    mnesia:activity(transaction, F).
+    lists:keysort(#ecf_post.id, mnesia:activity(transaction, F)).
+
+%% Get from [First, Last]
+-spec get_posts(ecf_thread:id(), id(), id()) -> [post()].
+get_posts(Thread, First, Last) ->
+    F = fun() ->
+            qlc:eval(qlc:q([X || X = #ecf_post{thread=T, id=I}
+                                 <- mnesia:table(ecf_post),
+                                 T =:= Thread, I >= First, I =< Last]))
+        end,
+    lists:keysort(#ecf_post.id, mnesia:activity(transaction, F)).
+
 
 -spec edit_post(ecf_thread:id(), id(), ecf_user:id(),
                 erlang:timestamp(),binary()) -> ok.

@@ -102,7 +102,7 @@ generate(forum, User, {Forum, Threads, Page, Last}) ->
              | Vars],
     {ok, Res} = ecf_forum_dtl:render(Vars2),
     Res;
-generate(thread, User, {Forum, Thread, Posts}) ->
+generate(thread, User, {Forum, Thread, Posts, Page, Last}) ->
     Vars = get_vars(User, ecf_thread:title(Thread)),
     ForumV = forum(Forum),
     ThreadV = thread(Thread),
@@ -117,7 +117,9 @@ generate(thread, User, {Forum, Thread, Posts}) ->
              {can_create_post, CreatePost},
              {can_delete_posts, DeletePosts},
              {can_edit_thread, EditThread},
-             {can_delete_thread, DeleteThread}
+             {can_delete_thread, DeleteThread},
+             {page, Page},
+             {page_last, Last}
              | Vars],
     {ok, Res} = ecf_thread_dtl:render(Vars2),
     Res;
