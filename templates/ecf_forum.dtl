@@ -22,6 +22,16 @@
 </form>
 {% endif %}
 
+<nav class="pagination">
+    {% if page > 1 %} <a href="{{ base_url }}/forum/{{ forum.id }}?page=1">First</a> {% endif %}
+    {% if page >= 3 %} <a href="{{ base_url }}/forum/{{ forum.id }}?page={{ page|add:"-2" }}">{{ page|add:"-2" }}</a> {% endif %}
+    {% if page >= 2 %} <a href="{{ base_url }}/forum/{{ forum.id }}?page={{ page|add:"-1" }}" rel="prev">{{ page|add:"-1" }}</a> {% endif %}
+    <span>[{{ page }}]</span>
+    {% if page_last >= page|add:"1" %} <a href="{{ base_url }}/forum/{{ forum.id }}?page={{ page|add:"1" }}" rel="next">{{ page|add:"1" }}</a> {% endif %}
+    {% if page_last >= page|add:"2" %} <a href="{{ base_url }}/forum/{{ forum.id }}?page={{ page|add:"2" }}">{{ page|add:"2" }}</a> {% endif %}
+    {% if page_last > page %} <a href="{{ base_url }}/forum/{{ forum.id }}?page={{ page_last }}">Last</a> {% endif %}
+</nav>
+
 <table id="thread-table">
     <thead>
         <tr>

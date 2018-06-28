@@ -8,6 +8,10 @@
     padding: 0 8px;
 }
 
+.pagination * {
+    padding: 0 4px;
+}
+
 #thread-table {
     width: 100%;
 }

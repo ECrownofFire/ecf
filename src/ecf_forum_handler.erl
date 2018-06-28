@@ -31,9 +31,16 @@ handle_get(Req, User, Id) ->
                 false ->
                     ecf_utils:reply_status(403, User, view_forum_403, Req);
                 true ->
-                    Threads0 = ecf_thread:get_forum_threads(Id),
-                    Threads = ecf_thread:visible_threads(Threads0, User),
-                    Html = ecf_generators:generate(forum, User, {Forum, Threads}),
+                    #{page := Page} = cowboy_req:match_qs([{page, int, 1}], Req),
+                    PerPage = application:get_env(ecf, threads_per_page, 40),
+                    % TODO: threads per page could be a user preference?
+                    Threads = ecf_thread:get_forum_threads(Id),
+                    Threads2 = ecf_thread:visible_threads(Threads, User),
+                    Threads3 = lists:sublist(Threads2,
+                                             (Page-1) * PerPage + 1, PerPage),
+                    LastPage = length(Threads2) div PerPage + 1,
+                    Html = ecf_generators:generate(forum, User, {Forum, Threads3,
+                                                                 Page, LastPage}),
                     cowboy_req:reply(200, #{<<"content-type">> => <<"text/html">>},
                                      Html, Req)
             end

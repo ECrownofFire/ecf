@@ -85,7 +85,7 @@ generate(group, User, Group) ->
              | Vars],
     {ok, Res} = ecf_group_dtl:render(Vars2),
     Res;
-generate(forum, User, {Forum, Threads}) ->
+generate(forum, User, {Forum, Threads, Page, Last}) ->
     Vars = get_vars(User, ecf_forum:name(Forum)),
     ForumV = forum(Forum),
     ThreadList = thread_list(Threads),
@@ -96,7 +96,9 @@ generate(forum, User, {Forum, Threads}) ->
              {thread_list, ThreadList},
              {can_edit, CanEdit},
              {can_delete, CanDelete},
-             {can_create_thread, CanCreate}
+             {can_create_thread, CanCreate},
+             {page, Page},
+             {page_last, Last}
              | Vars],
     {ok, Res} = ecf_forum_dtl:render(Vars2),
     Res;

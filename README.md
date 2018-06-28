@@ -28,8 +28,7 @@ At the bare minimum, ECF still needs the following:
 So that ECF is reasonably useable, I'd like to add the following as well:
 * Editing posts (and displaying time/user)
 * Messaging (needs backend)
-* Pagination of threads and posts (former can probably just use
-`lists:sublist/3`, but the latter should probably select in Mnesia itself)
+* Pagination of posts (should probably select in Mnesia itself)
 * Banning people for a given length of time (needs backend)
 * Listing all users, sorting by various fields (partially done)
 * List all posts by a user
