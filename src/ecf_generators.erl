@@ -65,7 +65,8 @@ generate(user, User, Profile) ->
     Res;
 generate(groups, User, Groups) ->
     Vars = get_vars(User, "Groups"),
-    GroupList = group_list(User, Groups),
+    GroupsSorted = lists:keysort(2, Groups),
+    GroupList = group_list(User, GroupsSorted),
     CanCreate = ecf_perms:check_perm_global(User, create_group),
     Vars2 = [{group_list, GroupList},
              {can_create, CanCreate}
@@ -172,6 +173,7 @@ get_title(String) ->
 users(Users) ->
     [user(ecf_user:get_user(X)) || X <- Users].
 
+-spec user(ecf_user:user()) -> [{atom(), term()}].
 user(undefined) ->
     false;
 user(User) ->
