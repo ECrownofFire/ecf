@@ -106,6 +106,34 @@ handle_post(Req0, User, <<"edit">>) ->
                                      Req)
             end
     end;
+handle_post(Req0, User, <<"reorder">>) ->
+    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
+    {_, Id0} = lists:keyfind(<<"id">>, 1, KV),
+    Id = binary_to_integer(Id0),
+    case ecf_forum:get_forum(Id) of
+        undefined ->
+            ecf_utils:reply_status(400, User, forum_400, Req);
+        _Forum ->
+            case ecf_perms:check_perm_global(User, reorder_forums) of
+                false ->
+                    ecf_utils:reply_status(403, User, reorder_forum_403, Req);
+                true ->
+                    {_, Action0} = lists:keyfind(<<"action">>, 1, KV),
+                    Action = binary_to_existing_atom(Action0, latin1),
+                    try ecf_forum:reorder(Id, Action) of
+                        ok ->
+                            Base = application:get_env(ecf, base_url, ""),
+                            cowboy_req:reply(303,
+                                             #{<<"location">>
+                                               => [Base, <<"/">>]},
+                                             Req)
+                    catch
+                        error:function_clause ->
+                            ecf_utils:reply_status(400, User, reorder_forum_400,
+                                                   Req)
+                    end
+            end
+    end;
 handle_post(Req, User, _) ->
     ecf_utils:reply_status(400, User, forum_400, Req).
 

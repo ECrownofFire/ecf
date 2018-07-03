@@ -7,7 +7,7 @@
 -export([create_table/1,
          get_forum/1, get_forums/0,
          new_forum/2,
-         edit_name/2, edit_desc/2, edit_order/2,
+         edit_name/2, edit_desc/2, reorder/2,
          edit_perms/2, edit_perm/4, remove_perm/3,
          delete_forum/1,
          visible_forums/2,
@@ -56,18 +56,8 @@ get_forums() ->
 
 -spec new_forum(binary(), binary()) -> id().
 new_forum(Name, Desc) ->
-    Max = fun(X, M) -> case X#ecf_forum.order of
-                           O when O > M -> O;
-                           _ -> M
-                       end
-          end,
     F = fun() ->
-                Order = case get_forums() of
-                            [] ->
-                                0;
-                            Forums ->
-                                lists:foldl(Max, order(hd(Forums)), Forums)
-                        end,
+                Order = max_order(get_forums()),
                 Id = ecf_db:get_new_id(ecf_forum),
                 mnesia:write(#ecf_forum{id=Id, name=Name, desc=Desc,
                                         order=Order, perms=[]}),
@@ -104,13 +94,51 @@ edit_desc(Id, Desc) ->
         end,
     mnesia:activity(transaction, F).
 
--spec edit_order(id(), integer()) -> ok.
-edit_order(Id, Order) ->
+
+-spec reorder(id(), top | bottom | up | down) -> ok.
+reorder(Id, Action) when Action =:= top; Action =:= bottom ->
     F = fun() ->
                 [Forum] = mnesia:wread({ecf_forum, Id}),
-                mnesia:write(Forum#ecf_forum{order=Order})
+                Old = order(Forum),
+                case get_reorder(Action, get_forums()) of
+                    Old ->
+                        ok;
+                    O ->
+                        mnesia:write(Forum#ecf_forum{order=O})
+                end
+        end,
+    mnesia:activity(transaction, F);
+reorder(Id, Action) when Action =:= up; Action =:= down ->
+    F = fun() ->
+                [Forum] = mnesia:wread({ecf_forum, Id}),
+                Old = order(Forum),
+                Target = get_reorder(Action, Old, order_forums(get_forums())),
+                New = order(Target),
+                mnesia:write(Forum#ecf_forum{order=New}),
+                mnesia:write(Target#ecf_forum{order=Old})
         end,
     mnesia:activity(transaction, F).
+
+
+get_reorder(top, Forums) ->
+    min_order(Forums) - 1;
+get_reorder(bottom, Forums) ->
+    max_order(Forums) + 1.
+
+get_reorder(up, Old, Forums) ->
+    case order(hd(Forums)) of
+        Old -> % already at top
+            hd(Forums);
+        _ ->
+            lists:last(lists:takewhile(fun(X) -> order(X) =/= Old end, Forums))
+    end;
+get_reorder(down, Old, Forums) ->
+    case lists:splitwith(fun(X) -> order(X) =/= Old end, Forums) of
+        {_, [_,T|_]} -> % hd is the forum we're reordering
+            T;
+        {_, [H]} -> % already at bottom
+            H
+    end.
 
 -spec edit_perms(id(), ecf_perms:perms()) -> ok.
 edit_perms(Id, Perms) ->
@@ -176,4 +204,26 @@ desc(Forum) ->
 -spec perms(forum()) -> [ecf_perms:perms()].
 perms(Forum) ->
     Forum#ecf_forum.perms.
+
+%% Utilities
+max_order([]) ->
+    0;
+max_order(Forums) ->
+    Max = fun(X, M) -> case X#ecf_forum.order of
+                           O when O > M -> O;
+                           _ -> M
+                       end
+          end,
+    % -INF doesn't exist in erlang, so just grab the order of the first one
+    lists:foldl(Max, order(hd(Forums)), Forums).
+
+min_order([]) ->
+    0;
+min_order(Forums) ->
+    Max = fun(X, M) -> case X#ecf_forum.order of
+                           O when O < M -> O;
+                           _ -> M
+                       end
+          end,
+    lists:foldl(Max, infinity, Forums). % numbers < atoms
 
