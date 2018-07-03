@@ -57,7 +57,7 @@ handle_post(Req, User, <<"create">>) ->
             {ok, KV, Req2} = cowboy_req:read_urlencoded_body(Req),
             {_, Name} = lists:keyfind(<<"name">>, 1, KV),
             {_, Desc} = lists:keyfind(<<"desc">>, 1, KV),
-            Id = ecf_forum:new_forum(Name, Desc, 0),
+            Id = ecf_forum:new_forum(Name, Desc),
             Base = application:get_env(ecf, base_url, ""),
             cowboy_req:reply(303,
                              #{<<"location">>

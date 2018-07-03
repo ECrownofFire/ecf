@@ -173,7 +173,8 @@ get_title(String) ->
 users(Users) ->
     [user(ecf_user:get_user(X)) || X <- Users].
 
--spec user(ecf_user:user()) -> [{atom(), term()}].
+-spec user(ecf_user:user()) -> [{atom(), term()}];
+          (undefined) -> false.
 user(undefined) ->
     false;
 user(User) ->

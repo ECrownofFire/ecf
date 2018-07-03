@@ -6,7 +6,7 @@
 
 -export([create_table/1,
          get_forum/1, get_forums/0,
-         new_forum/4,
+         new_forum/2,
          edit_name/2, edit_desc/2, edit_order/2,
          edit_perms/2, edit_perm/4, remove_perm/3,
          delete_forum/1,
@@ -14,14 +14,12 @@
          filter_forums/2, order_forums/1,
          id/1, name/1, desc/1, order/1, perms/1]).
 
--export([new_forum/3]).
-
 
 -type id()  :: non_neg_integer().
 
 -record(ecf_forum,
         {id    :: id(),
-         order :: non_neg_integer(),
+         order :: integer(),
          name  :: binary(),
          desc  :: binary(),
          perms :: [ecf_perms:perms()]}).
@@ -56,16 +54,23 @@ get_forums() ->
     mnesia:activity(transaction, F).
 
 
--spec new_forum(binary(), binary(), non_neg_integer()) -> id().
-new_forum(Name, Desc, Order) ->
-    new_forum(Name, Desc, Order, []).
-
--spec new_forum(binary(), binary(), non_neg_integer(), [ecf_perms:perms()]) -> id().
-new_forum(Name, Desc, Order, Perms) ->
+-spec new_forum(binary(), binary()) -> id().
+new_forum(Name, Desc) ->
+    Max = fun(X, M) -> case X#ecf_forum.order of
+                           O when O > M -> O;
+                           _ -> M
+                       end
+          end,
     F = fun() ->
+                Order = case get_forums() of
+                            [] ->
+                                0;
+                            Forums ->
+                                lists:foldl(Max, order(hd(Forums)), Forums)
+                        end,
                 Id = ecf_db:get_new_id(ecf_forum),
                 mnesia:write(#ecf_forum{id=Id, name=Name, desc=Desc,
-                                        order=Order, perms=Perms}),
+                                        order=Order, perms=[]}),
                 Id
         end,
     mnesia:activity(transaction, F).
@@ -99,7 +104,7 @@ edit_desc(Id, Desc) ->
         end,
     mnesia:activity(transaction, F).
 
--spec edit_order(id(), non_neg_integer()) -> ok.
+-spec edit_order(id(), integer()) -> ok.
 edit_order(Id, Order) ->
     F = fun() ->
                 [Forum] = mnesia:wread({ecf_forum, Id}),
@@ -156,7 +161,7 @@ order_forums(Forums) ->
 id(Forum) ->
     Forum#ecf_forum.id.
 
--spec order(forum()) -> non_neg_integer().
+-spec order(forum()) -> integer().
 order(Forum) ->
     Forum#ecf_forum.order.
 

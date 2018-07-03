@@ -1,7 +1,7 @@
 {# vim: set ft=htmldjango: #}
 {% spaceless %}
 <!DOCTYPE HTML>
-<html>
+<html lang="en-US">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -13,10 +13,11 @@
     <meta property="og:description" content="Simple BEAM-powered forum software">
     <script>var BASE_URL = "{{ base_url }}";</script>
     <script src="{{ base_url }}/static/perms.js"></script>
+    <script src="{{ base_url }}/static/format_dates.js" defer></script>
 </head>
 <body>
 <header>
-    <h1>{{ name }}</h2>
+    <h1>{{ name }}</h1>
     {% if user %}
     <section id="welcome-user" class="welcome">
         <p>Welcome {{ user.name }}!</p>
@@ -28,20 +29,19 @@
     <hr>
     <nav id="main-menu">
         <ul>
-            <li><a href="{{ base_url }}/">Home</a></li>
+            <li><a href="{{ base_url }}/">Home</a>
             {% if user %}
-            <li><a href="{{ base_url }}/user/{{ user.id }}">Profile</a></li>
-            <li><a href="{{ base_url }}/group">Groups</a></li>
-            <li><form id="logout-form" method="post" action="{{ base_url }}/logout"><a onclick="document.getElementById('logout-form').submit(); return false;" href="{{ base_url }}/logout">Logout</a></form></li>
+            <li><a href="{{ base_url }}/user/{{ user.id }}">Profile</a>
+            <li><a href="{{ base_url }}/group">Groups</a>
+            <li><form id="logout-form" method="post" action="{{ base_url }}/logout"><a onclick="document.getElementById('logout-form').submit(); return false;" href="{{ base_url }}/logout">Logout</a></form>
             {% else %}
-            <li><a href="{{ base_url }}/login" rel="nofollow">Login</a></li>
-            <li><a href="{{ base_url }}/register" rel="nofollow">Register</a></li>
+            <li><a href="{{ base_url }}/login" rel="nofollow">Login</a>
+            <li><a href="{{ base_url }}/register" rel="nofollow">Register</a>
             {% endif %}
         </ul>
     </nav>
 </header>
 {% block content %}{% endblock %}
-<script src="{{ base_url }}/static/format_dates.js"></script>
 </body>
 </html>
 {% endspaceless %}
