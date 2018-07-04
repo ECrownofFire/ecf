@@ -16,7 +16,7 @@
 
 -define(PO_ACTIONS, [<<"create">>, <<"delete">>, <<"edit">>]).
 
--define(F_ACTIONS, [<<"create">>, <<"delete">>, <<"edit">>]).
+-define(F_ACTIONS, [<<"create">>, <<"delete">>, <<"edit">>, <<"reorder">>]).
 
 start(_Type, _Args) ->
     PTypes = make_fun(?P_TYPES),
@@ -35,6 +35,7 @@ start(_Type, _Args) ->
                  {priv_file, ecf, "favicon.ico"}},
                {[Base, "/static/[...]"], cowboy_static,
                 {priv_dir, ecf, "static"}},
+               {[Base, "/admin"], ecf_admin_handler, {}},
                {[Base, "/login"], ecf_login_handler, {}},
                {[Base, "/register"], ecf_register_handler, {}},
                {[Base, "/edit_profile"], ecf_edit_profile_handler, {}},

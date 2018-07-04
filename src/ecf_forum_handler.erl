@@ -47,8 +47,6 @@ handle_get(Req, User, Id) ->
     end.
 
 
-handle_post(Req, User, undefined) ->
-    ecf_utils:reply_status(400, User, forum_400, Req);
 handle_post(Req, User, <<"create">>) ->
     case ecf_perms:check_perm_global(User, create_forum) of
         false ->
@@ -125,7 +123,7 @@ handle_post(Req0, User, <<"reorder">>) ->
                             Base = application:get_env(ecf, base_url, ""),
                             cowboy_req:reply(303,
                                              #{<<"location">>
-                                               => [Base, <<"/">>]},
+                                               => [Base, <<"/admin">>]},
                                              Req)
                     catch
                         error:function_clause ->

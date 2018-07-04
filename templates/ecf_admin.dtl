@@ -1,0 +1,37 @@
+{% extends "ecf_base.dtl" %}
+{# vim: set ft=htmldjango: #}
+{% block content %}
+<main id="admin">
+<a href="{{ base_url }}/">Home</a>
+<h2>Administration</h2>
+<p>This page contains several administrative functions. Note that you can only see what you have permission to do.</p>
+{% if can_reorder %}
+<h3>Reorder Forums</h3>
+<ol>
+{% for forum in forums %}
+<li><form id="form-reorder" action="{{ base_url }}/forum/reorder" method="post">
+        <input type="hidden" name="id" value="{{ forum.id }}">
+        {% if not forloop.first %}
+        <button name="action" value="top">Move to Top</button>
+        <button name="action" value="up">Move Up</button>
+        {% endif %}
+        {% if not forloop.last %}
+        <button name="action" value="down">Move Down</button>
+        <button name="action" value="bottom">Move to Bottom</button>
+        {% endif %}
+    </form>
+    <span>{{ forum.name }}</span>
+{% endfor %}
+</ol>
+{% endif %}
+{% if can_create_forum %}
+<h3>Create New Forum</h3>
+<form id="form-create-forum" action="/forum/create" method="post">
+    <label>Name:<input id='create-name' type="text" name="name"></label>
+    <label>Description:<input id='create-desc' type="text" name="desc"></label>
+    <button>Submit</button>
+</form>
+{% endif %}
+</main>
+{% endblock %}
+

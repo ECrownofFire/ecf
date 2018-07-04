@@ -8,12 +8,6 @@
     <li class="forum"><a href="{{ base_url }}/forum/{{ forum.id }}">{{ forum.name }}</a><p>{{ forum.desc }}</p></li>
     {% endfor %}
 </ol>
-{% if create_forum %}
-<form id='form-create' action="/forum/create" method="post">
-    <label>Name:<input id='create-name' type="text" name="name"></label>
-    <label>Description:<input id='create-desc' type="text" name="desc"></label>
-    <button>Submit</button>
-</form>
-{% endif %}
 </main>
 {% endblock %}
+

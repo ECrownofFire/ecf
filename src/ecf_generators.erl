@@ -9,14 +9,20 @@
 generate(main, User, Forums) ->
     Vars = get_vars(User),
     ForumList = forum_list(Forums),
-    CanCreate = ecf_perms:check_perm_global(User, create_forum),
-    Vars2 = [{forum_list, ForumList}, {create_forum, CanCreate}|Vars],
+    Vars2 = [{forum_list, ForumList}|Vars],
     {ok, Res} = ecf_main_dtl:render(Vars2),
     Res;
 generate(admin, User, _) ->
-    % TODO: ecf_admin.dtl
     Vars = get_vars(User, "Admin"),
-    {ok, Res} = ecf_admin_dtl:render(Vars),
+    Forums = ecf_forum:order_forums(ecf_forum:get_forums()),
+    CanReorder = ecf_perms:check_perm_global(User, reorder_forums),
+    CanCreate = ecf_perms:check_perm_global(User, create_forum),
+    FVar = forum_list(Forums),
+    Vars2 = [{forums, FVar},
+             {can_reorder, CanReorder},
+             {can_create_forum, CanCreate}
+             | Vars],
+    {ok, Res} = ecf_admin_dtl:render(Vars2),
     Res;
 generate(login, User, {Captcha, Url, Type}) ->
     Vars = get_vars(User, "Login"),

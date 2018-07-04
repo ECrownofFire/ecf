@@ -16,12 +16,6 @@ terminate(_Reason, _Req, _State) ->
 handle_reply(undefined, Req) ->
     ecf_utils:reply_status(401, undefined, admin_401, Req);
 handle_reply(User, Req) ->
-    case lists:member(0, ecf_user:groups(User)) of
-        false ->
-            ecf_utils:reply_status(403, User, admin_403, Req);
-        true ->
-            Html = ecf_generators:generate(admin, User, ignored),
-            cowboy_req:reply(200, #{<<"content-type">> => <<"text/html">>},
-                             Html, Req)
-    end.
+    Html = ecf_generators:generate(admin, User, ignored),
+    cowboy_req:reply(200, #{<<"content-type">> => <<"text/html">>}, Html, Req).
 
