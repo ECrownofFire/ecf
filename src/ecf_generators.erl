@@ -3,6 +3,18 @@
 -define(GRAVATAR_URL, <<"https://gravatar.com/avatar/">>).
 -define(GRAVATAR_OPTIONS, <<"?s=100&d=identicon">>).
 
+% TODO: avoid duplication of the mode list
+% unsure if that's possible with dialyzer specs, will need to investigate
+% probably requires a parse transform or something
+-define(MODES, [view_forum, view_thread, view_group, view_user,
+                create_forum, create_thread, create_post, create_group,
+                delete_forum, delete_thread, delete_post, delete_group,
+                edit_forum, edit_thread, edit_post, edit_group, edit_user,
+                reorder_forums,
+                move_thread, lock_thread, ban_user,
+                edit_perms, manage_group,
+                join_group, leave_group]).
+
 -export([generate/3]).
 
 -spec generate(atom() | integer(), ecf_user:user() | undefined, term()) -> iodata().
@@ -17,10 +29,16 @@ generate(admin, User, _) ->
     Forums = ecf_forum:order_forums(ecf_forum:get_forums()),
     CanReorder = ecf_perms:check_perm_global(User, reorder_forums),
     CanCreate = ecf_perms:check_perm_global(User, create_forum),
+    CanEditPerms = ecf_perms:check_perm_global(User, edit_perms),
     FVar = forum_list(Forums),
-    Vars2 = [{forums, FVar},
-             {can_reorder, CanReorder},
-             {can_create_forum, CanCreate}
+    Groups = lists:keysort(2, ecf_group:get_groups()),
+    GroupList = group_list(Groups),
+    Vars2 = [{forums, FVar}
+             , {can_reorder, CanReorder}
+             , {can_create_forum, CanCreate}
+             , {can_edit_perms, CanEditPerms}
+             , {mode_list, ?MODES}
+             , {group_list, GroupList}
              | Vars],
     {ok, Res} = ecf_admin_dtl:render(Vars2),
     Res;
@@ -231,6 +249,9 @@ group(User, Group) ->
      [{can_leave, CanLeave},
       {can_join, CanJoin}
       | group(Group)].
+
+group_list(Groups) ->
+    [group(X) || X <- Groups].
 
 group(Id) when is_integer(Id) ->
     group(ecf_group:get_group(Id));

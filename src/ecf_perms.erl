@@ -11,6 +11,8 @@
 % 'others' includes any user as well as guests
 -type class() :: {user, ecf_user:id()} | {group, ecf_group:id()} | others.
 
+% NOTE: at the moment there's a second list of modes in ecf_generators
+% need to update both until I figure out how to deduplicate them
 -type mode() :: view_forum | view_thread | view_group | view_user
               | create_forum | create_thread | create_post | create_group
               | delete_forum | delete_thread | delete_post | delete_group

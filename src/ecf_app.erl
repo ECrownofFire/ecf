@@ -4,8 +4,6 @@
 -export([start/2]).
 -export([stop/1]).
 
--define(P_TYPES, [<<"global">>, <<"forum">>, <<"thread">>, <<"group">>]).
-
 -define(G_ACTIONS, [<<"create">>, <<"delete">>, <<"edit">>,
                     <<"join">>, <<"leave">>,
                     <<"add">>, <<"remove">>]).
@@ -18,15 +16,16 @@
 
 -define(F_ACTIONS, [<<"create">>, <<"delete">>, <<"edit">>, <<"reorder">>]).
 
+-define(PE_ACTIONS, [<<"allow">>, <<"deny">>, <<"remove">>]).
+
 start(_Type, _Args) ->
-    PTypes = make_fun(?P_TYPES),
     IdC = [{id, int}],
     GCon = [{action, make_fun(?G_ACTIONS)}],
     UCon = [{action, make_fun(?U_ACTIONS)}],
     TCon = [{action, make_fun(?T_ACTIONS)}],
     PoCon = [{action, make_fun(?PO_ACTIONS)}],
     FCon = [{action, make_fun(?F_ACTIONS)}],
-    PConstraints = [{type, PTypes}, {id, int}],
+    PeCon = [{action, make_fun(?PE_ACTIONS)}],
     Host = application:get_env(ecf, host, '_'),
     Base = application:get_env(ecf, base_url, ""),
     Port = application:get_env(ecf, port, 8080),
@@ -50,7 +49,7 @@ start(_Type, _Args) ->
                {[Base, "/post/:action"], PoCon, ecf_post_handler, {}},
                {[Base, "/forum/:id"], IdC, ecf_forum_handler, {}},
                {[Base, "/forum/:action"], FCon, ecf_forum_handler, {}},
-               {[Base, "/:type/[:id/]perms"], PConstraints, ecf_perms_handler, {}},
+               {[Base, "/perms/:action"], PeCon, ecf_perms_handler, {}},
                {[Base, "/"], ecf_handler, {}},
                {[Base, "/[...]"], ecf_404_handler, {}}]}
     ]),
