@@ -10,7 +10,7 @@
          create_thread/5,
          get_thread/1, get_forum_threads/1,
          edit_title/2,
-         edit_perms/2, edit_perm/4, remove_perm/3, lock_thread/1,
+         edit_perm/4, remove_perm/3, lock_thread/1,
          new_post/2,
          delete_thread/1, delete_forum_threads/1,
          delete_post/2,
@@ -28,7 +28,7 @@
          last = 0  :: ecf_post:id(),
          creator   :: ecf_user:id(),
          views = 0 :: non_neg_integer(),
-         perms = []:: [ecf_perms:perms()]}).
+         perms = []:: [ecf_perms:perm()]}).
 -type thread() :: #ecf_thread{}.
 
 -spec create_table([node()]) -> ok.
@@ -75,14 +75,6 @@ edit_title(Id, Title) ->
     F = fun() ->
                 [Thread] = mnesia:wread({ecf_thread, Id}),
                 mnesia:write(Thread#ecf_thread{title=Title})
-        end,
-    mnesia:activity(transaction, F).
-
--spec edit_perms(id(), [ecf_perms:perms()]) -> ok.
-edit_perms(Id, Perms) ->
-    F = fun() ->
-                [Thread] = mnesia:wread({ecf_thread, Id}),
-                mnesia:write(Thread#ecf_thread{perms=Perms})
         end,
     mnesia:activity(transaction, F).
 
@@ -214,7 +206,7 @@ creator(Thread) ->
 views(Thread) ->
     Thread#ecf_thread.views.
 
--spec perms(thread()) -> [ecf_perms:perms()].
+-spec perms(thread()) -> [ecf_perms:perm()].
 perms(Thread) ->
     Thread#ecf_thread.perms.
 

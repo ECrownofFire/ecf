@@ -8,7 +8,7 @@
          get_forum/1, get_forums/0,
          new_forum/2,
          edit_name/2, edit_desc/2, reorder/2,
-         edit_perms/2, edit_perm/4, remove_perm/3,
+         edit_perm/4, remove_perm/3,
          delete_forum/1,
          visible_forums/2,
          filter_forums/2, order_forums/1,
@@ -22,7 +22,7 @@
          order :: integer(),
          name  :: binary(),
          desc  :: binary(),
-         perms :: [ecf_perms:perms()]}).
+         perms :: [ecf_perms:perm()]}).
 -type forum() :: #ecf_forum{}.
 
 
@@ -140,14 +140,6 @@ get_reorder(down, Old, Forums) ->
             H
     end.
 
--spec edit_perms(id(), ecf_perms:perms()) -> ok.
-edit_perms(Id, Perms) ->
-    F = fun() ->
-                [Forum] = mnesia:wread({ecf_forum, Id}),
-                mnesia:write(Forum#ecf_forum{perms=Perms})
-        end,
-    mnesia:activity(transaction, F).
-
 -spec edit_perm(id(), ecf_perms:class(), ecf_perms:mode(), allow | deny) -> ok.
 edit_perm(Id, Class, Mode, Set) ->
     F = fun() ->
@@ -201,7 +193,7 @@ name(Forum) ->
 desc(Forum) ->
     Forum#ecf_forum.desc.
 
--spec perms(forum()) -> [ecf_perms:perms()].
+-spec perms(forum()) -> [ecf_perms:perm()].
 perms(Forum) ->
     Forum#ecf_forum.perms.
 

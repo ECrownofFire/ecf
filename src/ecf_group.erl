@@ -7,7 +7,7 @@
          get_groups/0, get_group/1,
          filter_groups/2,
          edit_name/2, edit_desc/2,
-         edit_perms/2, edit_perm/4, remove_perm/3,
+         edit_perm/4, remove_perm/3,
          add_member/2, remove_member/2,
          id/1, name/1, desc/1, member/2, members/1, perms/1]).
 
@@ -21,7 +21,7 @@
          name :: binary(),
          desc :: binary(),
          members = [] :: [ecf_user:id()],
-         perms = [] :: [ecf_perms:perms()]}).
+         perms = [] :: [ecf_perms:perm()]}).
 -type group() :: #ecf_group{}.
 
 -spec create_table([node()]) -> ok.
@@ -40,10 +40,17 @@ create_table(Nodes) ->
     1 = new_group(<<"Registered Users">>, <<"Default user group">>),
     2 = new_group(<<"Confirmed Email Users">>, <<"Users with a confirmed email">>),
     3 = new_group(<<"Banned Users">>, <<"Banned users">>),
-    ok = edit_perms(0, [{others, [], [join_group, leave_group, manage_group]}]),
-    ok = edit_perms(1, [{others, [], [join_group, leave_group, manage_group]}]),
-    ok = edit_perms(2, [{others, [], [join_group, leave_group, manage_group]}]),
-    ok = edit_perms(3, [{others, [], [join_group, leave_group]}]),
+    ok = edit_perm(0, others, join_group, deny),
+    ok = edit_perm(0, others, manage_group, deny),
+    ok = edit_perm(1, others, join_group, deny),
+    ok = edit_perm(1, {group, 1}, leave_group, deny),
+    ok = edit_perm(1, others, manage_group, deny),
+    ok = edit_perm(2, others, join_group, deny),
+    ok = edit_perm(2, {group, 2}, leave_group, deny),
+    ok = edit_perm(2, others, manage_group, deny),
+    ok = edit_perm(3, others, join_group, deny),
+    ok = edit_perm(3, {group, 3}, leave_group, deny),
+    ok = edit_perm(3, others, manage_group, deny),
     ok = ecf_perms:edit_global_perm({group, 3}, create_thread, deny),
     ok = ecf_perms:edit_global_perm({group, 3}, create_post, deny).
 
@@ -127,14 +134,6 @@ remove_member(Id, User) ->
         end,
     mnesia:activity(transaction, F).
 
--spec edit_perms(id(), [ecf_perms:perms()]) -> ok.
-edit_perms(Id, New) ->
-    F = fun() ->
-                [G] = mnesia:wread({ecf_group, Id}),
-                mnesia:write(G#ecf_group{perms=New})
-        end,
-    mnesia:activity(transaction, F).
-
 -spec edit_perm(id(), ecf_perms:class(), ecf_perms:mode(), allow | deny) -> ok.
 edit_perm(Id, Class, Mode, Set) ->
     F = fun() ->
@@ -175,7 +174,7 @@ member(Group, User) ->
 members(Group) ->
     Group#ecf_group.members.
 
--spec perms(group()) -> [ecf_perms:perms()].
+-spec perms(group()) -> [ecf_perms:perm()].
 perms(Group) ->
     Group#ecf_group.perms.
 
