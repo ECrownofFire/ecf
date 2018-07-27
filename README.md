@@ -19,7 +19,6 @@ At the bare minimum, ECF still needs the following:
 * Limit lengths on various things
 * Administration frontend
     * Banning accounts
-    * Editing permissions
 * Security
     * HTTPS (works fine behind nginx reverse proxy though)
     * Logging stuff (most likely through lager)

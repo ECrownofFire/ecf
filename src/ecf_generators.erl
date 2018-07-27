@@ -19,15 +19,21 @@ generate(admin, User, _) ->
     CanCreate = ecf_perms:check_perm_global(User, create_forum),
     CanEditPerms = ecf_perms:check_perm_global(User, edit_perms),
     FVar = forum_list(Forums),
-    Groups = lists:keysort(2, ecf_group:get_groups()),
-    GroupList = group_list(Groups),
-    Vars2 = [{forums, FVar}
+    Vars2 = case CanEditPerms of
+                true ->
+                    Groups = lists:keysort(2, ecf_group:get_groups()),
+                    GroupList = group_list(Groups),
+                    PermList = perm_list(ecf_perms:get_global_perms()),
+                    [{perm_list, PermList}, {group_list, GroupList} | Vars];
+                false ->
+                    Vars
+            end,
+    Vars3 = [{forums, FVar}
              , {can_reorder, CanReorder}
              , {can_create_forum, CanCreate}
              , {can_edit_perms, CanEditPerms}
-             , {group_list, GroupList}
-             | Vars],
-    {ok, Res} = ecf_admin_dtl:render(Vars2),
+             | Vars2],
+    {ok, Res} = ecf_admin_dtl:render(Vars3),
     Res;
 generate(login, User, {Captcha, Url, Type}) ->
     Vars = get_vars(User, "Login"),
@@ -205,6 +211,38 @@ user(User) ->
      {group_list, [group(X) || X <- ecf_user:groups(User)]},
      {posts, integer_to_list(ecf_user:posts(User))}].
 
+
+perm_list(Perms) ->
+    [perm(X) || X <- Perms].
+
+perm(Perm) ->
+    Mode = ecf_perms:mode(Perm),
+    ModeBin = atom_to_binary(Mode, utf8),
+    Allow = ecf_perms:allow(Perm),
+    Deny = ecf_perms:deny(Perm),
+    AllowList = [class(X) || X <- Allow],
+    DenyList = [class(X) || X <- Deny],
+    [{mode, ModeBin},
+     {name, mode_name(ModeBin)},
+     {allow, AllowList},
+     {deny, DenyList}].
+
+% necessary because the title filter doesn't work for some reason
+mode_name(Mode) ->
+    Words = string:split(Mode, "_", all),
+    lists:join(" ", [string:titlecase(X) || X <- Words]).
+
+class(others) ->
+    [{type, <<"others">>},
+     {name, <<"Others">>}];
+class({user, Id}) ->
+    [{type, <<"user">>},
+     {id, Id},
+     {name, ecf_user:name(ecf_user:get_user(Id))}];
+class({group, Id}) ->
+    [{type, <<"group">>},
+     {id, Id},
+     {name, ecf_group:name(ecf_group:get_group(Id))}].
 
 login_message(undefined, Type) ->
     application:get_env(ecf, Type, <<"Please login.">>);

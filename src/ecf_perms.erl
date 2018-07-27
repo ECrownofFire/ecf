@@ -89,7 +89,8 @@ remove_global_perm(Class, Mode) ->
 get_global_perms() ->
     F = fun() ->
                 mnesia:read_lock_table(ecf_perm),
-                mnesia:select(ecf_perm, [{'_',[],['$_']}])
+                % done this way to make sure the ordering is maintained
+                lists:flatten([mnesia:read({ecf_perm, X}) || X <- ?MODES])
         end,
     mnesia:activity(transaction, F).
 

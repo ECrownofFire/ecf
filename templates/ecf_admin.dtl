@@ -32,6 +32,66 @@
     <button>Submit</button>
 </form>
 {% endif %}
+{% if can_edit_perms %}
+<h3>Edit Global Permissions</h3>
+{% for perm in perm_list %}
+<h4>{{ perm.name }}</h4>
+<table class="table-perms">
+    <tbody>
+        <tr>
+            <th>Allow
+        {% for class in perm.allow %}
+            <td>
+                <span>{{ class.name }}</span>
+                <form action="{{ base_url }}/perms/remove" method="post">
+                    <input type="hidden" name="mode" value="{{ perm.mode }}">
+                    <input type="hidden" name="class" value="{{ class.type }}">
+                    <input type="hidden" name="class_id" value="{{ class.id }}">
+                    <button>Remove</button>
+                </form>
+            </td>
+        {% endfor %}
+        </tr>
+        <tr>
+            <th>Deny
+        {% for class in perm.deny %}
+            <td>
+                <span>{{ class.name }}</span>
+                <form action="{{ base_url }}/perms/remove" method="post">
+                    <input type="hidden" name="mode" value="{{ perm.mode }}">
+                    <input type="hidden" name="class" value="{{ class.type }}">
+                    <input type="hidden" name="class_id" value="{{ class.id }}">
+                    <button>Remove</button>
+                </form>
+            </td>
+        {% endfor %}
+        </tr>
+</table>
+{% endfor %}
+</table>
+<h3>Add New Global Permission</h3>
+<form id="add-perms" action="{{ base_url }}/perms/add" method="post">
+    <select name="mode" required>
+        <option value="">Mode
+        {% for perm in perm_list %}
+        <option value="{{ perm.mode }}">{{ perm.name }}
+        {% endfor %}
+    </select>
+    <select name="class" required>
+        <option value="">Class
+        <option value="user">User
+        <option value="group">Group
+        <option value="others">Others
+    </select>
+    <label>Class ID (if applicable):<input name="class_id"></label>
+    <select name="set" required>
+        <option value="">Allow or Deny
+        <option value="allow">Allow
+        <option value="deny">Deny
+    </select>
+    <button>Submit</button>
+</form>
+{% endif %}
 </main>
 {% endblock %}
 

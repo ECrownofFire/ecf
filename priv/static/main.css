@@ -48,3 +48,20 @@
     height: 100px;
 }
 
+/* Transpose the permissions table */
+.table-perms tr {
+    display: block; float: left;
+}
+.table-perms th, .table-perms td {
+    display: block;
+    border: 1px solid black;
+    padding: 4px;
+}
+
+.table-perms {
+    border-collapse: collapse;
+    border-spacing: 0px;
+    padding: 4px;
+    border: 1px solid black;
+}
+
