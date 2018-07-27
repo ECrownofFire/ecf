@@ -16,7 +16,7 @@
 
 -define(F_ACTIONS, [<<"create">>, <<"delete">>, <<"edit">>, <<"reorder">>]).
 
--define(PE_ACTIONS, [<<"allow">>, <<"deny">>, <<"remove">>]).
+-define(PE_ACTIONS, [<<"add">>, <<"remove">>]).
 
 start(_Type, _Args) ->
     IdC = [{id, int}],

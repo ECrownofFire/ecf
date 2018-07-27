@@ -18,17 +18,18 @@ do_reply(undefined, _, Req) ->
     ecf_utils:reply_status(401, undefined, perms_401, Req);
 do_reply(User, Act, Req) ->
     {ok, KV, Req2} = cowboy_req:read_urlencoded_body(Req),
-    A = binary_to_atom(Act, latin1),
-    do_edit(User, KV, A, Req2).
+    do_edit(User, KV, Act, Req2).
 
-do_edit(User, KV, Set, Req) ->
+do_edit(User, KV, Action, Req) ->
     {Class, Mode} = perm_from_kv(KV),
     case ecf_perms:check_perm_global(User, edit_perms) of
         true ->
-            case Set of
-                remove ->
+            case Action of
+                <<"remove">> ->
                     ecf_perms:remove_global_perm(Class, Mode);
-                S when S =:= allow; S =:= deny ->
+                <<"add">> ->
+                    {_, Set0} = lists:keyfind(<<"set">>, 1, KV),
+                    Set = binary_to_existing_atom(Set0, utf8),
                     ecf_perms:edit_global_perm(Class, Mode, Set)
             end,
             Base = application:get_env(ecf, base_url, ""),
@@ -44,12 +45,13 @@ do_edit(User, KV, Set, Req) ->
 
 perm_from_kv(KV) ->
     {_, Class0} = lists:keyfind(<<"class">>, 1, KV),
-    Class = case binary_to_existing_atom(Class0, latin1) of
-                others -> others;
-                C when C =:= user; C =:= group ->
+    Class = case Class0 of
+                <<"others">> -> others;
+                C when C =:= <<"user">>; C =:= <<"group">> ->
+                    Cl = binary_to_existing_atom(Class0, latin1),
                     {_, ClassId0} = lists:keyfind(<<"class_id">>, 1, KV),
                     ClassId = binary_to_integer(ClassId0),
-                    {C, ClassId}
+                    {Cl, ClassId}
             end,
     {_, Mode0} = lists:keyfind(<<"mode">>, 1, KV),
     Mode = binary_to_existing_atom(Mode0, latin1),
