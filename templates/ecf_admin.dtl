@@ -34,6 +34,15 @@
 {% endif %}
 {% if can_edit_perms %}
 <h3>Edit Global Permissions</h3>
+<p>The permissions system is based off an ACL (Access Control List) system.
+
+<p>Each individual permission is known as a "mode" (such as creating threads, creating posts, etc). Each "mode" will have specified permissions for zero or more "classes".
+
+<p>A "class" is either a user, a group, or "others" (which can be thought of as a group that includes all users <em>as well as guests</em>). A more specific class will <em>always</em> override a more generic class. This really just means that user-specific permissions override group-specific permissions, which in turn override "others".
+
+<p>By default, permissions are NOT allowed, and so you need your desired classes to be set to "Allow". So if creating threads is not explicitly "Allow"ed for a user, they won't be able to create threads.
+
+<p>Also note that any group's "Deny" will override any another group's "Allow". This basically means that, for example, you can safely Deny permissions to the "Banned Users" group while having "Registered Users" in Allow.
 {% for perm in perm_list %}
 <h4>{{ perm.name }}</h4>
 <table class="table-perms">
@@ -42,7 +51,11 @@
             <th>Allow
         {% for class in perm.allow %}
             <td>
-                <span>{{ class.name }}</span>
+                {% if class.type != "others" %}
+                <a href="{{ base_url }}/{{ class.type }}/{{ class.id }}">{{ class.name }}</a>
+                {% else %}
+                <span>Others</span>
+                {% endif %}
                 <form action="{{ base_url }}/perms/remove" method="post">
                     <input type="hidden" name="mode" value="{{ perm.mode }}">
                     <input type="hidden" name="class" value="{{ class.type }}">
@@ -56,7 +69,11 @@
             <th>Deny
         {% for class in perm.deny %}
             <td>
-                <span>{{ class.name }}</span>
+                {% if class.type != "others" %}
+                <a href="{{ base_url }}/{{ class.type }}/{{ class.id }}">{{ class.name }}</a>
+                {% else %}
+                <span>Others</span>
+                {% endif %}
                 <form action="{{ base_url }}/perms/remove" method="post">
                     <input type="hidden" name="mode" value="{{ perm.mode }}">
                     <input type="hidden" name="class" value="{{ class.type }}">
