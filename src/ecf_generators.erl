@@ -3,18 +3,6 @@
 -define(GRAVATAR_URL, <<"https://gravatar.com/avatar/">>).
 -define(GRAVATAR_OPTIONS, <<"?s=100&d=identicon">>).
 
-% TODO: avoid duplication of the mode list
-% unsure if that's possible with dialyzer specs, will need to investigate
-% probably requires a parse transform or something
--define(MODES, [view_forum, view_thread, view_group, view_user,
-                create_forum, create_thread, create_post, create_group,
-                delete_forum, delete_thread, delete_post, delete_group,
-                edit_forum, edit_thread, edit_post, edit_group, edit_user,
-                reorder_forums,
-                move_thread, lock_thread, ban_user,
-                edit_perms, manage_group,
-                join_group, leave_group]).
-
 -export([generate/3]).
 
 -spec generate(atom() | integer(), ecf_user:user() | undefined, term()) -> iodata().
@@ -37,7 +25,6 @@ generate(admin, User, _) ->
              , {can_reorder, CanReorder}
              , {can_create_forum, CanCreate}
              , {can_edit_perms, CanEditPerms}
-             , {mode_list, ?MODES}
              , {group_list, GroupList}
              | Vars],
     {ok, Res} = ecf_admin_dtl:render(Vars2),
@@ -240,10 +227,10 @@ group_list(User, Groups) ->
 group(User, Group) ->
     Id = ecf_group:id(Group),
     InGroup = lists:member(Id, ecf_user:groups(User)),
-    CanJoin = Id >= 3
+    CanJoin = Id >= 4
               andalso not InGroup
               andalso ecf_perms:check_perm_group(User, Group, join_group),
-    CanLeave = Id >= 3
+    CanLeave = Id >= 4
                andalso InGroup
                andalso ecf_perms:check_perm_group(User, Group, leave_group),
      [{can_leave, CanLeave},

@@ -6,14 +6,26 @@
          get_global_perms/0, edit_global_perm/3, remove_global_perm/2,
          check_perm_global/2, check_perm_forum/3, check_perm_thread/3,
          check_perm_group/3,
-         edit_perm/4, remove_perm/3]).
+         edit_perm/4, remove_perm/3,
+         mode/1, allow/1, deny/1]).
 
 
 % 'others' includes any user as well as guests
 -type class() :: {user, ecf_user:id()} | {group, ecf_group:id()} | others.
 
-% NOTE: at the moment there's a second list of modes in ecf_generators
-% need to update both until I figure out how to deduplicate them
+
+% TODO: avoid duplication of the mode list
+% unsure if that's possible with dialyzer specs, will need to investigate
+% probably requires a parse transform or something
+-define(MODES, [view_forum, view_thread, view_group, view_user,
+                create_forum, create_thread, create_post, create_group,
+                delete_forum, delete_thread, delete_post, delete_group,
+                edit_forum, edit_thread, edit_post, edit_group, edit_user,
+                reorder_forums,
+                move_thread, lock_thread, ban_user,
+                edit_perms, manage_group,
+                join_group, leave_group]).
+
 -type mode() :: view_forum | view_thread | view_group | view_user
               | create_forum | create_thread | create_post | create_group
               | delete_forum | delete_thread | delete_post | delete_group
@@ -32,23 +44,32 @@
 
 -type perm() :: #ecf_perm{}.
 
+-spec mode(perm()) -> mode().
+mode(Perm) ->
+    Perm#ecf_perm.mode.
+
+-spec allow(perm()) -> [class()].
+allow(Perm) ->
+    Perm#ecf_perm.allow.
+
+-spec deny(perm()) -> [class()].
+deny(Perm) ->
+    Perm#ecf_perm.deny.
+
 -spec create_table([node()]) -> ok.
 create_table(Nodes) ->
     {atomic, ok} = mnesia:create_table(ecf_perm,
                         [{attributes, record_info(fields, ecf_perm)},
                          {disc_copies, Nodes}]),
     F = fun() ->
-                mnesia:write(#ecf_perm{})
+                [mnesia:write(#ecf_perm{mode=X}) || X <- ?MODES]
         end,
     mnesia:activity(transaction, F).
 
 -spec edit_global_perm(class(), mode(), allow | deny) -> ok.
 edit_global_perm(Class, Mode, Set) ->
     F = fun() ->
-                Old = case mnesia:wread({ecf_perm, Mode}) of
-                          [] -> #ecf_perm{mode=Mode};
-                          [P] -> P
-                      end,
+                [Old] = mnesia:wread({ecf_perm, Mode}),
                 New = edit_perm(Old, Class, Set),
                 mnesia:write(New)
         end,
@@ -74,12 +95,8 @@ get_global_perms() ->
 -spec get_global_perm(mode()) -> perm().
 get_global_perm(Mode) ->
     F = fun() ->
-                case mnesia:read({ecf_perm, Mode}) of
-                    [] ->
-                        #ecf_perm{mode=Mode};
-                    [P] ->
-                        P
-                end
+                [P] = mnesia:read({ecf_perm, Mode}),
+                P
         end,
     mnesia:activity(transaction, F).
 
