@@ -70,20 +70,54 @@
 {% endfor %}
 </table>
 <h3>Add New Global Permission</h3>
-<form id="add-perms" action="{{ base_url }}/perms/add" method="post">
+<h4>User</h4>
+<form class="add-perms" action="{{ base_url }}/perms/add" method="post">
+    <input type="hidden" name="class" value="user">
     <select name="mode" required>
         <option value="">Mode
         {% for perm in perm_list %}
         <option value="{{ perm.mode }}">{{ perm.name }}
         {% endfor %}
     </select>
-    <select name="class" required>
-        <option value="">Class
-        <option value="user">User
-        <option value="group">Group
-        <option value="others">Others
+    <label>User ID:<input name="class_id" required></label>
+    <select name="set" required>
+        <option value="">Allow or Deny
+        <option value="allow">Allow
+        <option value="deny">Deny
     </select>
-    <label>Class ID (if applicable):<input name="class_id"></label>
+    <button>Submit</button>
+</form>
+<h4>Group</h4>
+<form class="add-perms" action="{{ base_url }}/perms/add" method="post">
+    <input type="hidden" name="class" value="group">
+    <select name="mode" required>
+        <option value="">Mode
+        {% for perm in perm_list %}
+        <option value="{{ perm.mode }}">{{ perm.name }}
+        {% endfor %}
+    </select>
+    <select name="class_id" required>
+        <option value="">Group
+        {% for group in group_list %}
+        <option value="{{ group.id }}">{{ group.name }}
+        {% endfor %}
+    </select>
+    <select name="set" required>
+        <option value="">Allow or Deny
+        <option value="allow">Allow
+        <option value="deny">Deny
+    </select>
+    <button>Submit</button>
+</form>
+<h4>Others</h4>
+<form class="add-perms" action="{{ base_url }}/perms/add" method="post">
+    <input type="hidden" name="class" value="others">
+    <select name="mode" required>
+        <option value="">Mode
+        {% for perm in perm_list %}
+        <option value="{{ perm.mode }}">{{ perm.name }}
+        {% endfor %}
+    </select>
     <select name="set" required>
         <option value="">Allow or Deny
         <option value="allow">Allow
