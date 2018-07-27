@@ -62,7 +62,8 @@ create_table(Nodes) ->
                         [{attributes, record_info(fields, ecf_perm)},
                          {disc_copies, Nodes}]),
     F = fun() ->
-                [mnesia:write(#ecf_perm{mode=X}) || X <- ?MODES]
+                [mnesia:write(#ecf_perm{mode=X}) || X <- ?MODES],
+                ok
         end,
     mnesia:activity(transaction, F).
 

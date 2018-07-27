@@ -22,13 +22,13 @@ install() ->
     ok = mnesia:create_schema(Nodes),
     ok = application:start(mnesia),
     ok = create_id_table(Nodes),
+    ecf_log:create_table(Nodes),
+    ecf_perms:create_table(Nodes),
     ecf_forum:create_table(Nodes),
     ecf_thread:create_table(Nodes),
     ecf_post:create_table(Nodes),
     ecf_user:create_table(Nodes),
     ecf_group:create_table(Nodes),
-    ecf_log:create_table(Nodes),
-    ecf_perms:create_table(Nodes),
     ecf_email:create_table(Nodes).
 
 -spec create_id_table([node()]) -> ok.
