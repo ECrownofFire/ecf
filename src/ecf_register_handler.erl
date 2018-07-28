@@ -53,8 +53,7 @@ try_register(false, {Username, _, Email, Bday, Bio}, Req) ->
                      Html,
                      Req);
 try_register(true, {Username, Password, Email, Bday, Bio}, Req) ->
-    Time = erlang:timestamp(),
-    case ecf_user:new_user(Username, Password, Email, Time, Bday) of
+    case ecf_user:new_user(Username, Password, Email, Bday) of
         {error, Reason} ->
             BaseV = [{username, Username}, {email, Email},
                      {bday, Bday}, {bio, Bio}],

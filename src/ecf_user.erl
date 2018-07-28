@@ -16,7 +16,7 @@
 -type id() :: non_neg_integer().
 
 -export([create_table/1,
-         new_user/5,
+         new_user/4,
          get_user/1, get_user_by_name/1, get_user_by_email/1,
          edit_name/2, edit_email/2, edit_pass/2, new_session/1, reset_session/2,
          enable_user/1, disable_user/1,
@@ -35,7 +35,7 @@
         {id     :: id(),
          name   :: binary(),
          enabled:: boolean(),
-         session:: [{binary(), erlang:timestamp()}],
+         session:: [{binary(), integer()}],
          salt   :: binary(),
          pass   :: binary(),
          email  :: binary(),
@@ -56,22 +56,22 @@ create_table(Nodes) ->
                          {disc_copies, Nodes}]),
     ok.
 
--spec new_user(binary(), binary(), binary(),
-               erlang:timestamp(), calendar:datetime()) ->
+-spec new_user(binary(), binary(), binary(), calendar:datetime()) ->
     {id(), binary()} | {error, atom()}.
-new_user(Name, Pass, Email0, Time, Bday) ->
+new_user(Name, Pass, Email0, Bday) ->
     Email = string:trim(Email0),
     Salt = crypto:strong_rand_bytes(?SALT_LENGTH),
     {ok, Hash} = pbkdf2:pbkdf2(?HMAC, Pass, Salt,
                                ?HASH_ITERATIONS, ?HASH_LENGTH),
     Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
-    Sess = {Session, Time},
+    Sess = {Session, erlang:system_time(second)},
     F = fun() ->
                 case get_user_by_name(Name) of
                     undefined ->
                         case get_user_by_email(Email) of
                             undefined ->
                                 Id = ecf_db:get_new_id(ecf_user),
+                                Time = erlang:timestamp(),
                                 ok = mnesia:write(
                                        #ecf_user{
                                           id=Id, name=Name, enabled=true,
@@ -142,7 +142,7 @@ get_user_by_email(Email) ->
 -spec edit_name(id(), binary()) -> binary() | {error, username_taken}.
 edit_name(Id, Name) ->
     Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
-    Sess = {Session, erlang:timestamp()},
+    Sess = {Session, erlang:system_time(second)},
     F = fun() ->
                 case get_user_by_name(Name) of
                     undefined ->
@@ -158,7 +158,7 @@ edit_name(Id, Name) ->
 -spec edit_email(id(), binary()) -> binary() | {error, email_taken}.
 edit_email(Id, Email) ->
     Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
-    Sess = {Session, erlang:timestamp()},
+    Sess = {Session, erlang:system_time(second)},
     F = fun() ->
                 case get_user_by_email(Email) of
                     undefined ->
@@ -184,7 +184,7 @@ edit_pass(Id, NewPass) ->
     {ok, Hash} = pbkdf2:pbkdf2(?HMAC, NewPass, Salt,
                                ?HASH_ITERATIONS, ?HASH_LENGTH),
     Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
-    Sess = {Session, erlang:timestamp()},
+    Sess = {Session, erlang:system_time(second)},
     F = fun() ->
                 [User] = mnesia:wread({ecf_user, Id}),
                 ok = mnesia:write(User#ecf_user{pass=Hash,salt=Salt,session=[Sess]}),
@@ -198,7 +198,7 @@ new_session(Id) ->
     Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
     F = fun() ->
                 [User] = mnesia:wread({ecf_user, Id}),
-                New = [{Session, erlang:timestamp()}|User#ecf_user.session],
+                New = [{Session, erlang:system_time(second)}|User#ecf_user.session],
                 mnesia:write(User#ecf_user{session=New})
         end,
     ok = mnesia:activity(transaction, F),
@@ -224,8 +224,8 @@ clean_sessions(Id) ->
     mnesia:activity(transaction, F).
 
 clean_sess({_, Time}) ->
-    Limit = application:get_env(ecf, session_time, 604800) * 1000000,
-    Diff = timer:now_diff(erlang:timestamp(), Time),
+    Limit = application:get_env(ecf, minutes_session, 20160) * 60,
+    Diff = erlang:system_time(second) - Time,
     Diff < Limit.
 
 
