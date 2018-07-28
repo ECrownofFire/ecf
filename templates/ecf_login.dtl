@@ -1,25 +1,23 @@
 {% extends "ecf_base.dtl" %}
 {# vim: set ft=htmldjango: #}
 {% block content %}
-{% if not user %}
 <main id="login">
-<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <h2>Login</h2>
 <p id="message">{{ message }}</p>
+{% if not user %}
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <form id="form-login" action="{{ base_url }}/login?url={{ url|urlencode }}" method="post">
     <label>Email: <input id="email" type="text" autocomplete="email" name="email" required></label>
     <label>Password: <input id="password" type="password" autocomplete="current-password" name="password" required></label>
     {% if captcha %}
     <div class="g-recaptcha" data-sitekey="{{ recaptcha_key }}"></div>
     {% endif %}
-    <input id="submit-login" type="submit" value="Login">
+    <button id="submit-login">Login</button>
 </form>
 {% else %}
-<main id="alread-logged-in">
-    <p>{{ message }}</p>
-    <script language="javascript" type="text/javascript">
-        window.setTimeout(function() { location.href = "{{ base_url }}/{{ url }}";}, 2000);
-    </script>
+<script language="javascript" type="text/javascript">
+    window.setTimeout(function() { location.href = "{{ base_url }}/{{ url }}";}, 2000);
+</script>
 {% endif %}
 </main>
 {% endblock %}
