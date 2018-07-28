@@ -89,8 +89,10 @@ check_username(Username) ->
 
 -spec check_password(binary()) -> boolean().
 check_password(Password) ->
+    Min = application:get_env(ecf, min_password_length, 8),
+    Max = application:get_env(ecf, max_password_length, 64),
     case byte_size(Password) of
-        N when N >= 8, N =< 64 ->
+        N when N >= Min, N =< Max ->
             true;
         _ ->
             false
