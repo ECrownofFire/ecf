@@ -44,6 +44,22 @@ generate(login, User, {Captcha, Url, Type}) ->
              | Vars],
     {ok, Res} = ecf_login_dtl:render(Vars2),
     Res;
+generate(forgot_pw, undefined, Type) ->
+    Vars = get_vars(undefined, "Forgot Password"),
+    {ok, Message} = application:get_env(ecf, Type),
+    {ok, Key} = application:get_env(ecf, recaptcha_key),
+    Vars2 = [{message, Message}, {recaptcha_key, Key} | Vars],
+    {ok, Res} = ecf_forgot_pw_dtl:render(Vars2),
+    Res;
+generate(reset_pw, User, {Captcha, Type, Code}) ->
+    Vars = get_vars(User, "Reset Password"),
+    {ok, Message} = application:get_env(ecf, Type),
+    {ok, Key} = application:get_env(ecf, recaptcha_key),
+    Vars2 = [{captcha, Captcha}, {message, Message},
+             {recaptcha_key, Key}, {code, Code}
+             | Vars],
+    {ok, Res} = ecf_reset_pw_dtl:render(Vars2),
+    Res;
 generate(logout, undefined, Url) ->
     Vars = get_vars(undefined, "Logout"),
     Message = application:get_env(ecf, logout_message,

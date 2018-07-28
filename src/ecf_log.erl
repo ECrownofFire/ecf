@@ -1,7 +1,5 @@
 -module(ecf_log).
 
--include_lib("stdlib/include/qlc.hrl").
-
 -export_type([log/0]).
 
 -export([create_table/1,
@@ -36,7 +34,7 @@ clear_log(User, Ip) ->
 check_log(User, Ip) ->
     F = fun() ->
                 max(count(mnesia:read(ecf_log, User)),
-                count(mnesia:read(ecf_log, Ip)))
+                    count(mnesia:read(ecf_log, Ip)))
         end,
     Count = mnesia:activity(transaction, F),
     Max = application:get_env(ecf, max_login_attempts, 5),

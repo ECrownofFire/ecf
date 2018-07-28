@@ -1,0 +1,14 @@
+{% extends "ecf_base.dtl" %}
+{# vim: set ft=htmldjango: #}
+{% block content %}
+<main id="forgot-pw">
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+<h2>Forgot Password</h2>
+<p id="message">{{ message }}</p>
+<form id="form-forgot-pw" action="{{ base_url }}/forgot_password" method="post">
+    <label>Email: <input id="email" autocomplete="email" name="email" required></label>
+    <div class="g-recaptcha" data-sitekey="{{ recaptcha_key }}"></div>
+    <button id="submit-forgot-pw">Submit</button>
+</form>
+</main>
+{% endblock %}
