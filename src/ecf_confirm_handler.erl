@@ -11,19 +11,19 @@ init(Req, State) ->
                User ->
                    #{code := Code} = cowboy_req:match_qs([code], Req),
                    Id = ecf_user:id(User),
-                   case ecf_email:get_code(Id) of
-                       {confirm, Code} ->
+                   case ecf_email:get_confirm_code(Id) of
+                       undefined ->
+                           ecf_utils:reply_status(400, User, confirm_400, Req);
+                       Code ->
                            ok = ecf_user:confirm_email(Id),
-                           ok = ecf_email:clear_code(Id),
+                           ok = ecf_email:clear_confirm_code(Id),
                            Html = ecf_generators:generate(confirmed_email,
                                                           User,
                                                           ignored),
                            cowboy_req:reply(200,
                                             #{<<"content-type">> => <<"text/html">>},
                                             Html,
-                                            Req);
-                       _ ->
-                           ecf_utils:reply_status(400, User, confirm_400, Req)
+                                            Req)
                    end
            end,
     {ok, Req2, State}.
