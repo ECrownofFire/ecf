@@ -35,8 +35,8 @@
             <li><a href="{{ base_url }}/group">Groups</a>
             <li><form id="logout-form" method="post" action="{{ base_url }}/logout"><a onclick="document.getElementById('logout-form').submit(); return false;" href="{{ base_url }}/logout">Logout</a></form>
             {% else %}
-            <li><a href="{{ base_url }}/login" rel="nofollow">Login</a>
-            <li><a href="{{ base_url }}/register" rel="nofollow">Register</a>
+            <li><a href="{{ base_url }}/login">Login</a>
+            <li><a href="{{ base_url }}/register">Register</a>
             {% endif %}
         </ul>
     </nav>
