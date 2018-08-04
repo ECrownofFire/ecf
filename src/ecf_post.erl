@@ -127,7 +127,7 @@ time(Post) ->
 text(Post) ->
     Post#ecf_post.text.
 
--spec edited(post()) -> {ecf_user:id(), erlang:timestamp()}.
+-spec edited(post()) -> {ecf_user:id(), erlang:timestamp()} | undefined.
 edited(Post) ->
     Post#ecf_post.edited.
 
