@@ -118,9 +118,14 @@ edit_desc(Id, Desc) when is_binary(Desc) ->
 add_member(Id, User) ->
     F = fun() ->
                 [G] = mnesia:wread({ecf_group, Id}),
-                ecf_user:add_group(User, Id),
-                NewList = [User|members(G)],
-                mnesia:write(G#ecf_group{members=NewList})
+                case lists:member(User, members(G)) of
+                    true ->
+                        ok;
+                    false ->
+                        ecf_user:add_group(User, Id),
+                        NewList = [User|members(G)],
+                        mnesia:write(G#ecf_group{members=NewList})
+                end
         end,
     mnesia:activity(transaction, F).
 
