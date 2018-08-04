@@ -38,6 +38,7 @@ start(_Type, _Args) ->
                {[Base, "/login"], ecf_login_handler, {}},
                {[Base, "/forgot_password"], ecf_forgot_pw_handler, {}},
                {[Base, "/reset_password"], ecf_reset_pw_handler, {}},
+               {[Base, "/change_password"], ecf_change_pw_handler, {}},
                {[Base, "/register"], ecf_register_handler, {}},
                {[Base, "/edit_profile"], ecf_edit_profile_handler, {}},
                {[Base, "/logout"], ecf_logout_handler, {}},

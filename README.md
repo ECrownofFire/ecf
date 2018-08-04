@@ -27,7 +27,7 @@ At the bare minimum, ECF still needs the following:
 So that ECF is reasonably useable, I'd like to add the following as well:
 * Messaging (needs backend)
 * Banning people for a given length of time (needs backend)
-* Listing all users, sorting by various fields (partially done)
+* Listing all users, sorting by various fields (partially done, needs sorting)
 * List all posts by a user
 * Searching (needs backend)
 * Refreshing sessions

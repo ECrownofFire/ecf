@@ -1,6 +1,7 @@
 {% extends "ecf_base.dtl" %}
 {# vim: set ft=htmldjango: #}
 {% block content %}
+<main id="user-profile">
 <dl>
     <dt>Username<dd id="username">{{ profile.name }}</dd>
     {% if user.id == profile.id %}
@@ -40,8 +41,13 @@
     <button>Remove</button>
 </form>
 {% endif %}
+<div id="profile-links">
 {% if can_edit %}
 <a href="{{ base_url }}/user/edit?id={{ profile.id }}">Edit profile</a>
 {% endif %}
+{% if user.id == profile.id %}
+<a href="{{ base_url }}/change_password">Change your password</a>
+{% endif %}
+</div>
 </main>
 {% endblock %}

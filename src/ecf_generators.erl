@@ -60,6 +60,12 @@ generate(reset_pw, User, {Captcha, Type, Code}) ->
              | Vars],
     {ok, Res} = ecf_reset_pw_dtl:render(Vars2),
     Res;
+generate(change_pw, User, Type) ->
+    Vars = get_vars(User, "Change Password"),
+    Message = application:get_env(ecf, Type, <<"Change your password here.">>),
+    Vars2 = [{message, Message} | Vars],
+    {ok, Res} = ecf_change_pw_dtl:render(Vars2),
+    Res;
 generate(logout, undefined, Url) ->
     Vars = get_vars(undefined, "Logout"),
     Message = application:get_env(ecf, logout_message,
