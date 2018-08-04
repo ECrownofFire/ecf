@@ -65,7 +65,7 @@ try_register(true, {Username, Password, Email, Bday, Bio}, Req) ->
                              Req);
         {Id, Session} ->
             ok = ecf_user:edit_bio(Id, Bio),
-            Req2 = ecf_login_handler:set_login_cookies(Req, Id, Session),
+            Req2 = ecf_utils:set_login_cookies(Req, Id, Session),
             Base = application:get_env(ecf, base_url, ""),
             % TODO: flash here
             cowboy_req:reply(303,

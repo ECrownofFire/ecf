@@ -4,9 +4,6 @@
 -export([init/2]).
 -export([terminate/3]).
 
--export([set_login_cookies/3]).
-
--define(SESSION_TIME, 604800). % one week
 
 init(Req = #{method := <<"GET">>}, State) ->
     #{url := Url} = cowboy_req:match_qs([{url, [], <<"">>}], Req),
@@ -57,7 +54,7 @@ try_login(User, Password, Url, Req, Email) ->
         {true, true} ->
             ecf_log:clear_log(Email, ecf_utils:get_ip(Req)),
             Session = ecf_user:new_session(ecf_user:id(User)),
-            Req2 = set_login_cookies(Req, ecf_user:id(User), Session),
+            Req2 = ecf_utils:set_login_cookies(Req, ecf_user:id(User), Session),
             Base = application:get_env(ecf, base_url, ""),
             cowboy_req:reply(303,
                              #{<<"location">> => [Base, "/", Url]},
@@ -76,16 +73,4 @@ login_fail(Req, Email, Type) ->
                                                       Url,
                                                       Type}),
     cowboy_req:reply(400, #{<<"content-type">> => <<"text/html">>}, Html, Req).
-
-set_login_cookies(Req, Id, Session) ->
-    SessionEncoded = base64:encode(Session),
-    Req2 = cowboy_req:set_resp_cookie(<<"session">>, SessionEncoded,
-                                      Req,
-                                      #{http_only => true,
-                                        secure => true,
-                                        max_age => ?SESSION_TIME}),
-    cowboy_req:set_resp_cookie(<<"user">>,
-                               integer_to_list(Id),
-                               Req2,
-                               #{max_age => ?SESSION_TIME}).
 

@@ -1,6 +1,6 @@
 -module(ecf_utils).
 
--export([check_user_session/1, valid_password/1, get_ip/1,
+-export([check_user_session/1, valid_password/1, get_ip/1, set_login_cookies/3,
          reply_status/4, reply_status/5]).
 
 %%% Contains a few utility functions
@@ -75,4 +75,21 @@ valid_password(Password) ->
         _ ->
             false
     end.
+
+
+-spec set_login_cookies(cowboy_req:req(), ecf_user:id(), binary())
+        -> cowboy_req:req().
+set_login_cookies(Req, Id, Session) ->
+    {ok, SessionMins} = application:get_env(ecf, minutes_session),
+    SessionSecs = SessionMins * 60,
+    SessionEncoded = base64:encode(Session),
+    Req2 = cowboy_req:set_resp_cookie(<<"session">>, SessionEncoded,
+                                      Req,
+                                      #{http_only => true,
+                                        secure => true,
+                                        max_age => SessionSecs}),
+    cowboy_req:set_resp_cookie(<<"user">>,
+                               integer_to_list(Id),
+                               Req2,
+                               #{max_age => SessionSecs}).
 

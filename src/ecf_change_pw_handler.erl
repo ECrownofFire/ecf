@@ -38,7 +38,7 @@ change_pw(User, Old, Password, Req) ->
                 true ->
                     Id = ecf_user:id(User),
                     Sess = ecf_user:edit_pass(Id, Password),
-                    Req2 = ecf_login_handler:set_login_cookies(Req, Id, Sess),
+                    Req2 = ecf_utils:set_login_cookies(Req, Id, Sess),
                     Base = application:get_env(ecf, base_url, ""),
                     cowboy_req:reply(303, #{<<"location">> => [Base, "/"]}, Req2)
             end
