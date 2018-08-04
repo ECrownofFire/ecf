@@ -24,7 +24,7 @@ init(Req0 = #{method := <<"POST">>}, State) ->
 change_pw(undefined, _, _, Req) ->
     ecf_utils:reply_status(401, undefined, change_pw_401, Req);
 change_pw(User, Old, Password, Req) ->
-    case check_password(Password) of
+    case ecf_utils:valid_password(Password) of
         false ->
             Html = ecf_generators:generate(change_pw, User, change_pw_invalid_pw),
             cowboy_req:reply(400, #{<<"content-type">> => <<"text/html">>},
@@ -42,16 +42,5 @@ change_pw(User, Old, Password, Req) ->
                     Base = application:get_env(ecf, base_url, ""),
                     cowboy_req:reply(303, #{<<"location">> => [Base, "/"]}, Req2)
             end
-    end.
-
-
-check_password(Password) ->
-    Min = application:get_env(ecf, min_password_length, 8),
-    Max = application:get_env(ecf, max_password_length, 64),
-    case byte_size(Password) of
-        N when N >= Min, N =< Max ->
-            true;
-        _ ->
-            false
     end.
 

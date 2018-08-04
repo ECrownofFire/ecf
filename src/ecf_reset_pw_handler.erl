@@ -38,7 +38,7 @@ try_reset_pw(KV, Ip, Req) ->
     {_, Email} = lists:keyfind(<<"email">>, 1, KV),
     {_, Password} = lists:keyfind(<<"password">>, 1, KV),
     {_, Code} = lists:keyfind(<<"code">>, 1, KV),
-    case check_password(Password) of
+    case ecf_utils:valid_password(Password) of
         true ->
             case ecf_user:get_user_by_email(Email) of
                 undefined ->
@@ -75,15 +75,4 @@ reply_fail(Email, Ip, Code, Req, Type) ->
                                    {ecf_log:check_log(Email, Ip),
                                     Type, Code}),
     cowboy_req:reply(400, #{<<"content-type">> => <<"text/html">>}, Html, Req).
-
-
-check_password(Password) ->
-    Min = application:get_env(ecf, min_password_length, 8),
-    Max = application:get_env(ecf, max_password_length, 64),
-    case byte_size(Password) of
-        N when N >= Min, N =< Max ->
-            true;
-        _ ->
-            false
-    end.
 

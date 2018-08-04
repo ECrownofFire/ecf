@@ -1,6 +1,7 @@
 -module(ecf_utils).
 
--export([check_user_session/1, get_ip/1, reply_status/4, reply_status/5]).
+-export([check_user_session/1, valid_password/1, get_ip/1,
+         reply_status/4, reply_status/5]).
 
 %%% Contains a few utility functions
 
@@ -62,4 +63,16 @@ reply_status(Status, User, Type, Req, Storage) ->
               _ -> #{<<"content-type">> => <<"text/html">>}
           end,
     cowboy_req:reply(Status, Map, Html, Req).
+
+
+-spec valid_password(binary()) -> boolean().
+valid_password(Password) ->
+    Min = application:get_env(ecf, min_password_length, 8),
+    Max = application:get_env(ecf, max_password_length, 64),
+    case byte_size(Password) of
+        N when N >= Min, N =< Max ->
+            true;
+        _ ->
+            false
+    end.
 

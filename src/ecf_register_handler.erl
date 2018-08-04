@@ -26,7 +26,8 @@ init(Req0 = #{method := <<"POST">>}, State) ->
     Ip = ecf_utils:get_ip(Req),
     Req2 = case ecf_captcha:check_captcha(Ip, KV) of
                true ->
-                   try_register(check_username(Username) and check_password(Password),
+                   try_register(check_username(Username)
+                                and ecf_utils:valid_password(Password),
                                 {Username, Password, Email, Bday, Bio},
                                 Req);
                false ->
@@ -83,17 +84,6 @@ check_username(Username) ->
                                   lists:seq($0, $9)]),
             Check = string:trim(Username, leading, List),
             string:is_empty(Check);
-        _ ->
-            false
-    end.
-
--spec check_password(binary()) -> boolean().
-check_password(Password) ->
-    Min = application:get_env(ecf, min_password_length, 8),
-    Max = application:get_env(ecf, max_password_length, 64),
-    case byte_size(Password) of
-        N when N >= Min, N =< Max ->
-            true;
         _ ->
             false
     end.
