@@ -19,13 +19,13 @@ At the bare minimum, ECF still needs the following:
 * Limit lengths on various things
 * Administration frontend
     * Banning accounts
-    * Editing permissions on forums and threads
+    * Editing permissions on forums, threads, and groups
 * Security
     * HTTPS (works fine behind nginx reverse proxy though)
     * Logging stuff (most likely through lager)
 
 So that ECF is reasonably useable, I'd like to add the following as well:
-* Editing posts (and displaying time/user)
+* Displaying time/user that edited each post
 * Messaging (needs backend)
 * Banning people for a given length of time (needs backend)
 * Listing all users, sorting by various fields (partially done)

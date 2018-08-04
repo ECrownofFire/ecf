@@ -21,6 +21,8 @@
                 create_forum, create_thread, create_post, create_group,
                 delete_forum, delete_thread, delete_post, delete_group,
                 edit_forum, edit_thread, edit_post, edit_group, edit_user,
+                delete_own_thread, edit_own_thread,
+                delete_own_post, edit_own_post,
                 reorder_forums,
                 move_thread, lock_thread, ban_user,
                 edit_perms, manage_group,
@@ -30,6 +32,8 @@
               | create_forum | create_thread | create_post | create_group
               | delete_forum | delete_thread | delete_post | delete_group
               | edit_forum | edit_thread | edit_post | edit_group | edit_user
+              | delete_own_thread | edit_own_thread
+              | delete_own_post | edit_own_post
               | reorder_forums
               | move_thread | lock_thread | ban_user
               | edit_perms | manage_group

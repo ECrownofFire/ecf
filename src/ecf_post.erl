@@ -100,6 +100,7 @@ get_posts(Thread, First, Last) ->
 edit_post(Thread, Id, User, Time, Text) ->
     F = fun() ->
                 P = get_post(Thread, Id),
+                mnesia:delete_object(P),
                 mnesia:write(P#ecf_post{text=Text,edited={User,Time}})
         end,
     mnesia:activity(transaction, F).

@@ -15,6 +15,38 @@ terminate(_Reason, _Req, _State) ->
 
 try_post(Req, undefined, _) ->
     ecf_utils:reply_status(401, undefined, post_401, Req);
+try_post(Req = #{method := <<"GET">>}, User, <<"edit">>) ->
+    #{thread := TId, post := Id} = cowboy_req:match_qs([{thread, int},
+                                                        {post, int}], Req),
+    case ecf_thread:get_thread(TId) of
+        undefined ->
+            ecf_utils:reply_status(404, User, thread_404, Req);
+        Thread ->
+            case ecf_post:get_post(TId, Id) of
+                undefined ->
+                    ecf_utils:reply_status(404, User, post_404, Req);
+                Post ->
+                    get_edit(User, Thread, Post, Req)
+            end
+    end;
+try_post(Req0 = #{method := <<"POST">>}, User, <<"edit">>) ->
+    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
+    {_, TId0} = lists:keyfind(<<"thread">>, 1, KV),
+    TId = binary_to_integer(TId0),
+    {_, Id0} = lists:keyfind(<<"post">>, 1, KV),
+    Id = binary_to_integer(Id0),
+    {_, Text} = lists:keyfind(<<"text">>, 1, KV),
+    case ecf_thread:get_thread(TId) of
+        undefined ->
+            ecf_utils:reply_status(404, User, thread_404, Req);
+        Thread ->
+            case ecf_post:get_post(TId, Id) of
+                undefined ->
+                    ecf_utils:reply_status(404, User, post_404, Req);
+                Post ->
+                    post_edit(User, Thread, Post, Text, Req)
+            end
+    end;
 try_post(Req0 = #{method := <<"POST">>}, User, <<"create">>) ->
     LimitSec = application:get_env(ecf, post_limit_seconds, 20),
     Limit = LimitSec * 1000000,
@@ -66,4 +98,40 @@ try_post(Req0 = #{method := <<"POST">>}, User, <<"delete">>) ->
     end;
 try_post(Req, User, _) ->
     ecf_utils:reply_status(405, User, post_405, Req).
+
+
+get_edit(User, Thread, Post, Req) ->
+    case check_edit_perms(User, Thread, Post) of
+        false ->
+            ecf_utils:reply_status(403, User, edit_post_403, Req);
+        true ->
+            Html = ecf_generators:generate(post_edit, User, {Thread, Post}),
+            cowboy_req:reply(200, #{<<"content-type">> => <<"text/html">>},
+                             Html, Req)
+    end.
+
+post_edit(User, Thread, Post, Text, Req) ->
+    case check_edit_perms(User, Thread, Post) of
+        false ->
+            ecf_utils:reply_status(403, User, edit_post_403, Req);
+        true ->
+            TId = ecf_thread:id(Thread),
+            Id = ecf_post:id(Post),
+            ecf_post:edit_post(TId, Id, ecf_user:id(User),
+                               erlang:timestamp(), Text),
+            Base = application:get_env(ecf, base_url, ""),
+            PerPage = application:get_env(ecf, posts_per_page, 40),
+            Page = ecf_post:id(Post) div PerPage + 1,
+            cowboy_req:reply(303,
+                             #{<<"location">>
+                               => [Base, <<"/thread/">>, integer_to_list(TId),
+                                   <<"?page=">>, integer_to_list(Page),
+                                   <<"#post-">>, integer_to_list(Id)]},
+                             Req)
+    end.
+
+check_edit_perms(User, Thread, Post) ->
+    ecf_perms:check_perm_thread(User, Thread, edit_post)
+    orelse (ecf_post:poster(Post) =:= ecf_user:id(User)
+            andalso ecf_perms:check_perm_thread(User, Thread, edit_own_post)).
 

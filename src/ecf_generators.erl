@@ -142,20 +142,34 @@ generate(thread, User, {Forum, Thread, Posts, Page, Last}) ->
     ThreadV = thread(Thread),
     PostList = post_list(Posts),
     CreatePost = ecf_perms:check_perm_thread(User, Thread, create_post),
+    EditPosts = ecf_perms:check_perm_thread(User, Thread, edit_post),
+    EditOwnPosts = ecf_perms:check_perm_thread(User, Thread, edit_own_post),
     DeletePosts = ecf_perms:check_perm_thread(User, Thread, delete_post),
+    DeleteOwnPosts = ecf_perms:check_perm_thread(User, Thread, delete_own_post),
     EditThread = ecf_perms:check_perm_thread(User, Thread, edit_thread),
     DeleteThread = ecf_perms:check_perm_thread(User, Thread, delete_thread),
     Vars2 = [{forum, ForumV},
              {thread, ThreadV},
              {post_list, PostList},
              {can_create_post, CreatePost},
+             {can_edit_posts, EditPosts},
+             {can_edit_own_posts, EditOwnPosts},
              {can_delete_posts, DeletePosts},
+             {can_delete_own_posts, DeleteOwnPosts},
              {can_edit_thread, EditThread},
              {can_delete_thread, DeleteThread},
              {page, Page},
              {page_last, Last}
              | Vars],
     {ok, Res} = ecf_thread_dtl:render(Vars2),
+    Res;
+generate(post_edit, User, {Thread, Post}) ->
+    Vars = get_vars(User, "Edit Post"),
+    PerPage = application:get_env(ecf, posts_per_page, 40),
+    Page = integer_to_binary(ecf_post:id(Post) div PerPage + 1),
+    Vars2 = [{thread, thread(Thread)}, {post, post(Post)}, {page, Page}
+             | Vars],
+    {ok, Res} = ecf_post_edit_dtl:render(Vars2),
     Res;
 generate(user_edit, User, Profile) ->
     Vars = get_vars(User, "Edit Profile"),

@@ -1,0 +1,30 @@
+{% extends "ecf_base.dtl" %}
+{# vim: set ft=htmldjango: #}
+{% block content %}
+<main id="edit-post">
+<h2>Edit Post</h2>
+<a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page }}#post-{{ post.id }}">Go Back to Post</a>
+<form class="form-post" action="{{ base_url }}/post/edit" method="post" onsubmit="savePost();">
+    <input type="hidden" name="thread" value="{{ thread.id }}">
+    <input type="hidden" name="post" value="{{ post.id }}">
+    <label>Thread: <input value="{{ thread.title }}" disabled></label>
+    <textarea id="post-text" type="text" autocomplete="off" name="text">{{ post.text }}</textarea>
+    <button>Submit Changes</button>
+</form>
+<script>
+if(sessionStorage.getItem('restore')
+    && sessionStorage.getItem('loc') == "post_edit"
+    && sessionStorage.getItem('id') == {{ post.id }}) {
+    document.getElementById('post-text').value = sessionStorage.getItem('form');
+}
+sessionStorage.removeItem('restore');
+sessionStorage.removeItem('form');
+sessionStorage.removeItem('loc');
+sessionStorage.removeItem('id');
+function savePost() {
+    sessionStorage.setItem('form', document.getElementById('post-text').value);
+    sessionStorage.setItem('loc', 'post_edit');
+    sessionStorage.setItem('id', {{ post.id }});
+}
+</script>
+{% endblock %}

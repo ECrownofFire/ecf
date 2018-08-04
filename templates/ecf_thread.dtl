@@ -39,11 +39,22 @@
         </section>
         <article class="post-content">
             <h4><a href="#post-{{ post.id }}">Reply #{{ post.id }}</a> on: <time class="format-time post-time" datetime="{{ post.time }}"></time></h4>
-            {% if can_delete_posts %}
-            <form action="{{ base_url }}/post/delete" method="post">
+            {% if can_delete_posts
+            or can_delete_own_posts and post.poster.id == user.id
+            or can_edit_posts
+            or can_edit_own_posts and post.poster.id == user.id
+            %}
+            <form method="post">
                 <input type="hidden" name="thread" value="{{ thread.id }}">
                 <input type="hidden" name="post" value="{{ post.id }}">
-                <button class='post-delete' onclick="return confirm('Are you sure you want to delete this post?');">Delete Post</button>
+                {% if can_delete_posts
+                or can_delete_own_posts and post.poster.id == user.id %}
+                <button class='post-delete' formaction="{{ base_url }}/post/delete" onclick="return confirm('Are you sure you want to delete this post?');">Delete Post</button>
+                {% endif %}
+                {% if can_edit_posts
+                or can_edit_own_posts and post.poster.id == user.id %}
+                <button formaction="{{ base_url }}/post/edit" formmethod="get">Edit Post</button>
+                {% endif %}
             </form>
             {% endif %}
             <p>{{ post.text }}</p>
@@ -63,7 +74,7 @@
 </nav>
 
 {% if can_create_post %}
-<form id="form-post" action="{{ base_url }}/post/create" method="post" onsubmit="savePost();">
+<form class="form-post" action="{{ base_url }}/post/create" method="post" onsubmit="savePost();">
     <h3>Reply:</h3>
     <input type="hidden" name="thread" value="{{ thread.id }}">
     <textarea id="post-text" type="text" autocomplete="off" name="text"></textarea>
