@@ -373,7 +373,12 @@ post(Post) ->
      {gravatar, Gravatar},
      {poster, user(Poster)},
      {time, Time},
-     {text, Text}].
+     {text, Text}] ++ edited(ecf_post:edited(Post)).
+
+edited(undefined) ->
+    [];
+edited({Id, Time}) ->
+    [{editor, user(ecf_user:get_user(Id))}, {edited, iso8601:format(Time)}].
 
 status_desc(400) ->
     "Bad Request";

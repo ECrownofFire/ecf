@@ -39,6 +39,9 @@
         </section>
         <article class="post-content">
             <h4><a href="#post-{{ post.id }}">Reply #{{ post.id }}</a> on: <time class="format-time post-time" datetime="{{ post.time }}"></time></h4>
+            {% if post.editor %}
+            <p class="post-edited">Edited By: <a href="{{ base_url }}/user/{{ post.editor.id }}">{{ post.editor.name }}</a> on <time class="format-time" datetime="{{ post.edited }}"></time></p>
+            {% endif %}
             {% if can_delete_posts
             or can_delete_own_posts and post.poster.id == user.id
             or can_edit_posts

@@ -24,6 +24,10 @@
     list-style-type: none;
 }
 
+.post-edited {
+    font-size: 0.75em;
+}
+
 .post {
     display: flex;
     flex-direction: row;
