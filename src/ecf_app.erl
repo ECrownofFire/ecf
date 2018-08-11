@@ -28,7 +28,6 @@ start(_Type, _Args) ->
     PeCon = [{action, make_fun(?PE_ACTIONS)}],
     Host = application:get_env(ecf, host, '_'),
     Base = application:get_env(ecf, base_url, ""),
-    Port = application:get_env(ecf, port, 8080),
     Dispatch = cowboy_router:compile([
         {Host, [{[Base, "/favicon.ico"], cowboy_static,
                  {priv_file, ecf, "favicon.ico"}},
@@ -56,15 +55,32 @@ start(_Type, _Args) ->
                {[Base, "/"], ecf_handler, {}},
                {[Base, "/[...]"], ecf_404_handler, {}}]}
     ]),
-    {ok, _Pid} = cowboy:start_clear(ecf_http_listener,
-        [{port, Port}],
-        #{env => #{dispatch => Dispatch},
-          middlewares => [ecf_csrf, cowboy_router, cowboy_handler]
-         }
-    ),
+    {ok, Http} = application:get_env(ecf, http),
+    {ok, Https} = application:get_env(ecf, https),
+    start_clear(Http, Dispatch),
+    start_tls(Https, Dispatch),
     ecf_sup:start_link().
 
 stop(_State) ->
+    ok.
+
+
+start_clear(false, _) ->
+    ok;
+start_clear(Port, Dispatch) ->
+    {ok, _Pid} = cowboy:start_clear(ecf_http_listener,
+        [{port, Port}],
+        #{env => #{dispatch => Dispatch},
+          middlewares => [ecf_csrf, cowboy_router, cowboy_handler]}),
+    ok.
+
+start_tls(false, _) ->
+    ok;
+start_tls({Port, CertFile, KeyFile}, Dispatch) ->
+    {ok, _Pid} = cowboy:start_tls(ecf_https_listener,
+        [{port, Port}, {certfile, CertFile}, {keyfile, KeyFile}],
+        #{env => #{dispatch => Dispatch},
+          middlewares => [ecf_csrf, cowboy_router, cowboy_handler]}),
     ok.
 
 make_fun(List) ->

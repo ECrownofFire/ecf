@@ -35,9 +35,15 @@ check_user_session(ID, SessionEncoded) ->
 
 
 % wrapper to get IP in case reverse proxying is in use
-% TODO: support x-forwarded-for in case of multiple forwards
 -spec get_ip(cowboy_req:req()) -> inet:ip_address().
 get_ip(Req) ->
+    {ok, Http} = application:get_env(ecf, http),
+    get_ip(Http, Req).
+
+get_ip(false, Req) ->
+    {Addr, _} = cowboy_req:peer(Req),
+    Addr;
+get_ip(_, Req) ->
     case cowboy_req:parse_header(<<"x-forwarded-for">>, Req) of
         undefined ->
             {Addr, _} = cowboy_req:peer(Req),

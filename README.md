@@ -21,8 +21,8 @@ At the bare minimum, ECF still needs the following:
     * Banning accounts
     * Editing permissions on forums, threads, and groups
 * Security
-    * HTTPS (works fine behind nginx reverse proxy though)
     * Logging stuff (most likely through lager)
+    * Deny non-HTTPS traffic
 
 So that ECF is reasonably useable, I'd like to add the following as well:
 * Messaging (needs backend)
@@ -70,4 +70,21 @@ You will need to set the following app env variables:
 * `email_relay`: The host to use as a relay
 * `email_host`: The host to EHLO as when sending email
 * `forum_name`: The name of your forum
+* `http`: `false` or a port number.
+* `https`: `false` or `{Port, CertFile, KeyFile}`.
+
+So when setting up ECF behind an HTTPS-serving reverse proxy, you'll want to set
+`http` to the local port (such as 8080, the default), and `https` to `false`.
+
+If you want ECF to server HTTPS traffic directly, set `http` to `false` and then
+`https` to the required things. Note that they must be strings and not binaries.
+The PEM file pointed at `CertFile` may also contain the private key. If that's
+the case, then `KeyFile` should be `false`.
+
+Please note that ECF does *not* support using HTTP unless behind a reverse proxy
+that serves HTTPS. This will not change.
+
+Also note that ECF does not currently support using a HTTPS-serving proxy that
+in turn connects to ECF using HTTPS. It should be supported in the future
+though.
 
