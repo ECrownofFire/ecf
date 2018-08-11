@@ -1,7 +1,8 @@
 -module(ecf_utils).
 
--export([check_user_session/1, valid_password/1, get_ip/1, set_login_cookies/3,
-         reply_status/4, reply_status/5]).
+-export([check_user_session/1,
+         valid_password/1, valid_username/1,
+         get_ip/1, set_login_cookies/3, reply_status/4, reply_status/5]).
 
 %%% Contains a few utility functions
 
@@ -78,6 +79,21 @@ valid_password(Password) ->
     case byte_size(Password) of
         N when N >= Min, N =< Max ->
             true;
+        _ ->
+            false
+    end.
+
+
+-spec valid_username(binary()) -> boolean().
+valid_username(Username) ->
+    MaxLength = application:get_env(ecf, max_username_length, 32),
+    case byte_size(Username) of
+        N when N >= 1, N =< MaxLength ->
+            % allow dash, underscore, and ASCII letters/numbers only
+            List = lists:flatten([$_, $-, lists:seq($A, $Z), lists:seq($a, $z),
+                                  lists:seq($0, $9)]),
+            Check = string:trim(Username, leading, List),
+            string:is_empty(Check);
         _ ->
             false
     end.

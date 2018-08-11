@@ -26,7 +26,7 @@ init(Req0 = #{method := <<"POST">>}, State) ->
     Ip = ecf_utils:get_ip(Req),
     Req2 = case ecf_captcha:check_captcha(Ip, KV) of
                true ->
-                   try_register(check_username(Username)
+                   try_register(ecf_utils:valid_username(Username)
                                 and ecf_utils:valid_password(Password),
                                 {Username, Password, Email, Bday, Bio},
                                 Req);
@@ -71,20 +71,5 @@ try_register(true, {Username, Password, Email, Bday, Bio}, Req) ->
             cowboy_req:reply(303,
                              #{<<"location">> => [Base, "/"]},
                              Req2)
-    end.
-
-
--spec check_username(binary()) -> boolean().
-check_username(Username) ->
-    MaxLength = application:get_env(ecf, max_username_length, 32),
-    case byte_size(Username) of
-        N when N >= 1, N =< MaxLength ->
-            % allow dash, underscore, and ASCII letters/numbers only
-            List = lists:flatten([$_, $-, lists:seq($A, $Z), lists:seq($a, $z),
-                                  lists:seq($0, $9)]),
-            Check = string:trim(Username, leading, List),
-            string:is_empty(Check);
-        _ ->
-            false
     end.
 
