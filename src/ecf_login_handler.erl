@@ -28,7 +28,7 @@ init(Req0 = #{method := <<"POST">>}, State) ->
                        false ->
                            Html = ecf_generators:generate(login, undefined,
                                                           {true, Url,
-                                                           login_fail_captcha}),
+                                                           failed_captcha}),
                            cowboy_req:reply(429, #{<<"content-type">>
                                                    => <<"text/html">>},
                                             Html, Req)

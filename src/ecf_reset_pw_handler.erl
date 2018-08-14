@@ -26,7 +26,7 @@ check_captcha(true, KV, Ip, Req) ->
         false ->
             {_, Code} = lists:keyfind(<<"code">>, 1, KV),
             Html = ecf_generators:generate(reset_pw, undefined,
-                                           {true, reset_pw_failed_captcha, Code}),
+                                           {true, failed_captcha, Code}),
             cowboy_req:reply(429, #{<<"content-type">> => <<"text/html">>},
                              Html, Req)
     end;
@@ -49,7 +49,7 @@ try_reset_pw(KV, Ip, Req) ->
                     reset_pw(Valid, Id, Password, Email, Ip, Code, Req)
             end;
         false ->
-            reply_fail(Email, Ip, Code, Req, reset_pw_invalid_pw)
+            reply_fail(Email, Ip, Code, Req, invalid_password)
     end.
 
 

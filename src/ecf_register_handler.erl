@@ -34,7 +34,7 @@ init(Req0 = #{method := <<"POST">>}, State) ->
                    Vars = [{username, Username}, {email, Email},
                            {bday, Bday}, {bio, Bio}],
                    Html = ecf_generators:generate(register, undefined,
-                                                  {register_failed_captcha,
+                                                  {failed_captcha,
                                                    Vars}),
                    cowboy_req:reply(400,
                                     #{<<"content-type">> => <<"text/html">>},

@@ -18,7 +18,7 @@ init(Req0 = #{method := <<"POST">>}, State) ->
     {ok, Req2, State}.
 
 try_reset(false, _, Req) ->
-    Html = ecf_generators:generate(forgot_pw, undefined, forgot_pw_failed_captcha),
+    Html = ecf_generators:generate(forgot_pw, undefined, failed_captcha),
     cowboy_req:reply(400, #{<<"content-type">> => <<"text/html">>}, Html, Req);
 try_reset(true, Email, Req) ->
     try_email(ecf_user:get_user_by_email(Email)),

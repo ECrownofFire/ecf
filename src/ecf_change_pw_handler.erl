@@ -26,7 +26,7 @@ change_pw(undefined, _, _, Req) ->
 change_pw(User, Old, Password, Req) ->
     case ecf_utils:valid_password(Password) of
         false ->
-            Html = ecf_generators:generate(change_pw, User, change_pw_invalid_pw),
+            Html = ecf_generators:generate(change_pw, User, invalid_password),
             cowboy_req:reply(400, #{<<"content-type">> => <<"text/html">>},
                              Html, Req);
         true ->
