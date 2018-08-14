@@ -16,7 +16,7 @@
 -type id() :: non_neg_integer().
 
 -export([create_table/1,
-         new_user/4,
+         new_user/3,
          get_user/1, get_user_by_name/1, get_user_by_email/1,
          edit_name/2, edit_email/2, edit_pass/2, new_session/1, reset_session/2,
          enable_user/1, disable_user/1,
@@ -41,7 +41,7 @@
          email  :: binary(),
          joined :: erlang:timestamp(),
          groups = [] :: [ecf_group:id()],
-         bday   :: calendar:datetime() | undefined,
+         bday   = undefined :: calendar:datetime() | undefined,
          title  = <<"">> :: binary(),
          bio    = <<"">> :: binary(),
          loc    = <<"">> :: binary(),
@@ -56,9 +56,9 @@ create_table(Nodes) ->
                          {disc_copies, Nodes}]),
     ok.
 
--spec new_user(binary(), binary(), binary(), calendar:datetime()) ->
+-spec new_user(binary(), binary(), binary()) ->
     {id(), binary()} | {error, atom()}.
-new_user(Name, Pass, Email0, Bday) ->
+new_user(Name, Pass, Email0) ->
     Email = string:trim(Email0),
     Salt = crypto:strong_rand_bytes(?SALT_LENGTH),
     {ok, Hash} = pbkdf2:pbkdf2(?HMAC, Pass, Salt,
@@ -76,7 +76,7 @@ new_user(Name, Pass, Email0, Bday) ->
                                        #ecf_user{
                                           id=Id, name=Name, enabled=true,
                                           salt=Salt, pass=Hash, session=[Sess],
-                                          email=Email, joined=Time, bday=Bday,
+                                          email=Email, joined=Time,
                                           last_post=Time}),
                                 % All users are in the basic group
                                 ok = ecf_group:add_member(1, Id),

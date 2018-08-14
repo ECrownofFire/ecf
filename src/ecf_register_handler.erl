@@ -7,8 +7,7 @@
 
 init(Req = #{method := <<"GET">>}, State) ->
     Html = ecf_generators:generate(register, undefined, {register_message, []}),
-    Req2 = cowboy_req:reply(200,
-                            #{<<"content-type">> => <<"text/html">>},
+    Req2 = cowboy_req:reply(200, #{<<"content-type">> => <<"text/html">>},
                             Html,
                             Req),
     {ok, Req2, State};
@@ -26,16 +25,15 @@ init(Req0 = #{method := <<"POST">>}, State) ->
     Ip = ecf_utils:get_ip(Req),
     Req2 = case ecf_captcha:check_captcha(Ip, KV) of
                true ->
-                   try_register(ecf_utils:valid_username(Username)
-                                and ecf_utils:valid_password(Password),
-                                {Username, Password, Email, Bday, Bio},
+                   try_register(ecf_utils:valid_username(Username),
+                                ecf_utils:valid_password(Password),
+                                Username, Password, Email, Bday, Bio,
                                 Req);
                false ->
                    Vars = [{username, Username}, {email, Email},
                            {bday, Bday}, {bio, Bio}],
                    Html = ecf_generators:generate(register, undefined,
-                                                  {failed_captcha,
-                                                   Vars}),
+                                                  {failed_captcha, Vars}),
                    cowboy_req:reply(400,
                                     #{<<"content-type">> => <<"text/html">>},
                                     Html,
@@ -46,30 +44,30 @@ init(Req0 = #{method := <<"POST">>}, State) ->
 terminate(_Reason, _Req, _State) ->
     ok.
 
-try_register(false, {Username, _, Email, Bday, Bio}, Req) ->
-    BaseV = [{username, Username}, {email, Email}, {bday, Bday}, {bio, Bio}],
-    Html = ecf_generators:generate(register, undefined, {invalid_username, BaseV}),
-    cowboy_req:reply(400,
-                     #{<<"content-type">> => <<"text/html">>},
-                     Html,
-                     Req);
-try_register(true, {Username, Password, Email, Bday, Bio}, Req) ->
-    case ecf_user:new_user(Username, Password, Email, Bday) of
+try_register(true, true, Username, Password, Email, Bday, Bio, Req) ->
+    case ecf_user:new_user(Username, Password, Email) of
         {error, Reason} ->
             BaseV = [{username, Username}, {email, Email},
                      {bday, Bday}, {bio, Bio}],
             Html = ecf_generators:generate(register, undefined, {Reason, BaseV}),
-            cowboy_req:reply(400,
-                             #{<<"content-type">> => <<"text/html">>},
+            cowboy_req:reply(400, #{<<"content-type">> => <<"text/html">>},
                              Html,
                              Req);
         {Id, Session} ->
+            ok = ecf_user:edit_bday(Id, Bday),
             ok = ecf_user:edit_bio(Id, Bio),
             Req2 = ecf_utils:set_login_cookies(Req, Id, Session),
             Base = application:get_env(ecf, base_url, ""),
             % TODO: flash here
-            cowboy_req:reply(303,
-                             #{<<"location">> => [Base, "/"]},
-                             Req2)
-    end.
+            cowboy_req:reply(303, #{<<"location">> => [Base, "/"]}, Req2)
+    end;
+try_register(false, _, Username, _, Email, Bday, Bio, Req) ->
+    fail(invalid_username, Username, Email, Bday, Bio, Req);
+try_register(_, false, Username, _, Email, Bday, Bio, Req) ->
+    fail(invalid_password, Username, Email, Bday, Bio, Req).
+
+fail(Reason, Username, Email, Bday, Bio, Req) ->
+    BaseV = [{username, Username}, {email, Email}, {bday, Bday}, {bio, Bio}],
+    Html = ecf_generators:generate(register, undefined, {Reason, BaseV}),
+    cowboy_req:reply(400, #{<<"content-type">> => <<"text/html">>}, Html, Req).
 
