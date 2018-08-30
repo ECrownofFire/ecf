@@ -88,3 +88,15 @@ Also note that ECF does not currently support using a HTTPS-serving proxy that
 in turn connects to ECF using HTTPS. It should be supported in the future
 though.
 
+## License and Third Party Software
+ECF is under the AGPL 3.0, you may find a copy of it in LICENSE.
+
+ECF makes use of the following third-party software:
+
+* [iso8601](https://github.com/erlsci/iso8601), MIT license.
+* [Jiffy](https://github.com/davisp/jiffy), MIT License.
+* [Cowboy](https://github.com/ninenines/cowboy), ISC License.
+* [gen_smtp](https://github.com/Vagabond/gen_smtp), BSD 2-Clause License.
+* [ErlyDTL](https://github.com/erlydtl/erlydtl), MIT License.
+* [erlang-pbkdf2](https://github.com/basho/erlang-pbkdf2), Apache License 2.0.
+
