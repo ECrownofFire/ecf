@@ -64,16 +64,21 @@ do_perm(Act, User, KV, Req) ->
             {_, New} = lists:keyfind(<<"user">>, 1, KV),
             case ecf_user:get_user_by_name(New) of
                 undefined ->
-                    ecf_utils:reply_status(400, User, invalid_user, Req, true);
+                    ecf_utils:reply_status(400, User, invalid_user, Req);
                 NewUser ->
                     Id = ecf_user:id(NewUser),
-                    case Act of
-                        add ->
-                            do_add(Id, ThreadId);
-                        remove ->
-                            do_remove(Id, ThreadId)
-                    end,
-                    reply(ThreadId, Req)
+                    case ecf_user:id(User) of
+                        Id -> % stop users from removing themselves
+                            reply(ThreadId, Req);
+                        _ ->
+                            case Act of
+                                add ->
+                                    do_add(Id, ThreadId);
+                                remove ->
+                                    do_remove(Id, ThreadId)
+                            end,
+                            reply(ThreadId, Req)
+                    end
             end;
         Req2 ->
             Req2
