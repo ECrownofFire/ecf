@@ -63,11 +63,11 @@ create(User, Forum, Title, Time, Text) ->
     case ecf_perms:check_perm_forum(User, Forum, create_thread) of
         true ->
             Limit = application:get_env(ecf, post_limit_seconds, 20) * 1000000,
-            Time = timer:now_diff(erlang:timestamp(), ecf_user:last_post(User)),
-            case Time > Limit of
+            Diff = timer:now_diff(erlang:timestamp(), ecf_user:last_post(User)),
+            case Diff > Limit of
                 true ->
-                    create_thread(ecf_forum:id(Forum), Title,
-                                  erlang:timestamp(), ecf_user:id(User), Text);
+                    create_thread(ecf_forum:id(Forum), Title, Time,
+                                  ecf_user:id(User), Text);
                 false ->
                     post_limit
             end;
