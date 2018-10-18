@@ -6,7 +6,7 @@
          get_global_perms/0, edit_global_perm/3, remove_global_perm/2,
          check_perm_global/2, check_perm_forum/3, check_perm_thread/3,
          check_perm_group/3,
-         edit_perm/4, remove_perm/3,
+         get_perm/2, edit_perm/4, remove_perm/3,
          mode/1, allow/1, deny/1]).
 
 
@@ -154,8 +154,8 @@ check_perm_group(User, Group, Mode) ->
 -spec check_perm(ecf_user:user() | undefined, [perm()], mode()) ->
     allow | deny | none.
 check_perm(User, Perms, Mode) ->
-    case lists:keyfind(Mode, #ecf_perm.mode, Perms) of
-        false -> none;
+    case get_perm(Perms, Mode) of
+        undefined -> none;
         Perm -> check_perm(User, Perm)
     end.
 
@@ -210,16 +210,23 @@ check_perm_class(Perm, Class) ->
             end
     end.
 
+-spec get_perm([perm()], mode()) -> perm() | undefined.
+get_perm(Perms, Mode) ->
+    case lists:keyfind(Mode, #ecf_perm.mode, Perms) of
+        false -> undefined;
+        P -> P
+    end.
+
 -spec edit_perm([perm()], class(), mode(), allow | deny) -> [perm()].
 edit_perm(Perms, Class, Mode, Set) ->
-    Perm = case lists:keyfind(Mode, #ecf_perm.mode, Perms) of
-               false ->
+    Perm = case get_perm(Perms, Mode) of
+               undefined ->
                    #ecf_perm{mode=Mode};
                P ->
                    P
            end,
     NewPerm = edit_perm(Perm, Class, Set),
-    lists:keyreplace(Mode, #ecf_perm.mode, Perms, NewPerm).
+    lists:keystore(Mode, #ecf_perm.mode, Perms, NewPerm).
 
 -spec edit_perm(perm(), class(), allow | deny) -> perm().
 edit_perm(Perm, Class, Set) ->
