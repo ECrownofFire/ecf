@@ -7,7 +7,7 @@
 -type id() :: non_neg_integer().
 
 -export([create_table/1,
-         create_thread/5,
+         create/5, create_thread/5,
          get_thread/1, get_forum_threads/1,
          edit_title/2,
          edit_perm/4, remove_perm/3, lock_thread/1,
@@ -55,6 +55,25 @@ get_forum_threads(Forum) ->
                 mnesia:index_read(ecf_thread, Forum, #ecf_thread.forum)
         end,
     mnesia:activity(transaction, F).
+
+% Create a thread, respecting permissions and time limit
+-spec create(ecf_user:user(), ecf_forum:forum(), binary(), erlang:timestamp(),
+             binary()) -> id() | post_limit | denied.
+create(User, Forum, Title, Time, Text) ->
+    case ecf_perms:check_perm_forum(User, Forum, create_thread) of
+        true ->
+            Limit = application:get_env(ecf, post_limit_seconds, 20) * 1000000,
+            Time = timer:now_diff(erlang:timestamp(), ecf_user:last_post(User)),
+            case Time > Limit of
+                true ->
+                    create_thread(ecf_forum:id(Forum), Title,
+                                  erlang:timestamp(), ecf_user:id(User), Text);
+                false ->
+                    post_limit
+            end;
+        false ->
+            denied
+    end.
 
 %% Thread actions
 -spec create_thread(ecf_forum:id(), binary(), erlang:timestamp(),

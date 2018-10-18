@@ -50,30 +50,20 @@ handle_post(Req, User, undefined) ->
 handle_post(Req0, User, <<"create">>) ->
     {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
     {_, Forum0} = lists:keyfind(<<"forum">>, 1, KV),
-    Forum = binary_to_integer(Forum0),
-    case ecf_perms:check_perm_forum(User, ecf_forum:get_forum(Forum),
-                                    create_thread) of
-        true ->
-            Limit = application:get_env(ecf, post_limit_seconds, 20) * 1000000,
-            Time = timer:now_diff(erlang:timestamp(), ecf_user:last_post(User)),
-            case Time > Limit of
-                true ->
-                    {_, Title} = lists:keyfind(<<"title">>, 1, KV),
-                    {_, Text} = lists:keyfind(<<"text">>, 1, KV),
-                    Id = ecf_thread:create_thread(Forum, Title,
-                                                  erlang:timestamp(),
-                                                  ecf_user:id(User),
-                                                  Text),
-                    Base = application:get_env(ecf, base_url, ""),
-                    cowboy_req:reply(303,
-                                     #{<<"location">> => [Base, "/thread/",
-                                                          integer_to_list(Id)]},
-                                     Req);
-                false ->
-                    ecf_utils:reply_status(429, User, create_thread_429, Req, true)
-            end;
-        false ->
-            ecf_utils:reply_status(403, User, create_thread_403, Req)
+    Forum = ecf_forum:get_forum(binary_to_integer(Forum0)),
+    {_, Title} = lists:keyfind(<<"title">>, 1, KV),
+    {_, Text} = lists:keyfind(<<"text">>, 1, KV),
+    case ecf_thread:create(User, Forum, Title, erlang:timestamp(), Text) of
+        post_limit ->
+            ecf_utils:reply_status(429, User, create_thread_429, Req, true);
+        denied ->
+            ecf_utils:reply_status(403, User, create_thread_403, Req);
+        Id ->
+            Base = application:get_env(ecf, base_url, ""),
+            cowboy_req:reply(303,
+                             #{<<"location">> => [Base, "/thread/",
+                                                  integer_to_list(Id)]},
+                             Req)
     end;
 handle_post(Req0, User, <<"delete">>) ->
     {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),

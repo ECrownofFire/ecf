@@ -69,7 +69,19 @@ create_table(Nodes) ->
                 [mnesia:write(#ecf_perm{mode=X}) || X <- ?MODES],
                 ok
         end,
-    mnesia:activity(transaction, F).
+    ok = mnesia:activity(transaction, F),
+    % set some sane defaults for some common permissions
+    % allow everyone to see forums and threads
+    ok = edit_global_perm(others, view_forum, allow),
+    ok = edit_global_perm(others, view_thread, allow),
+    % allow registered users to see groups and users
+    ok = edit_global_perm({group, 1}, view_group, allow),
+    ok = edit_global_perm({group, 1}, view_user, allow),
+    ok = edit_global_perm({group, 3}, view_group, deny),
+    ok = edit_global_perm({group, 3}, view_user, deny),
+    % deny thread/post creation from banned users
+    ok = edit_global_perm({group, 3}, create_thread, deny),
+    ok = edit_global_perm({group, 3}, create_post, deny).
 
 -spec edit_global_perm(class(), mode(), allow | deny) -> ok.
 edit_global_perm(Class, Mode, Set) ->
@@ -109,10 +121,8 @@ get_global_perm(Mode) ->
 -spec check_perm_global(ecf_user:user() | undefined, mode()) -> boolean().
 check_perm_global(User, Mode) ->
     case check_perm(User, get_global_perm(Mode)) of
-        allow ->
-            true;
-        _ ->
-            false
+        allow -> true;
+        _ -> false
     end.
 
 -spec check_perm_forum(ecf_user:user(), ecf_forum:forum(), mode()) -> boolean().
@@ -145,10 +155,8 @@ check_perm_group(User, Group, Mode) ->
     allow | deny | none.
 check_perm(User, Perms, Mode) ->
     case lists:keyfind(Mode, #ecf_perm.mode, Perms) of
-        false ->
-            none;
-        Perm ->
-            check_perm(User, Perm)
+        false -> none;
+        Perm -> check_perm(User, Perm)
     end.
 
 -spec check_perm(ecf_user:user() | undefined, perm()) -> allow | deny | none.
@@ -197,10 +205,8 @@ check_perm_class(Perm, Class) ->
             deny;
         false ->
             case lists:member(Class, Perm#ecf_perm.allow) of
-                true ->
-                    allow;
-                false ->
-                    none
+                true -> allow;
+                false -> none
             end
     end.
 

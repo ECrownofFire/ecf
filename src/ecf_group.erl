@@ -40,19 +40,7 @@ create_table(Nodes) ->
     1 = new_group(<<"Registered Users">>, <<"Default user group">>),
     2 = new_group(<<"Confirmed Email Users">>, <<"Users with a confirmed email">>),
     3 = new_group(<<"Banned Users">>, <<"Banned users">>),
-    ok = edit_perm(0, others, join_group, deny),
-    ok = edit_perm(0, others, manage_group, deny),
-    ok = edit_perm(1, others, join_group, deny),
-    ok = edit_perm(1, {group, 1}, leave_group, deny),
-    ok = edit_perm(1, others, manage_group, deny),
-    ok = edit_perm(2, others, join_group, deny),
-    ok = edit_perm(2, {group, 2}, leave_group, deny),
-    ok = edit_perm(2, others, manage_group, deny),
-    ok = edit_perm(3, others, join_group, deny),
-    ok = edit_perm(3, {group, 3}, leave_group, deny),
-    ok = edit_perm(3, others, manage_group, deny),
-    ok = ecf_perms:edit_global_perm({group, 3}, create_thread, deny),
-    ok = ecf_perms:edit_global_perm({group, 3}, create_post, deny).
+    ok.
 
 
 -spec new_group(binary(), binary()) -> id().

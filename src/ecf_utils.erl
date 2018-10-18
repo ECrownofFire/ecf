@@ -66,7 +66,7 @@ reply_status(Status, User, Type, Req, Storage) ->
     Map = case Status of
               401 ->
                   #{<<"content-type">> => <<"text/html">>,
-                    <<"www-authenticate">> => <<"FormBase">>};
+                    <<"www-authenticate">> => <<"FormBased">>};
               _ -> #{<<"content-type">> => <<"text/html">>}
           end,
     cowboy_req:reply(Status, Map, Html, Req).

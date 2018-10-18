@@ -22,7 +22,7 @@
          order :: integer(),
          name  :: binary(),
          desc  :: binary(),
-         perms :: [ecf_perms:perm()]}).
+         perms = [] :: [ecf_perms:perm()]}).
 -type forum() :: #ecf_forum{}.
 
 
@@ -60,7 +60,7 @@ new_forum(Name, Desc) ->
                 Order = max_order(get_forums()),
                 Id = ecf_db:get_new_id(ecf_forum),
                 mnesia:write(#ecf_forum{id=Id, name=Name, desc=Desc,
-                                        order=Order, perms=[]}),
+                                        order=Order}),
                 Id
         end,
     mnesia:activity(transaction, F).
@@ -120,11 +120,13 @@ reorder(Id, Action) when Action =:= up; Action =:= down ->
     mnesia:activity(transaction, F).
 
 
+-spec get_reorder(top | bottom, [forum()]) -> integer().
 get_reorder(top, Forums) ->
     min_order(Forums) - 1;
 get_reorder(bottom, Forums) ->
     max_order(Forums) + 1.
 
+-spec get_reorder(up | down, integer(), [forum()]) -> forum().
 get_reorder(up, Old, Forums) ->
     case order(hd(Forums)) of
         Old -> % already at top
