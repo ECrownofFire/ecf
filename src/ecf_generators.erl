@@ -129,8 +129,10 @@ generate(forum, User, {Forum, Threads, Page, Last}) ->
     Vars = get_vars(User, ecf_forum:name(Forum)),
     ForumV = forum(Forum),
     ThreadList = thread_list(Threads),
-    CanEdit = ecf_perms:check_perm_forum(User, Forum, edit_forum),
-    CanDelete = ecf_perms:check_perm_forum(User, Forum, delete_forum),
+    CanEdit = ecf_forum:id(Forum) >= 1
+              andalso ecf_perms:check_perm_forum(User, Forum, edit_forum),
+    CanDelete = ecf_forum:id(Forum) >= 1
+                andalso ecf_perms:check_perm_forum(User, Forum, delete_forum),
     CanCreate = ecf_perms:check_perm_forum(User, Forum, create_thread),
     Vars2 = [{forum, ForumV},
              {thread_list, ThreadList},
@@ -154,6 +156,8 @@ generate(thread, User, {Forum, Thread, Posts, Page, Last}) ->
     DeleteOwnPosts = ecf_perms:check_perm_thread(User, Thread, delete_own_post),
     EditThread = ecf_perms:check_perm_thread(User, Thread, edit_thread),
     DeleteThread = ecf_perms:check_perm_thread(User, Thread, delete_thread),
+    EditPerms = ecf_perms:check_perm_thread(User, Thread, edit_perms),
+    Users = pm_users(Thread),
     Vars2 = [{forum, ForumV},
              {thread, ThreadV},
              {post_list, PostList},
@@ -164,8 +168,10 @@ generate(thread, User, {Forum, Thread, Posts, Page, Last}) ->
              {can_delete_own_posts, DeleteOwnPosts},
              {can_edit_thread, EditThread},
              {can_delete_thread, DeleteThread},
+             {can_edit_perms, EditPerms},
              {page, Page},
-             {page_last, Last}
+             {page_last, Last},
+             {pm_users, Users}
              | Vars],
     {ok, Res} = ecf_thread_dtl:render(Vars2),
     Res;
@@ -364,6 +370,31 @@ thread(Thread) ->
      {last_time, iso8601:format(LastPostTime)},
      {last_poster_id, integer_to_list(LastPosterId)},
      {last_poster_name, LastPosterName}].
+
+pm_users(Thread) ->
+    case ecf_thread:forum(Thread) of
+        0 ->
+            Perms = ecf_thread:perms(Thread),
+            case ecf_perms:get_perm(Perms, view_thread) of
+                undefined -> [];
+                Perm ->
+                    List = ecf_perms:allow(Perm),
+                    Users = pm_user_list(List),
+                    users(Users)
+            end;
+        _ ->
+            []
+    end.
+
+pm_user_list(List) ->
+    pm_user_list(List, []).
+
+pm_user_list([], Res) ->
+    lists:reverse(Res);
+pm_user_list([{user, Id}|T], Acc) ->
+    pm_user_list(T, [Id|Acc]);
+pm_user_list([_H|T], Acc) ->
+    pm_user_list(T, Acc).
 
 post_list(Posts) ->
     [post(X) || X <- Posts].

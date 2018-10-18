@@ -49,13 +49,23 @@
         {% endfor %}
 </table>
 {% if can_create_thread %}
-<form id="form-thread" action="{{ base_url }}/thread/create" method="post" onsubmit="saveThread();">
-    <h3>Create New Thread</h3>
-    <input type="hidden" name="forum" value="{{ forum.id }}">
-    <label><h4>Title:</h4><input id="thread-title" type="text" name="title" required></label>
-    <label><h4>Text:</h4><textarea id="thread-text" name="text"></textarea></label>
-    <input id="submit-thread" type="submit" value="Create">
-</form>
+    {% if forum.id != 0 %}
+    <form id="form-thread" action="{{ base_url }}/thread/create" method="post" onsubmit="saveThread();">
+        <h3>Create New Thread</h3>
+        <input type="hidden" name="forum" value="{{ forum.id }}">
+        <label><h4>Title:</h4><input id="thread-title" type="text" name="title" required></label>
+        <label><h4>Text:</h4><textarea id="thread-text" name="text"></textarea></label>
+        <button>Create</button>
+    </form>
+    {% else %}
+    <form id="form-pm" action="{{ base_url }}/msg/create" method="post" onsubmit="saveThread();">
+        <h3>New Private Message</h3>
+        <label><h4>To:</h4><input id="pm-to" type="text" name="to" required></label>
+        <label><h4>Subject:</h4><input id="pm-subject" type="text" name="subject" required></label>
+        <label><h4>Text:</h4><textarea id="pm-text" name="text"></textarea></label>
+        <button>Send</button>
+    </form>
+    {% endif %}
 <script>
 if(sessionStorage.getItem('restore')
     && sessionStorage.getItem('loc') == "forum"
