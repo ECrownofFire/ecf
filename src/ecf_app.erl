@@ -18,6 +18,8 @@
 
 -define(PE_ACTIONS, [<<"add">>, <<"remove">>]).
 
+-define(MSG_ACTIONS, [<<"create">>, <<"add">>, <<"remove">>]).
+
 start(_Type, _Args) ->
     IdC = [{id, int}],
     GCon = [{action, make_fun(?G_ACTIONS)}],
@@ -26,6 +28,7 @@ start(_Type, _Args) ->
     PoCon = [{action, make_fun(?PO_ACTIONS)}],
     FCon = [{action, make_fun(?F_ACTIONS)}],
     PeCon = [{action, make_fun(?PE_ACTIONS)}],
+    MsgCon = [{action, make_fun(?MSG_ACTIONS)}],
     Host = application:get_env(ecf, host, '_'),
     Base = application:get_env(ecf, base_url, ""),
     Dispatch = cowboy_router:compile([
@@ -52,6 +55,7 @@ start(_Type, _Args) ->
                {[Base, "/forum/:id"], IdC, ecf_forum_handler, {}},
                {[Base, "/forum/:action"], FCon, ecf_forum_handler, {}},
                {[Base, "/perms/:action"], PeCon, ecf_perms_handler, {}},
+               {[Base, "/msg/:action"], MsgCon, ecf_msg_handler, {}},
                {[Base, "/"], ecf_handler, {}},
                {[Base, "/[...]"], ecf_404_handler, {}}]}
     ]),

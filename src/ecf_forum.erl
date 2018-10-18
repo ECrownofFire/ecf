@@ -31,7 +31,19 @@ create_table(Nodes) ->
     {atomic, ok} = mnesia:create_table(ecf_forum,
                         [{attributes, record_info(fields, ecf_forum)},
                          {disc_copies, Nodes}]),
-    ok.
+    F = fun() ->
+                mnesia:write(#ecf_forum{id = 0,
+                                        order = -999,
+                                        name = <<"Private Messages">>,
+                                        desc = <<"Your private messages">>})
+        end,
+    ok = mnesia:activity(transaction, F),
+    % defaults for PM forum, overriden by PM threads
+    ok = edit_perm(0, {group, 1}, view_forum, allow),
+    ok = edit_perm(0, others, view_thread, deny),
+    ok = edit_perm(0, {group, 2}, create_thread, allow),
+    ok = edit_perm(0, {group, 3}, create_thread, deny),
+    ok = edit_perm(0, others, create_post, deny).
 
 %% Forum actions
 
@@ -49,7 +61,9 @@ get_forum(Id) ->
 get_forums() ->
     F = fun() ->
                 mnesia:read_lock_table(ecf_forum),
-                mnesia:select(ecf_forum,[{'_',[],['$_']}])
+                Head = {ecf_forum, '$1', '_', '_', '_', '_'},
+                Guard = {'>', '$1', 0}, % skip PM forum
+                mnesia:select(ecf_forum,[{Head,[Guard],['$_']}])
         end,
     mnesia:activity(transaction, F).
 
