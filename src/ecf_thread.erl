@@ -8,7 +8,7 @@
 
 -export([create_table/1,
          create/5, create_thread/5,
-         get_thread/1, get_forum_threads/1,
+         get_thread/1, get_forum_threads/1, view_thread/1,
          edit_title/2,
          edit_perm/4, remove_perm/3, lock_thread/1,
          new_post/2,
@@ -53,6 +53,16 @@ get_thread(Id) ->
 get_forum_threads(Forum) ->
     F = fun() ->
                 mnesia:index_read(ecf_thread, Forum, #ecf_thread.forum)
+        end,
+    mnesia:activity(transaction, F).
+
+-spec view_thread(id()) -> non_neg_integer().
+view_thread(Id) ->
+    F = fun() ->
+                [Thread] = mnesia:wread({ecf_thread, Id}),
+                V = views(Thread) + 1,
+                mnesia:write(Thread#ecf_thread{views=V}),
+                V
         end,
     mnesia:activity(transaction, F).
 

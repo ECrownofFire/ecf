@@ -362,6 +362,7 @@ thread(Thread) ->
     CreatorId = ecf_thread:creator(Thread),
     Creator = ecf_user:get_user(CreatorId),
     CreatorName = ecf_user:name(Creator),
+    Views = ecf_thread:views(Thread),
     [{id, integer_to_list(Id)},
      {title, ecf_thread:title(Thread)},
      {replies, integer_to_list(LastId)},
@@ -369,7 +370,8 @@ thread(Thread) ->
      {creator_name, CreatorName},
      {last_time, iso8601:format(LastPostTime)},
      {last_poster_id, integer_to_list(LastPosterId)},
-     {last_poster_name, LastPosterName}].
+     {last_poster_name, LastPosterName},
+     {views, integer_to_list(Views)}].
 
 pm_users(Thread) ->
     case ecf_thread:forum(Thread) of

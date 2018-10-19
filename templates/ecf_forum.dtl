@@ -36,6 +36,7 @@
     <thead>
         <tr>
             <th class="thread-title">Title
+            <th class="thread-views">Views
             <th class="thread-replies">Replies
             <th class="thread-creator">Creator
             <th class="thread-last-post">Last Post
@@ -43,6 +44,7 @@
         {% for thread in thread_list %}
         <tr>
             <td class="thread-title"><a href="{{ base_url }}/thread/{{ thread.id }}">{{ thread.title }}</a>
+            <td class="thread-views">{{ thread.views }}
             <td class="thread-replies">{{ thread.replies }}
             <td class="thread-creator"><a href="{{ base_url }}/user/{{ thread.creator_id }}">{{ thread.creator_name }}</a>
             <td class="thread-last-post"><time class="format-time" datetime="{{ thread.last_time }}"></time><br>by <a href="{{ base_url }}/user/{{ thread.last_poster_id }}">{{ thread.last_poster_name }}</a>

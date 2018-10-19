@@ -25,6 +25,7 @@ handle_get(Req, User, Id) ->
         Thread ->
             case ecf_perms:check_perm_thread(User, Thread, view_thread) of
                 true ->
+                    ecf_thread:view_thread(Id),
                     #{page := Page} = cowboy_req:match_qs([{page, int, 1}], Req),
                     PerPage = application:get_env(ecf, posts_per_page, 40),
                     Forum = ecf_forum:get_forum(ecf_thread:forum(Thread)),
