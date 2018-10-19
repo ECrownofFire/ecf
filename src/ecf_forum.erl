@@ -71,7 +71,7 @@ get_forums() ->
 -spec new_forum(binary(), binary()) -> id().
 new_forum(Name, Desc) ->
     F = fun() ->
-                Order = max_order(get_forums()),
+                Order = max_order(get_forums()) + 1,
                 Id = ecf_db:get_new_id(ecf_forum),
                 mnesia:write(#ecf_forum{id=Id, name=Name, desc=Desc,
                                         order=Order}),
