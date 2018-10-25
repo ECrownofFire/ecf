@@ -12,7 +12,6 @@
     <meta property="og:title" content="{{ title }}">
     <meta property="og:description" content="Simple BEAM-powered forum software">
     <script>var BASE_URL = "{{ base_url }}";</script>
-    <script src="{{ base_url }}/static/perms.js"></script>
     <script src="{{ base_url }}/static/format_dates.js" defer></script>
 </head>
 <body>
