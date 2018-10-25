@@ -61,8 +61,7 @@ do_perm(Act, User, KV, Req) ->
     ThreadId = binary_to_integer(Thread0),
     case check_perm(User, ThreadId, Req) of
         ok ->
-            {_, New} = lists:keyfind(<<"user">>, 1, KV),
-            case ecf_user:get_user_by_name(New) of
+            case get_user(Act, KV) of
                 undefined ->
                     ecf_utils:reply_status(400, User, invalid_user, Req);
                 NewUser ->
@@ -83,6 +82,14 @@ do_perm(Act, User, KV, Req) ->
         Req2 ->
             Req2
     end.
+
+get_user(add, KV) ->
+    {_, Name} = lists:keyfind(<<"user">>, 1, KV),
+    ecf_user:get_user_by_name(Name);
+get_user(remove, KV) ->
+    {_, Id0} = lists:keyfind(<<"uid">>, 1, KV),
+    Id = binary_to_integer(Id0),
+    ecf_user:get_user(Id).
 
 check_perm(User, ThreadId, Req) ->
     case ecf_thread:get_thread(ThreadId) of

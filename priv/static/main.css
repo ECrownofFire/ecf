@@ -12,6 +12,11 @@
     padding: 0 4px;
 }
 
+.form-pm-remove-user {
+    display: inline;
+    margin-left: 8px;
+}
+
 #thread-table {
     width: 100%;
 }

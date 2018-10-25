@@ -17,26 +17,28 @@
     <button id='button-delete' type='submit' onclick="return confirm('Are you sure you want to delete this thread and every post in it?');">Delete Thread</button>
 </form>
 {% endif %}
-{% if forum.id == 0 and can_edit_perms %}
-<form id="form-pm-add-user" action="{{ base_url }}/msg/add" method="post">
-    <input type="hidden" name="id" value="{{ thread.id }}">
-    <label>User:<input type="text" name="user" required></label>
-    <button>Add User</button>
-</form>
-<form id="form-pm-remove-user" action="{{ base_url }}/msg/remove" method="post">
-    <input type="hidden" name="id" value="{{ thread.id }}">
-    <label>User:<input type="text" name="user" required></label>
-    <button>Remove User</button>
-</form>
-{% endif %}
 
 {% if forum.id == 0 %}
 <h3>Users in this PM</h3>
 <ul>
 {% for u in pm_users %}
-    <li><a href="{{ base_url }}/user/{{ u.id }}">{{ u.name }}</a>
+<li><a href="{{ base_url }}/user/{{ u.id }}">{{ u.name }}</a>
+    {% if u.id != user.id %}
+    <form class="form-pm-remove-user" action="{{ base_url }}/msg/remove" method="post">
+        <input type="hidden" name="id" value="{{ thread.id }}">
+        <input type="hidden" name="uid" value="{{ u.id }}">
+        <button>Remove</button>
+    </form>
+    {% endif %}
 {% endfor %}
 </ul>
+{% if can_edit_perms %}
+<form id="form-pm-add-user" action="{{ base_url }}/msg/add" method="post">
+    <input type="hidden" name="id" value="{{ thread.id }}">
+    <label>User:<input type="text" name="user" required></label>
+    <button>Add User</button>
+</form>
+{% endif %}
 {% endif %}
 
 <nav class="pagination">
