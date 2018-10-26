@@ -43,9 +43,9 @@ handle_post(User, Req, undefined) ->
 handle_post(User, Req, <<"create">>) ->
     case ecf_perms:check_perm_global(User, create_group) of
         true ->
-            {ok, KV, Req2} = cowboy_req:read_urlencoded_body(Req),
-            {_, Name} = lists:keyfind(<<"name">>, 1, KV),
-            {_, Desc} = lists:keyfind(<<"desc">>, 1, KV),
+            L = [name, desc],
+            {ok, M, Req2} = cowboy_req:read_and_match_urlencoded_body(L, Req),
+            #{name := Name, desc := Desc} = M,
             Id = ecf_group:new_group(Name, Desc),
             Base = application:get_env(ecf, base_url, ""),
             cowboy_req:reply(303, #{<<"location">>
@@ -55,9 +55,8 @@ handle_post(User, Req, <<"create">>) ->
             ecf_utils:reply_status(403, User, create_group_403, Req)
     end;
 handle_post(User, Req0, <<"delete">>) ->
-    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
-    {_, Id0} = lists:keyfind(<<"id">>, 1, KV),
-    Id = binary_to_integer(Id0),
+    {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body([{id, int}], Req0),
+    #{id := Id} = M,
     case ecf_group:get_group(Id) of
         undefined ->
             ecf_utils:reply_status(400, User, invalid_group, Req);
@@ -75,11 +74,9 @@ handle_post(User, Req0, <<"delete">>) ->
             end
     end;
 handle_post(User, Req0, <<"edit">>) ->
-    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
-    {_, Id0} = lists:keyfind(<<"id">>, 1, KV),
-    Id = binary_to_integer(Id0),
-    {_, Name} = lists:keyfind(<<"name">>, 1, KV),
-    {_, Desc} = lists:keyfind(<<"desc">>, 1, KV),
+    L = [{id, int}, name, desc],
+    {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body(L, Req0),
+    #{id := Id, name := Name, desc := Desc} = M,
     case ecf_group:get_group(Id) of
         undefined ->
             ecf_utils:reply_status(400, User, invalid_group, Req);
@@ -90,16 +87,15 @@ handle_post(User, Req0, <<"edit">>) ->
                     ok = ecf_group:edit_desc(Id, Desc),
                     Base = application:get_env(ecf, base_url, ""),
                     cowboy_req:reply(303, #{<<"location">>
-                                            => [Base, "/group/", Id0]},
+                                            => [Base, "/group/",
+                                                integer_to_binary(Id)]},
                                      Req);
                 false ->
                     ecf_utils:reply_status(403, User, edit_group_403, Req)
             end
     end;
 handle_post(User, Req0, <<"join">>) ->
-    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
-    {_, Id0} = lists:keyfind(<<"id">>, 1, KV),
-    Id = binary_to_integer(Id0),
+    {ok, #{id := Id}, Req} = cowboy_req:read_and_match_urlencoded_body([{id, int}], Req0),
     case ecf_group:get_group(Id) of
         undefined ->
             ecf_utils:reply_status(400, User, invalid_group, Req);
@@ -110,16 +106,15 @@ handle_post(User, Req0, <<"join">>) ->
                     ok = ecf_group:add_member(Id, ecf_user:id(User)),
                     Base = application:get_env(ecf, base_url, ""),
                     cowboy_req:reply(303, #{<<"location">>
-                                            => [Base, "/group/", Id0]},
+                                            => [Base, "/group/",
+                                                integer_to_binary(Id)]},
                                      Req);
                 false ->
                     ecf_utils:reply_status(403, User, join_group_403, Req)
             end
     end;
 handle_post(User, Req0, <<"leave">>) ->
-    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
-    {_, Id0} = lists:keyfind(<<"id">>, 1, KV),
-    Id = binary_to_integer(Id0),
+    {ok, #{id := Id}, Req} = cowboy_req:read_and_match_urlencoded_body([{id, int}], Req0),
     case ecf_group:get_group(Id) of
         undefined ->
             ecf_utils:reply_status(400, User, invalid_group, Req);
@@ -130,18 +125,16 @@ handle_post(User, Req0, <<"leave">>) ->
                     ok = ecf_group:remove_member(Id, ecf_user:id(User)),
                     Base = application:get_env(ecf, base_url, ""),
                     cowboy_req:reply(303, #{<<"location">>
-                                            => [Base, "/group/", Id0]},
+                                            => [Base, "/group/",
+                                                integer_to_binary(Id)]},
                                      Req);
                 false ->
                     ecf_utils:reply_status(403, User, leave_group_403, Req)
             end
     end;
 handle_post(User, Req0, <<"add">>) ->
-    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
-    {_, Id0} = lists:keyfind(<<"id">>, 1, KV),
-    Id = binary_to_integer(Id0),
-    {_, U0} = lists:keyfind(<<"user">>, 1, KV),
-    U = binary_to_integer(U0),
+    {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body([{id, int}, {user, int}], Req0),
+    #{id := Id, user := U} = M,
     case ecf_group:get_group(Id) of
         undefined ->
             ecf_utils:reply_status(400, User, invalid_group, Req);
@@ -156,7 +149,8 @@ handle_post(User, Req0, <<"add">>) ->
                             ok = ecf_group:add_member(Id, U),
                             Base = application:get_env(ecf, base_url, ""),
                             cowboy_req:reply(303, #{<<"location">>
-                                                    => [Base, "/user/", U0]},
+                                                    => [Base, "/user/",
+                                                        integer_to_binary(U)]},
                                              Req)
                     end;
                 false ->
@@ -164,11 +158,8 @@ handle_post(User, Req0, <<"add">>) ->
             end
     end;
 handle_post(User, Req0, <<"remove">>) ->
-    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
-    {_, Id0} = lists:keyfind(<<"id">>, 1, KV),
-    Id = binary_to_integer(Id0),
-    {_, U0} = lists:keyfind(<<"user">>, 1, KV),
-    U = binary_to_integer(U0),
+    {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body([{id, int}, {user, int}], Req0),
+    #{id := Id, user := U} = M,
     case ecf_group:get_group(Id) of
         undefined ->
             ecf_utils:reply_status(400, User, invalid_group, Req);
@@ -183,7 +174,8 @@ handle_post(User, Req0, <<"remove">>) ->
                             ok = ecf_group:remove_member(Id, U),
                             Base = application:get_env(ecf, base_url, ""),
                             cowboy_req:reply(303, #{<<"location">>
-                                                    => [Base, "/user/", U0]},
+                                                    => [Base, "/user/",
+                                                        integer_to_binary(U)]},
                                              Req)
                     end;
                 false ->

@@ -57,54 +57,48 @@ handle_post(Req, User, undefined) ->
 handle_post(Req, undefined, _) ->
     ecf_utils:reply_status(401, undefined, user_401, Req);
 handle_post(Req0, User, <<"edit">>) ->
-    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
-    {_, Id0} = lists:keyfind(<<"id">>, 1, KV),
-    Id = binary_to_integer(Id0),
+    L = [{id, int}, bio, loc, {bday, [], <<"">>}],
+    {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body(L, Req0),
+    #{id := Id, bio := Bio, loc := Loc, bday := Bday0} = M,
+    Bday = case Bday0 of
+               <<"">> -> undefined;
+               _ -> iso8601:parse(Bday0)
+           end,
     case ecf_user:id(User) =:= Id
          orelse ecf_perms:check_perm_global(User, edit_user) of
         true ->
-            Bday = case lists:keyfind(<<"bday">>, 1, KV) of
-                       {_, <<"">>} -> undefined;
-                       {_, Bday0} -> iso8601:parse(Bday0);
-                       _ -> undefined
-                   end,
-            {_, Bio} = lists:keyfind(<<"bio">>, 1, KV),
-            {_, Loc} = lists:keyfind(<<"loc">>, 1, KV),
             ecf_user:edit_bday(Id, Bday),
             ecf_user:edit_bio(Id, Bio),
             ecf_user:edit_loc(Id, Loc),
             Base = application:get_env(ecf, base_url, ""),
             cowboy_req:reply(303,
                              #{<<"location">>
-                               => [Base, "/user/", integer_to_list(Id)]},
+                               => [Base, "/user/", integer_to_binary(Id)]},
                              Req);
         false ->
             ecf_utils:reply_status(403, User, edit_user_403, Req)
     end;
 handle_post(Req0, User, <<"ban">>) ->
-    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
-    {_, Id0} = lists:keyfind(<<"id">>, 1, KV),
-    Id = binary_to_integer(Id0),
+    {ok, #{id := Id}, Req} = cowboy_req:read_and_match_urlencoded_body([{id, int}], Req0),
     case ecf_perms:check_perm_global(User, ban_user) of
         true ->
             ok = ecf_user:ban_user(Id),
             Base = application:get_env(ecf, base_url, ""),
             cowboy_req:reply(303,
-                             #{<<"location">> => [Base, "/user/", Id0]},
+                             #{<<"location">> => [Base, "/user/",
+                                                  integer_to_binary(Id)]},
                              Req);
         false ->
             ecf_utils:reply_status(403, User, ban_user_403, Req)
     end;
 handle_post(Req0, User, <<"unban">>) ->
-    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
-    {_, Id0} = lists:keyfind(<<"id">>, 1, KV),
-    Id = binary_to_integer(Id0),
+    {ok, #{id := Id}, Req} = cowboy_req:read_and_match_urlencoded_body([{id, int}], Req0),
     case ecf_perms:check_perm_global(User, ban_user) of
         true ->
             ok = ecf_user:unban_user(Id),
             Base = application:get_env(ecf, base_url, ""),
             cowboy_req:reply(303,
-                             #{<<"location">> => [Base, "/user/", Id0]},
+                             #{<<"location">> => [Base, "/user/", integer_to_binary(Id)]},
                              Req);
         false ->
             ecf_utils:reply_status(403, User, unban_user_403, Req)

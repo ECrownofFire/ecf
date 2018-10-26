@@ -30,12 +30,9 @@ try_post(Req = #{method := <<"GET">>}, User, <<"edit">>) ->
             end
     end;
 try_post(Req0 = #{method := <<"POST">>}, User, <<"edit">>) ->
-    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
-    {_, TId0} = lists:keyfind(<<"thread">>, 1, KV),
-    TId = binary_to_integer(TId0),
-    {_, Id0} = lists:keyfind(<<"post">>, 1, KV),
-    Id = binary_to_integer(Id0),
-    {_, Text} = lists:keyfind(<<"text">>, 1, KV),
+    L = [{thread, int}, {post, int}, text],
+    {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body(L, Req0),
+    #{thread := TId, post := Id, text := Text} = M,
     case ecf_thread:get_thread(TId) of
         undefined ->
             ecf_utils:reply_status(404, User, thread_404, Req);
@@ -53,19 +50,18 @@ try_post(Req0 = #{method := <<"POST">>}, User, <<"create">>) ->
     Time = timer:now_diff(erlang:timestamp(), ecf_user:last_post(User)),
     case Time > Limit of
         true ->
-            {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
-            {_, Thread0} = lists:keyfind(<<"thread">>, 1, KV),
-            Thread = binary_to_integer(Thread0),
+            L = [{thread, int}, {text, int}],
+            {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body(L, Req0),
+            #{thread := Thread, text := Text} = M,
             case ecf_perms:check_perm_thread(User, ecf_thread:get_thread(Thread),
                                              create_post) of
                 true ->
-                    {_, Text} = lists:keyfind(<<"text">>, 1, KV),
                     Post = ecf_post:new_post(Thread, ecf_user:id(User),
                                              erlang:timestamp(), Text),
                     Base = application:get_env(ecf, base_url, ""),
                     cowboy_req:reply(303,
                                      #{<<"location">>
-                                       => [Base, <<"/thread/">>, Thread0,
+                                       => [Base, <<"/thread/">>, integer_to_binary(Thread),
                                            <<"#post-">>, integer_to_list(Post)]},
                                      Req);
                 false ->
@@ -75,11 +71,9 @@ try_post(Req0 = #{method := <<"POST">>}, User, <<"create">>) ->
             ecf_utils:reply_status(429, User, create_post_429, Req0, true)
     end;
 try_post(Req0 = #{method := <<"POST">>}, User, <<"delete">>) ->
-    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
-    {_, TId0} = lists:keyfind(<<"thread">>, 1, KV),
-    TId = binary_to_integer(TId0),
-    {_, Id0} = lists:keyfind(<<"post">>, 1, KV),
-    Id = binary_to_integer(Id0),
+    L = [{thread, int}, {post, int}],
+    {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body(L, Req0),
+    #{thread := TId, post := Id} = M,
     case ecf_thread:get_thread(TId) of
         undefined ->
             ecf_utils:reply_status(400, User, thread_404, Req);
@@ -90,7 +84,8 @@ try_post(Req0 = #{method := <<"POST">>}, User, <<"delete">>) ->
                     Base = application:get_env(ecf, base_url, ""),
                     cowboy_req:reply(303,
                                      #{<<"location">>
-                                       => [Base, <<"/thread/">>, TId0]},
+                                       => [Base, <<"/thread/">>,
+                                           integer_to_binary(TId)]},
                                      Req);
                 false ->
                     ecf_utils:reply_status(403, User, delete_post_403, Req)

@@ -9,6 +9,8 @@
          get_perm/2, edit_perm/4, remove_perm/3,
          mode/1, allow/1, deny/1]).
 
+-export([class_constraint/2, set_constraint/2, mode_constraint/2]).
+
 
 % 'others' includes any user as well as guests
 -type class() :: {user, ecf_user:id()} | {group, ecf_group:id()} | others.
@@ -266,4 +268,58 @@ remove_perm(Perm, Class) ->
     NewA = lists:delete(Class, Perm#ecf_perm.allow),
     NewD = lists:delete(Class, Perm#ecf_perm.deny),
     Perm#ecf_perm{allow=NewA, deny=NewD}.
+
+%% Constraints
+
+class_constraint(forward, Val) ->
+    case lists:member(Val, [<<"user">>, <<"group">>, <<"others">>]) of
+        true ->
+            {ok, binary_to_atom(Val, latin1)};
+        false ->
+            {error, invalid_class}
+    end;
+class_constraint(reverse, Val) ->
+    case lists:member(Val, [user, group, others]) of
+        true ->
+            {ok, atom_to_binary(Val, latin1)};
+        false ->
+            {error, invalid_class}
+    end;
+class_constraint(Op, _Val) when Op =:= forward; Op =:= reverse ->
+    {error, invalid_class};
+class_constraint(format_error, {invalid_class, Val}) ->
+    io_lib:format("~p is not a valid class type.", [Val]).
+
+
+set_constraint(forward, <<"allow">>) ->
+    {ok, allow};
+set_constraint(forward, <<"deny">>) ->
+    {ok, deny};
+set_constraint(reverse, allow) ->
+    {ok, <<"allow">>};
+set_constraint(reverse, deny) ->
+    {ok, <<"deny">>};
+set_constraint(Op, _Val) when Op =:= forward; Op =:= reverse ->
+    {error, invalid_set};
+set_constraint(format_error, {invalid_set, Val}) ->
+    io_lib:format("\"allow\" or \"deny\" expected, but received ~p.", [Val]).
+
+
+mode_constraint(forward, Mode) ->
+    case lists:member(Mode, ?MODES) of
+        true ->
+            {ok, binary_to_atom(Mode, latin1)};
+        false ->
+            {error, invalid_mode}
+    end;
+mode_constraint(reverse, Mode) ->
+    Ret = atom_to_binary(Mode, latin1),
+    case lists:member(Ret, ?MODES) of
+        true ->
+            {ok, Ret};
+        false ->
+            {error, invalid_mode}
+    end;
+mode_constraint(format_error, {invalid_mode, Val}) ->
+    io_lib:format("~p is not a valid mode.", [Val]).
 

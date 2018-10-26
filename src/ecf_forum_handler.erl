@@ -52,9 +52,9 @@ handle_post(Req, User, <<"create">>) ->
         false ->
             ecf_utils:reply_status(403, User, create_forum_403, Req);
         true ->
-            {ok, KV, Req2} = cowboy_req:read_urlencoded_body(Req),
-            {_, Name} = lists:keyfind(<<"name">>, 1, KV),
-            {_, Desc} = lists:keyfind(<<"desc">>, 1, KV),
+            L = [name, desc],
+            {ok, M, Req2} = cowboy_req:read_and_match_urlencoded_body(L, Req),
+            #{name := Name, desc := Desc} = M,
             Id = ecf_forum:new_forum(Name, Desc),
             Base = application:get_env(ecf, base_url, ""),
             cowboy_req:reply(303,
@@ -63,9 +63,8 @@ handle_post(Req, User, <<"create">>) ->
                              Req2)
     end;
 handle_post(Req0, User, <<"delete">>) ->
-    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
-    {_, Id0} = lists:keyfind(<<"id">>, 1, KV),
-    Id = binary_to_integer(Id0),
+    {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body([{id, int}], Req0),
+    #{id := Id} = M,
     case ecf_forum:get_forum(Id) of
         undefined ->
             ecf_utils:reply_status(400, User, forum_400, Req);
@@ -82,9 +81,9 @@ handle_post(Req0, User, <<"delete">>) ->
             end
     end;
 handle_post(Req0, User, <<"edit">>) ->
-    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
-    {_, Id0} = lists:keyfind(<<"id">>, 1, KV),
-    Id = binary_to_integer(Id0),
+    L = [{id, int}, name, desc],
+    {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body(L, Req0),
+    #{id := Id, name := Name, desc := Desc} = M,
     case ecf_forum:get_forum(Id) of
         undefined ->
             ecf_utils:reply_status(400, User, forum_400, Req);
@@ -93,21 +92,20 @@ handle_post(Req0, User, <<"edit">>) ->
                 false ->
                     ecf_utils:reply_status(403, User, edit_forum_403, Req);
                 true ->
-                    {_, Name} = lists:keyfind(<<"name">>, 1, KV),
-                    {_, Desc} = lists:keyfind(<<"desc">>, 1, KV),
                     ok = ecf_forum:edit_name(Id, Name),
                     ok = ecf_forum:edit_desc(Id, Desc),
                     Base = application:get_env(ecf, base_url, ""),
                     cowboy_req:reply(303,
                                      #{<<"location">>
-                                       => [Base, <<"/forum/">>, Id0]},
+                                       => [Base, <<"/forum/">>,
+                                           integer_to_binary(Id)]},
                                      Req)
             end
     end;
 handle_post(Req0, User, <<"reorder">>) ->
-    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
-    {_, Id0} = lists:keyfind(<<"id">>, 1, KV),
-    Id = binary_to_integer(Id0),
+    L = [{id, int}, {action, fun reorder_con/2}],
+    {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body(L, Req0),
+    #{id := Id, action := Action} = M,
     case ecf_forum:get_forum(Id) of
         undefined ->
             ecf_utils:reply_status(400, User, forum_400, Req);
@@ -116,8 +114,6 @@ handle_post(Req0, User, <<"reorder">>) ->
                 false ->
                     ecf_utils:reply_status(403, User, reorder_forum_403, Req);
                 true ->
-                    {_, Action0} = lists:keyfind(<<"action">>, 1, KV),
-                    Action = binary_to_existing_atom(Action0, latin1),
                     try ecf_forum:reorder(Id, Action) of
                         ok ->
                             Base = application:get_env(ecf, base_url, ""),
@@ -134,4 +130,21 @@ handle_post(Req0, User, <<"reorder">>) ->
     end;
 handle_post(Req, User, _) ->
     ecf_utils:reply_status(400, User, forum_400, Req).
+
+reorder_con(forward, Action) ->
+    case lists:member(Action, [<<"up">>, <<"down">>, <<"top">>, <<"bottom">>]) of
+        true ->
+            {ok, binary_to_atom(Action, latin1)};
+        false ->
+            {error, invalid_action}
+    end;
+reorder_con(reverse, Action) ->
+    case lists:member(Action, [up, down, top, bottom]) of
+        true ->
+            {ok, atom_to_binary(Action, latin1)};
+        false ->
+            {error, invalid_action}
+    end;
+reorder_con(format_error, {invalid_action, Val}) ->
+    io_lib:format("~p is not a valid reorder action.", [Val]).
 

@@ -12,18 +12,19 @@ init(Req = #{method := <<"GET">>}, State) ->
                                     Html, Req)
            end,
     {ok, Req2, State};
-init(Req0 = #{method := <<"POST">>}, State) ->
-    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
-    {_, OldPassword} = lists:keyfind(<<"old-password">>, 1, KV),
-    {_, Password} = lists:keyfind(<<"password">>, 1, KV),
+init(Req = #{method := <<"POST">>}, State) ->
     User = ecf_utils:check_user_session(Req),
-    Req2 = change_pw(User, OldPassword, Password, Req),
+    Req2 = change_pw(User, Req),
     {ok, Req2, State}.
 
 
-change_pw(undefined, _, _, Req) ->
+% TODO: check if password and confirmation match (only checked clientside atm)
+change_pw(undefined, Req) ->
     ecf_utils:reply_status(401, undefined, change_pw_401, Req);
-change_pw(User, Old, Password, Req) ->
+change_pw(User, Req0) ->
+    {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body([old_password,
+                                                              password], Req0),
+    #{old_password := Old, password := Password} = M,
     case ecf_utils:valid_password(Password) of
         false ->
             Html = ecf_generators:generate(change_pw, User, invalid_password),

@@ -18,26 +18,26 @@ terminate(_Reason, _Req, _State) ->
 do_reply(undefined, _, Req) ->
     ecf_utils:reply_status(401, undefined, msg_401, Req);
 do_reply(User, Action, Req) ->
-    {ok, KV, Req2} = cowboy_req:read_urlencoded_body(Req),
     case Action of
         <<"create">> ->
-            create(User, KV, Req2);
+            create(User, Req);
         <<"add">> ->
-            do_perm(add, User, KV, Req2);
+            do_perm(add, User, Req);
         <<"remove">> ->
-            do_perm(remove, User, KV, Req2)
+            do_perm(remove, User, Req)
     end.
 
 
-create(User, KV, Req) ->
+create(User, Req0) ->
+    L = [{to, nonempty}, subject, text],
+    {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body(L, Req0),
+    #{to := ToName, subject := Subject, text := Text} = M,
     Forum = ecf_forum:get_forum(0),
     From = ecf_user:id(User),
-    case get_to(KV) of
+    case ecf_user:get_user_by_name(ToName) of
         undefined ->
             ecf_utils:reply_status(400, User, invalid_user, Req, true);
         To ->
-            Subject = get_subject(KV),
-            Text = get_text(KV),
             case ecf_thread:create(User, Forum, Subject, erlang:timestamp(),
                                    Text) of
                 post_limit ->
@@ -56,12 +56,13 @@ create(User, KV, Req) ->
     end.
 
 
-do_perm(Act, User, KV, Req) ->
-    {_, Thread0} = lists:keyfind(<<"id">>, 1, KV),
-    ThreadId = binary_to_integer(Thread0),
+do_perm(Act, User, Req0) ->
+    L = [{id, int}, {user, [], <<"">>}, {uid, int, 0}],
+    {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body(L, Req0),
+    #{id := ThreadId} = M,
     case check_perm(User, ThreadId, Req) of
         ok ->
-            case get_user(Act, KV) of
+            case get_user(Act, M) of
                 undefined ->
                     ecf_utils:reply_status(400, User, invalid_user, Req);
                 NewUser ->
@@ -83,13 +84,10 @@ do_perm(Act, User, KV, Req) ->
             Req2
     end.
 
-get_user(add, KV) ->
-    {_, Name} = lists:keyfind(<<"user">>, 1, KV),
-    ecf_user:get_user_by_name(Name);
-get_user(remove, KV) ->
-    {_, Id0} = lists:keyfind(<<"uid">>, 1, KV),
-    Id = binary_to_integer(Id0),
-    ecf_user:get_user(Id).
+get_user(add, M) ->
+    ecf_user:get_user_by_name(maps:get(user, M));
+get_user(remove, M) ->
+    ecf_user:get_user(maps:get(uid, M)).
 
 check_perm(User, ThreadId, Req) ->
     case ecf_thread:get_thread(ThreadId) of
@@ -117,21 +115,4 @@ reply(Id, Req) ->
     cowboy_req:reply(303,
                      #{<<"location">> => [Base, "/thread/", integer_to_list(Id)]},
                      Req).
-
-get_to(KV) ->
-    {_, To} = lists:keyfind(<<"to">>, 1, KV),
-    case ecf_user:get_user_by_name(To) of
-        undefined ->
-            undefined;
-        User ->
-            ecf_user:id(User)
-    end.
-
-get_subject(KV) ->
-    {_, Subject} = lists:keyfind(<<"subject">>, 1, KV),
-    Subject.
-
-get_text(KV) ->
-    {_, Text} = lists:keyfind(<<"text">>, 1, KV),
-    Text.
 

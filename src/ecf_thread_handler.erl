@@ -49,11 +49,10 @@ handle_post(Req, undefined, _Action) ->
 handle_post(Req, User, undefined) ->
     ecf_utils:reply_status(400, User, thread_400, Req);
 handle_post(Req0, User, <<"create">>) ->
-    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
-    {_, Forum0} = lists:keyfind(<<"forum">>, 1, KV),
-    Forum = ecf_forum:get_forum(binary_to_integer(Forum0)),
-    {_, Title} = lists:keyfind(<<"title">>, 1, KV),
-    {_, Text} = lists:keyfind(<<"text">>, 1, KV),
+    L = [{forum, int}, title, text],
+    {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body(L, Req0),
+    #{forum := ForumId, title := Title, text := Text} = M,
+    Forum = ecf_forum:get_forum(ForumId),
     case ecf_thread:create(User, Forum, Title, erlang:timestamp(), Text) of
         post_limit ->
             ecf_utils:reply_status(429, User, create_thread_429, Req, true);
@@ -67,9 +66,8 @@ handle_post(Req0, User, <<"create">>) ->
                              Req)
     end;
 handle_post(Req0, User, <<"delete">>) ->
-    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
-    {_, Id0} = lists:keyfind(<<"id">>, 1, KV),
-    Id = binary_to_integer(Id0),
+    {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body([{id, int}], Req0),
+    #{id := Id} = M,
     case ecf_thread:get_thread(Id) of
         undefined ->
             ecf_utils:reply_status(400, User, thread_400, Req);
@@ -89,21 +87,19 @@ handle_post(Req0, User, <<"delete">>) ->
             end
     end;
 handle_post(Req0, User, <<"edit">>) ->
-    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
-    {_, Id0} = lists:keyfind(<<"id">>, 1, KV),
-    Id = binary_to_integer(Id0),
+    {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body([{id, int}, title], Req0),
+    #{id := Id, title := Title} = M,
     case ecf_thread:get_thread(Id) of
         undefined ->
             ecf_utils:reply_status(400, User, thread_400, Req);
         Thread ->
             case ecf_perms:check_perm_thread(User, Thread, edit_thread) of
                 true ->
-                    {_, Title} = lists:keyfind(<<"title">>, 1, KV),
                     ok = ecf_thread:edit_title(Id, Title),
                     Base = application:get_env(ecf, base_url, ""),
                     cowboy_req:reply(303,
                                      #{<<"location">> => [Base, "/thread/",
-                                                          Id0]},
+                                                          integer_to_binary(Id)]},
                                      Req);
                 false ->
                     ecf_utils:reply_status(403, User, edit_thread_403, Req)
