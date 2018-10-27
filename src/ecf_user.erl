@@ -4,6 +4,8 @@
 
 -export_type([id/0, user/0]).
 
+-define(HASH(X), enacl:pwhash_str(X, moderate, interactive)).
+
 -define(SESSION_LENGTH, 32).
 
 %%% Wrapper for user type
@@ -54,7 +56,7 @@ create_table(Nodes) ->
     {id(), binary()} | {error, atom()}.
 new_user(Name, Pass, Email0) ->
     Email = string:trim(Email0),
-    {ok, Hash} = enacl:pwhash_str(Pass),
+    {ok, Hash} = ?HASH(Pass),
     Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
     Sess = {Session, erlang:system_time(second)},
     F = fun() ->
@@ -171,7 +173,7 @@ edit_email(Id, Email) ->
 
 -spec edit_pass(id(), binary()) -> binary().
 edit_pass(Id, NewPass) ->
-    {ok, Hash} = enacl:pwhash_str(NewPass),
+    {ok, Hash} = ?HASH(NewPass),
     Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
     Sess = {Session, erlang:system_time(second)},
     F = fun() ->
@@ -335,7 +337,7 @@ check_pass(User, Pass) ->
 % Fakes hashing for invalid logins
 -spec fake_hash() -> ok.
 fake_hash() ->
-    Test = <<"$argon2id$v=19$m=65536,t=2,p=1$1uZRoN+31tWAp5568l4NdQ$K41NbPMWptYR+KDI2iAHmP0qoeL1agZqptVwuSdpUGA">>,
+    Test = <<"$argon2id$v=19$m=65536,t=3,p=1$1uZRoN+31tWAp5568l4NdQ$K41NbPMWptYR+KDI2iAHmP0qoeL1agZqptVwuSdpUGA">>,
     enacl:pwhash_str_verify(Test, <<"badpassword">>),
     ok.
 
