@@ -1,8 +1,12 @@
 {% extends "ecf_base.dtl" %}
 {# vim: set ft=htmldjango: #}
 {% block content %}
-<main id="forum-list">
+<main id="main">
+
+<header id="main-header">
 <h2>Forums</h2>
+</header>
+
 <ol>
     {% for forum in forum_list %}
     <li class="forum"><a href="{{ base_url }}/forum/{{ forum.id }}">{{ forum.name }}</a><p>{{ forum.desc }}</p></li>

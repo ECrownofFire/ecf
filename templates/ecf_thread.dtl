@@ -1,7 +1,8 @@
 {% extends "ecf_base.dtl" %}
 {# vim: set ft=htmldjango: #}
 {% block content %}
-<main id="post-list">
+<main id="thread">
+<header id="thread-header">
 <a href="{{ base_url }}/forum/{{ forum.id }}">{{ forum.name }}</a>
 <h2>{{ thread.title }}</h2>
 {% if can_edit_thread %}
@@ -52,8 +53,9 @@
     {% if page_last > page %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page_last }}">Last</a> {% endif %}
     {% if page_last >= page|add:"1" %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page|add:"1" }}" rel="next">Next</a> {% endif %}
 </nav>
+</header>
 
-<ol>
+<ol id="post-list">
     {% for post in post_list %}
     <li id="post-{{ post.id }}" class="post">
         <section class="poster">
@@ -63,6 +65,7 @@
             <p class="user-posts">Posts: {{ post.poster.posts }}</p>
         </section>
         <article class="post-content">
+            <header class="post-header">
             <h4><a href="#post-{{ post.id }}">Reply #{{ post.id }}</a> on: <time class="format-time post-time" datetime="{{ post.time }}"></time></h4>
             {% if post.editor %}
             <p class="post-edited">Edited By: <a href="{{ base_url }}/user/{{ post.editor.id }}">{{ post.editor.name }}</a> on <time class="format-time" datetime="{{ post.edited }}"></time></p>
@@ -87,12 +90,13 @@
                 {% endif %}
             </form>
             {% endif %}
+            </header>
             <p>{{ post.text }}</p>
         </article>
     </li>
     {% endfor %}
 </ol>
-
+<footer id="thread-footer">
 <nav class="pagination">
     {% if page > 1 %} <a href="{{ base_url }}/thread/{{ thread.id }}?page=1">First</a> {% endif %}
     {% if page >= 3 %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page|add:"-2" }}">{{ page|add:"-2" }}</a> {% endif %}
@@ -104,7 +108,7 @@
 </nav>
 
 {% if can_create_post %}
-<form class="form-post" action="{{ base_url }}/post/create" method="post" onsubmit="savePost();">
+<form id="form-post" action="{{ base_url }}/post/create" method="post" onsubmit="savePost();">
     <h3>Reply:</h3>
     <input type="hidden" name="thread" value="{{ thread.id }}">
     <textarea id="post-text" type="text" autocomplete="off" name="text"></textarea>
@@ -127,5 +131,6 @@ function savePost() {
 }
 </script>
 {% endif %}
+</footer>
 </main>
 {% endblock %}
