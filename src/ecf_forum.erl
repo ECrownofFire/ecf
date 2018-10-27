@@ -39,6 +39,7 @@ create_table(Nodes) ->
         end,
     ok = mnesia:activity(transaction, F),
     % defaults for PM forum, overriden by PM threads
+    ok = edit_perm(0, others, view_forum, deny),
     ok = edit_perm(0, {group, 1}, view_forum, allow),
     ok = edit_perm(0, others, view_thread, deny),
     ok = edit_perm(0, {group, 2}, create_thread, allow),

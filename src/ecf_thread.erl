@@ -141,30 +141,28 @@ new_post(Id, Time) ->
         end,
     mnesia:activity(transaction, F).
 
-% when removing posts if the last post is removed it needs to be changed here
 -spec delete_post(id(), ecf_post:id()) -> ok.
 delete_post(Id, Post) ->
     F = fun() ->
                 [Thread] = mnesia:wread({ecf_thread, Id}),
                 case last(Thread) of
                     Post ->
+                        % if last post is removed then change last
                         delete_post2(Thread, Post);
                     _ ->
                         ok
                 end
         end,
     mnesia:activity(transaction, F).
+
 % walk backwards until a post that exists is found... dumb but it works
 delete_post2(Thread, Post) ->
-    F = fun() ->
-                case ecf_post:get_post(id(Thread), Post-1) of
-                    undefined ->
-                        delete_post2(Thread, Post-1);
-                    _ ->
-                        mnesia:write(Thread#ecf_thread{last=Post-1})
-                end
-        end,
-    mnesia:activity(transaction, F).
+    case ecf_post:get_post(id(Thread), Post-1) of
+        undefined ->
+            delete_post2(Thread, Post-1);
+        _ ->
+            mnesia:write(Thread#ecf_thread{last=Post-1})
+    end.
 
 -spec delete_thread(id()) -> ok.
 delete_thread(Id) ->

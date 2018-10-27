@@ -42,13 +42,15 @@
 {% endif %}
 
 <nav class="pagination">
+    {% if page >= 2 %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page|add:"-1" }}" rel="prev">Prev</a> {% endif %}
     {% if page > 1 %} <a href="{{ base_url }}/thread/{{ thread.id }}?page=1">First</a> {% endif %}
     {% if page >= 3 %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page|add:"-2" }}">{{ page|add:"-2" }}</a> {% endif %}
-    {% if page >= 2 %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page|add:"-1" }}" rel="prev">{{ page|add:"-1" }}</a> {% endif %}
+    {% if page >= 2 %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page|add:"-1" }}">{{ page|add:"-1" }}</a> {% endif %}
     <span>[{{ page }}]</span>
-    {% if page_last >= page|add:"1" %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page|add:"1" }}" rel="next">{{ page|add:"1" }}</a> {% endif %}
+    {% if page_last >= page|add:"1" %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page|add:"1" }}">{{ page|add:"1" }}</a> {% endif %}
     {% if page_last >= page|add:"2" %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page|add:"2" }}">{{ page|add:"2" }}</a> {% endif %}
     {% if page_last > page %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page_last }}">Last</a> {% endif %}
+    {% if page_last >= page|add:"1" %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page|add:"1" }}" rel="next">Next</a> {% endif %}
 </nav>
 
 <ol>
@@ -75,7 +77,9 @@
                 <input type="hidden" name="post" value="{{ post.id }}">
                 {% if can_delete_posts
                 or can_delete_own_posts and post.poster.id == user.id %}
+                    {% if post.id != 1 %}
                 <button class='post-delete' formaction="{{ base_url }}/post/delete" onclick="return confirm('Are you sure you want to delete this post?');">Delete Post</button>
+                    {% endif %}
                 {% endif %}
                 {% if can_edit_posts
                 or can_edit_own_posts and post.poster.id == user.id %}

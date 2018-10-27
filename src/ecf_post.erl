@@ -55,9 +55,10 @@ delete_posts(Thread) ->
     mnesia:activity(transaction, F).
 
 -spec delete_post(ecf_thread:id(), id()) -> ok.
-delete_post(Thread, Id) ->
+delete_post(Thread, Id) when Id > 1 ->
     F = fun() ->
                 mnesia:delete({ecf_post, {Thread, Id}}),
+                % adjust last post in thread if needed
                 ecf_thread:delete_post(Thread, Id)
         end,
     mnesia:activity(transaction, F).

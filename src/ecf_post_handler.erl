@@ -80,13 +80,18 @@ try_post(Req0 = #{method := <<"POST">>}, User, <<"delete">>) ->
         Thread ->
             case ecf_perms:check_perm_thread(User, Thread, delete_post) of
                 true ->
-                    ok = ecf_post:delete_post(TId, Id),
-                    Base = application:get_env(ecf, base_url, ""),
-                    cowboy_req:reply(303,
-                                     #{<<"location">>
-                                       => [Base, <<"/thread/">>,
-                                           integer_to_binary(TId)]},
-                                     Req);
+                    case Id of
+                        N when N > 1 ->
+                            ok = ecf_post:delete_post(TId, Id),
+                            Base = application:get_env(ecf, base_url, ""),
+                            cowboy_req:reply(303,
+                                             #{<<"location">>
+                                               => [Base, <<"/thread/">>,
+                                                   integer_to_binary(TId)]},
+                                             Req);
+                        _ ->
+                            ecf_utils:reply_status(400, User, delete_post_400, Req)
+                    end;
                 false ->
                     ecf_utils:reply_status(403, User, delete_post_403, Req)
             end
