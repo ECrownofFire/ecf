@@ -230,7 +230,7 @@ get_title(String) ->
     [get_title(), " - ", String].
 
 users(Users) ->
-    [user(ecf_user:get_user(X)) || X <- Users].
+    [user(get_user(X)) || X <- Users].
 
 -spec user(ecf_user:user()) -> [{atom(), term()}];
           (undefined) -> false.
@@ -280,11 +280,11 @@ class(others) ->
 class({user, Id}) ->
     [{type, <<"user">>},
      {id, Id},
-     {name, ecf_user:name(ecf_user:get_user(Id))}];
+     {name, ecf_user:name(get_user(Id))}];
 class({group, Id}) ->
     [{type, <<"group">>},
      {id, Id},
-     {name, ecf_group:name(ecf_group:get_group(Id))}].
+     {name, ecf_group:name(get_group(Id))}].
 
 login_message(undefined, Type) ->
     application:get_env(ecf, Type, <<"Please login.">>);
@@ -321,7 +321,7 @@ group_list(Groups) ->
     [group(X) || X <- Groups].
 
 group(Id) when is_integer(Id) ->
-    group(ecf_group:get_group(Id));
+    group(get_group(Id));
 group(Group) ->
     [{id, integer_to_list(ecf_group:id(Group))},
      {name, ecf_group:name(Group)},
@@ -357,10 +357,10 @@ thread(Thread) ->
     LastPost = ecf_post:get_post(Id, LastId),
     LastPostTime = ecf_post:time(LastPost),
     LastPosterId = ecf_post:poster(LastPost),
-    LastPoster = ecf_user:get_user(LastPosterId),
+    LastPoster = get_user(LastPosterId),
     LastPosterName = ecf_user:name(LastPoster),
     CreatorId = ecf_thread:creator(Thread),
-    Creator = ecf_user:get_user(CreatorId),
+    Creator = get_user(CreatorId),
     CreatorName = ecf_user:name(Creator),
     Views = ecf_thread:views(Thread),
     [{id, integer_to_list(Id)},
@@ -404,7 +404,7 @@ post_list(Posts) ->
 post(Post) ->
     Id = ecf_post:id(Post),
     PosterId = ecf_post:poster(Post),
-    Poster = ecf_user:get_user(PosterId),
+    Poster = get_user(PosterId),
     Gravatar = gravatar(Poster),
     Time = iso8601:format(ecf_post:time(Post)),
     Text = ecf_post:text(Post),
@@ -417,7 +417,7 @@ post(Post) ->
 edited(undefined) ->
     [];
 edited({Id, Time}) ->
-    [{editor, user(ecf_user:get_user(Id))}, {edited, iso8601:format(Time)}].
+    [{editor, user(get_user(Id))}, {edited, iso8601:format(Time)}].
 
 status_desc(400) ->
     "Bad Request";
@@ -432,6 +432,27 @@ status_desc(405) ->
 status_desc(429) ->
     "Too Many Requests".
 
+
+% simple memoization using process dict
+get_user(Id) ->
+    case get({ecf_user, Id}) of
+        undefined ->
+            U = ecf_user:get_user(Id),
+            put({ecf_user, Id}, U),
+            U;
+        User ->
+            User
+    end.
+
+get_group(Id) ->
+    case get({ecf_group, Id}) of
+        undefined ->
+            G = ecf_group:get_group(Id),
+            put({ecf_group, Id}, G),
+            G;
+        User ->
+            User
+    end.
 
 -spec gravatar(ecf_user:user()) -> iodata().
 gravatar(User) ->
