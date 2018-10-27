@@ -2,6 +2,8 @@ PROJECT = ecf
 PROJECT_DESCRIPTION = Simple BEAM-powered forum software
 PROJECT_VERSION = 0.0.1
 
+BUILD_DEPS = parse_trans
+
 DEPS = cowboy iso8601 jiffy erlydtl gen_smtp
 dep_cowboy_commit = 2.5.0
 

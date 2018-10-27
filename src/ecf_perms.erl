@@ -1,5 +1,7 @@
 -module(ecf_perms).
 
+-compile({parse_transform, ecf_perm_pt}).
+
 -export_type([class/0, mode/0, perm/0]).
 
 -export([create_table/1,
@@ -16,20 +18,7 @@
 -type class() :: {user, ecf_user:id()} | {group, ecf_group:id()} | others.
 
 
-% TODO: avoid duplication of the mode list
-% unsure if that's possible with dialyzer specs, will need to investigate
-% probably requires a parse transform or something
--define(MODES, [view_forum, view_thread, view_group, view_user,
-                create_forum, create_thread, create_post, create_group,
-                delete_forum, delete_thread, delete_post, delete_group,
-                edit_forum, edit_thread, edit_post, edit_group, edit_user,
-                delete_own_thread, edit_own_thread,
-                delete_own_post, edit_own_post,
-                reorder_forums,
-                move_thread, lock_thread, ban_user,
-                edit_perms, manage_group,
-                join_group, leave_group]).
-
+% use get_modes() to get this list, parse transform takes care of it
 -type mode() :: view_forum | view_thread | view_group | view_user
               | create_forum | create_thread | create_post | create_group
               | delete_forum | delete_thread | delete_post | delete_group
@@ -68,7 +57,7 @@ create_table(Nodes) ->
                         [{attributes, record_info(fields, ecf_perm)},
                          {disc_copies, Nodes}]),
     F = fun() ->
-                [mnesia:write(#ecf_perm{mode=X}) || X <- ?MODES],
+                [mnesia:write(#ecf_perm{mode=X}) || X <- get_modes()],
                 ok
         end,
     ok = mnesia:activity(transaction, F),
@@ -108,7 +97,7 @@ get_global_perms() ->
     F = fun() ->
                 mnesia:read_lock_table(ecf_perm),
                 % done this way to make sure the ordering is maintained
-                lists:flatten([mnesia:read({ecf_perm, X}) || X <- ?MODES])
+                lists:flatten([mnesia:read({ecf_perm, X}) || X <- get_modes()])
         end,
     mnesia:activity(transaction, F).
 
@@ -307,7 +296,7 @@ set_constraint(format_error, {invalid_set, Val}) ->
 
 mode_constraint(forward, Mode) ->
     Atom = binary_to_existing_atom(Mode, latin1),
-    case lists:member(Atom, ?MODES) of
+    case lists:member(Atom, get_modes()) of
         true ->
             {ok, Atom};
         false ->
@@ -315,7 +304,7 @@ mode_constraint(forward, Mode) ->
     end;
 mode_constraint(reverse, Mode) ->
     Ret = atom_to_binary(Mode, latin1),
-    case lists:member(Ret, ?MODES) of
+    case lists:member(Ret, get_modes()) of
         true ->
             {ok, Ret};
         false ->

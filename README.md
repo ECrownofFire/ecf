@@ -98,4 +98,5 @@ ECF makes use of the following third-party software:
 * [gen_smtp](https://github.com/Vagabond/gen_smtp), BSD 2-Clause License.
 * [ErlyDTL](https://github.com/erlydtl/erlydtl), MIT License.
 * [erlang-pbkdf2](https://github.com/basho/erlang-pbkdf2), Apache License 2.0.
+* [parse_trans](https://github.com/uwiger/parse_trans), Apache License 2.0.
 
