@@ -25,22 +25,22 @@ At the bare minimum, ECF still needs the following:
     * Deny non-HTTPS traffic
 
 So that ECF is reasonably useable, I'd like to add the following as well:
+* Track read/unread posts (needs backend)
 * Banning people for a given length of time (needs backend)
 * Listing all users, sorting by various fields (partially done, needs sorting)
-* List all posts by a user
 * Searching (needs backend)
+    * List all posts by a user
 * Refreshing sessions
 * Pinning threads
 
 The following may happen at some point, but I'm unsure about them:
 * Markdown for posts (could be done with clientside JS)
-* Using Argon2 for password hashing instead of PBKDF2
 
 And these would be nice to eventually get:
 * Events calendar
 * Announcements
-* Track read/unread posts
 * Replying to posts
+* Email notifications for posts/replies/threads/forums/PMs
 
 ### Requirements
 Erlang/OTP 20
@@ -99,4 +99,6 @@ ECF makes use of the following third-party software:
 * [ErlyDTL](https://github.com/erlydtl/erlydtl), MIT License.
 * [erlang-pbkdf2](https://github.com/basho/erlang-pbkdf2), Apache License 2.0.
 * [parse_trans](https://github.com/uwiger/parse_trans), Apache License 2.0.
+* [enacl](https://github.com/jlouis/enacl), MIT License.
+* [libsodium](https://github.com/jedisct1/libsodium), ISC License.
 

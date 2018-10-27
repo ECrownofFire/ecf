@@ -4,11 +4,6 @@
 
 -export_type([id/0, user/0]).
 
--define(HMAC, sha512).
--define(HASH_ITERATIONS, 200000).
--define(HASH_LENGTH, 64).
--define(SALT_LENGTH, 32).
-
 -define(SESSION_LENGTH, 32).
 
 %%% Wrapper for user type
@@ -36,7 +31,6 @@
          name   :: binary(),
          enabled:: boolean(),
          session:: [{binary(), integer()}],
-         salt   :: binary(),
          pass   :: binary(),
          email  :: binary(),
          joined :: erlang:timestamp(),
@@ -60,9 +54,7 @@ create_table(Nodes) ->
     {id(), binary()} | {error, atom()}.
 new_user(Name, Pass, Email0) ->
     Email = string:trim(Email0),
-    Salt = crypto:strong_rand_bytes(?SALT_LENGTH),
-    {ok, Hash} = pbkdf2:pbkdf2(?HMAC, Pass, Salt,
-                               ?HASH_ITERATIONS, ?HASH_LENGTH),
+    {ok, Hash} = enacl:pwhash_str(Pass),
     Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
     Sess = {Session, erlang:system_time(second)},
     F = fun() ->
@@ -73,11 +65,10 @@ new_user(Name, Pass, Email0) ->
                                 Id = ecf_db:get_new_id(ecf_user),
                                 Time = erlang:timestamp(),
                                 ok = mnesia:write(
-                                       #ecf_user{
-                                          id=Id, name=Name, enabled=true,
-                                          salt=Salt, pass=Hash, session=[Sess],
-                                          email=Email, joined=Time,
-                                          last_post=Time}),
+                                       #ecf_user{id=Id, name=Name, enabled=true,
+                                                 pass=Hash, session=[Sess],
+                                                 email=Email, joined=Time,
+                                                 last_post=Time}),
                                 % All users are in the basic group
                                 ok = ecf_group:add_member(1, Id),
                                 {Id, Session};
@@ -180,14 +171,12 @@ edit_email(Id, Email) ->
 
 -spec edit_pass(id(), binary()) -> binary().
 edit_pass(Id, NewPass) ->
-    Salt = crypto:strong_rand_bytes(?SALT_LENGTH),
-    {ok, Hash} = pbkdf2:pbkdf2(?HMAC, NewPass, Salt,
-                               ?HASH_ITERATIONS, ?HASH_LENGTH),
+    {ok, Hash} = enacl:pwhash_str(NewPass),
     Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
     Sess = {Session, erlang:system_time(second)},
     F = fun() ->
                 [User] = mnesia:wread({ecf_user, Id}),
-                ok = mnesia:write(User#ecf_user{pass=Hash,salt=Salt,session=[Sess]}),
+                ok = mnesia:write(User#ecf_user{pass=Hash,session=[Sess]}),
                 Session
         end,
     mnesia:activity(transaction, F).
@@ -340,18 +329,14 @@ check_session(User, Session) ->
 
 -spec check_pass(user(), binary()) -> boolean().
 check_pass(User, Pass) ->
-    Salt = User#ecf_user.salt,
-    PHash = User#ecf_user.pass,
-    {ok, Hash} = pbkdf2:pbkdf2(?HMAC, Pass, Salt, ?HASH_ITERATIONS, ?HASH_LENGTH),
-    pbkdf2:compare_secure(PHash, Hash).
+    Hash = User#ecf_user.pass,
+    enacl:pwhash_str_verify(Hash, Pass).
 
 % Fakes hashing for invalid logins
 -spec fake_hash() -> ok.
 fake_hash() ->
-    Pass = <<"password">>,
-    Salt = <<"saltSALTsaltSALT">>,
-    {ok, Hash} = pbkdf2:pbkdf2(?HMAC, Pass, Salt, ?HASH_ITERATIONS, ?HASH_LENGTH),
-    _ = pbkdf2:compare_secure(Hash, Hash),
+    Test = <<"$argon2id$v=19$m=65536,t=2,p=1$1uZRoN+31tWAp5568l4NdQ$K41NbPMWptYR+KDI2iAHmP0qoeL1agZqptVwuSdpUGA">>,
+    enacl:pwhash_str_verify(Test, <<"badpassword">>),
     ok.
 
 -spec confirm_email(id()) -> ok.
