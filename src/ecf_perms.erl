@@ -306,9 +306,10 @@ set_constraint(format_error, {invalid_set, Val}) ->
 
 
 mode_constraint(forward, Mode) ->
-    case lists:member(Mode, ?MODES) of
+    Atom = binary_to_existing_atom(Mode, latin1),
+    case lists:member(Atom, ?MODES) of
         true ->
-            {ok, binary_to_atom(Mode, latin1)};
+            {ok, Atom};
         false ->
             {error, invalid_mode}
     end;
