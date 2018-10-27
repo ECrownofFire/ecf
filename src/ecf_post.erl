@@ -37,9 +37,10 @@ create_table(Nodes) ->
                binary()) -> id().
 new_post(Thread, Poster, Time, Text) ->
     F = fun() ->
-                _ = ecf_thread:get_thread(Thread),
+                T = ecf_thread:get_thread(Thread),
                 Id = ecf_thread:new_post(Thread, Time),
                 ecf_user:add_post(Poster, Time),
+                ecf_forum:count_post(ecf_thread:forum(T)),
                 mnesia:write(#ecf_post{id={Thread,Id},poster=Poster,
                                        time=Time,text=Text}),
                 Id

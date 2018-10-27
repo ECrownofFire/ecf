@@ -95,6 +95,7 @@ create_thread(Forum, Title, Time, Creator, Text) ->
                                          time=Time,last_time=Time,
                                          creator=Creator,perms=[]}),
                 ecf_post:new_post(Id, Creator, Time, Text),
+                ecf_forum:count_thread(Forum),
                 Id
         end,
     mnesia:activity(transaction, F).

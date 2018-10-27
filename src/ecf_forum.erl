@@ -6,13 +6,13 @@
 
 -export([create_table/1,
          get_forum/1, get_forums/0,
-         new_forum/2,
+         new_forum/2, count_thread/1, count_post/1,
          edit_name/2, edit_desc/2, reorder/2,
          edit_perm/4, remove_perm/3,
          delete_forum/1,
          visible_forums/2,
          filter_forums/2, order_forums/1,
-         id/1, name/1, desc/1, order/1, perms/1]).
+         id/1, name/1, desc/1, order/1, posts/1, threads/1, perms/1]).
 
 
 -type id()  :: non_neg_integer().
@@ -22,6 +22,8 @@
          order :: integer(),
          name  :: binary(),
          desc  :: binary(),
+         posts = 0 :: non_neg_integer(),
+         threads = 0 :: non_neg_integer(),
          perms = [] :: [ecf_perms:perm()]}).
 -type forum() :: #ecf_forum{}.
 
@@ -62,7 +64,7 @@ get_forum(Id) ->
 get_forums() ->
     F = fun() ->
                 mnesia:read_lock_table(ecf_forum),
-                Head = {ecf_forum, '$1', '_', '_', '_', '_'},
+                Head = {ecf_forum, '$1', '_', '_', '_', '_', '_', '_'},
                 Guard = {'>', '$1', 0}, % skip PM forum
                 mnesia:select(ecf_forum,[{Head,[Guard],['$_']}])
         end,
@@ -92,6 +94,26 @@ delete_forum(Id) ->
     mnesia:activity(transaction, F).
 
 %% Forum editing
+
+-spec count_thread(id()) -> non_neg_integer().
+count_thread(Id) ->
+    F = fun() ->
+                [Forum] = mnesia:wread({ecf_forum, Id}),
+                Count = threads(Forum) + 1,
+                ok = mnesia:write(Forum#ecf_forum{threads=Count}),
+                Count
+        end,
+    mnesia:activity(transaction, F).
+
+-spec count_post(id()) -> non_neg_integer().
+count_post(Id) ->
+    F = fun() ->
+                [Forum] = mnesia:wread({ecf_forum, Id}),
+                Count = posts(Forum) + 1,
+                ok = mnesia:write(Forum#ecf_forum{posts=Count}),
+                Count
+        end,
+    mnesia:activity(transaction, F).
 
 -spec edit_name(id(), binary()) -> ok.
 edit_name(Id, Name) ->
@@ -209,6 +231,14 @@ name(Forum) ->
 -spec desc(forum()) -> binary().
 desc(Forum) ->
     Forum#ecf_forum.desc.
+
+-spec posts(forum()) -> non_neg_integer().
+posts(Forum) ->
+    Forum#ecf_forum.posts.
+
+-spec threads(forum()) -> non_neg_integer().
+threads(Forum) ->
+    Forum#ecf_forum.threads.
 
 -spec perms(forum()) -> [ecf_perms:perm()].
 perms(Forum) ->

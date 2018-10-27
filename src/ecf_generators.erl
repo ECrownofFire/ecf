@@ -299,7 +299,9 @@ forum_list(Forums) ->
 forum(Forum) ->
     [{id, integer_to_list(ecf_forum:id(Forum))},
      {name, ecf_forum:name(Forum)},
-     {desc, ecf_forum:desc(Forum)}].
+     {desc, ecf_forum:desc(Forum)},
+     {threads, ecf_forum:threads(Forum)},
+     {posts, ecf_forum:posts(Forum)}].
 
 group_list(User, Groups) ->
     [group(User, X) || X <- Groups].
