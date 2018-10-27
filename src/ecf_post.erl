@@ -10,7 +10,6 @@
          edit_post/5,
          id/1, thread/1, poster/1, time/1, text/1, edited/1]).
 
--include_lib("stdlib/include/qlc.hrl").
 
 %%% Post type wrapper
 
@@ -18,8 +17,7 @@
 
 
 -record(ecf_post,
-        {thread :: ecf_thread:id(),
-         id     :: id(),
+        {id     :: {ecf_thread:id(), id()},
          poster :: ecf_user:id(),
          time   :: erlang:timestamp(),
          text   :: binary(),
@@ -30,8 +28,7 @@
 create_table(Nodes) ->
     {atomic, ok} = mnesia:create_table(ecf_post,
                         [{attributes, record_info(fields, ecf_post)},
-                         {type, bag},
-                         {index, [#ecf_post.id]},
+                         {type, set},
                          {disc_copies, Nodes}]),
     ok.
 
@@ -43,7 +40,7 @@ new_post(Thread, Poster, Time, Text) ->
                 _ = ecf_thread:get_thread(Thread),
                 Id = ecf_thread:new_post(Thread, Time),
                 ecf_user:add_post(Poster, Time),
-                mnesia:write(#ecf_post{thread=Thread,id=Id,poster=Poster,
+                mnesia:write(#ecf_post{id={Thread,Id},poster=Poster,
                                        time=Time,text=Text}),
                 Id
         end,
@@ -52,15 +49,15 @@ new_post(Thread, Poster, Time, Text) ->
 -spec delete_posts(ecf_thread:id()) -> ok.
 delete_posts(Thread) ->
     F = fun() ->
-                mnesia:delete({ecf_post, Thread})
+                N = ecf_thread:last(ecf_thread:get_thread(Thread)),
+                [mnesia:delete({ecf_post, {Thread, X}}) || X <- lists:seq(1, N)]
         end,
     mnesia:activity(transaction, F).
 
 -spec delete_post(ecf_thread:id(), id()) -> ok.
 delete_post(Thread, Id) ->
     F = fun() ->
-                Post = get_post(Thread, Id),
-                mnesia:delete_object(Post),
+                mnesia:delete({ecf_post, {Thread, Id}}),
                 ecf_thread:delete_post(Thread, Id)
         end,
     mnesia:activity(transaction, F).
@@ -68,9 +65,7 @@ delete_post(Thread, Id) ->
 -spec get_post(ecf_thread:id(), id()) -> post() | undefined.
 get_post(Thread, Id) ->
     F = fun() ->
-                case qlc:eval(qlc:q([X || X = #ecf_post{thread=T, id=I}
-                                          <- mnesia:table(ecf_post),
-                                          T =:= Thread, I =:= Id])) of
+                case mnesia:read({ecf_post, {Thread,Id}}) of
                     [Post] -> Post;
                     _ -> undefined
                 end
@@ -80,7 +75,7 @@ get_post(Thread, Id) ->
 -spec get_posts(ecf_thread:id()) -> [post()].
 get_posts(Thread) ->
     F = fun() ->
-                mnesia:read({ecf_post, Thread})
+                mnesia:match_object(#ecf_post{id={Thread,'_'},_='_'})
         end,
     lists:keysort(#ecf_post.id, mnesia:activity(transaction, F)).
 
@@ -88,11 +83,9 @@ get_posts(Thread) ->
 -spec get_posts(ecf_thread:id(), id(), id()) -> [post()].
 get_posts(Thread, First, Last) ->
     F = fun() ->
-            qlc:eval(qlc:q([X || X = #ecf_post{thread=T, id=I}
-                                 <- mnesia:table(ecf_post),
-                                 T =:= Thread, I >= First, I =< Last]))
+                [mnesia:read({ecf_post, {Thread,I}}) || I <- lists:seq(First, Last)]
         end,
-    lists:keysort(#ecf_post.id, mnesia:activity(transaction, F)).
+    lists:flatten(mnesia:activity(transaction, F)).
 
 
 -spec edit_post(ecf_thread:id(), id(), ecf_user:id(),
@@ -109,11 +102,13 @@ edit_post(Thread, Id, User, Time, Text) ->
 
 -spec thread(post()) -> ecf_thread:id().
 thread(Post) ->
-    Post#ecf_post.thread.
+    {T,_I} = Post#ecf_post.id,
+    T.
 
 -spec id(post()) -> id().
 id(Post) ->
-    Post#ecf_post.id.
+    {_T,I} = Post#ecf_post.id,
+    I.
 
 -spec poster(post()) -> ecf_user:id().
 poster(Post) ->

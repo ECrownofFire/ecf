@@ -169,7 +169,6 @@ delete_post2(Thread, Post) ->
 -spec delete_thread(id()) -> ok.
 delete_thread(Id) ->
     F = fun() ->
-                [_] = mnesia:wread({ecf_thread, Id}),
                 ecf_post:delete_posts(Id),
                 mnesia:delete({ecf_thread, Id})
         end,
