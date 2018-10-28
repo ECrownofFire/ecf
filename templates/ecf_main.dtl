@@ -7,11 +7,20 @@
 <h2>Forums</h2>
 </header>
 
-<ol>
+<table id="forum-table">
+    <thead>
+        <tr>
+            <th class="forum-name-desc">Forum
+            <th class="forum-threads">Threads
+            <th class="forum-posts">Posts
+    <tbody>
     {% for forum in forum_list %}
-    <li class="forum"><a href="{{ base_url }}/forum/{{ forum.id }}">{{ forum.name }}</a><p>{{ forum.desc }}</p></li>
+        <tr>
+            <td class="forum-name-desc"><a href="{{ base_url }}/forum/{{ forum.id }}">{{ forum.name }}</a><p>{{ forum.desc }}</p>
+            <td class="forum-threads">{{ forum.threads }}
+            <td class="forum-posts">{{ forum.posts }}
     {% endfor %}
-</ol>
+</table>
 </main>
 {% endblock %}
 

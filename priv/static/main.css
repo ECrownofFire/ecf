@@ -17,6 +17,14 @@
     margin-left: 8px;
 }
 
+#forum-table {
+    width: 100%;
+}
+
+.forum-name-desc {
+    width: 60%;
+}
+
 #thread-table {
     width: 100%;
 }
