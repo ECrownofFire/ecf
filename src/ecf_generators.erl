@@ -207,26 +207,19 @@ generate(Status, User, {Type, Storage})
 
 
 get_vars(User, Title) ->
-    [{base, get_base()},
+    {ok, Base} = application:get_env(ecf, base_url),
+    [{base, Base},
      {title, get_title(Title)},
      {user, user_profile(User)}].
 
-get_base() ->
-    {ok, Base} = application:get_env(ecf, base_url),
-    Base.
-
--spec get_title() -> iodata().
-get_title() ->
-    {ok, ForumName} = application:get_env(ecf, forum_name),
-    ForumName.
-
 -spec get_title(iodata()) -> iodata().
 get_title(String) ->
+    {ok, ForumName} = application:get_env(ecf, forum_name),
     case string:is_empty(String) of
         false ->
-            [get_title(), " - ", String];
+            [ForumName, " - ", String];
         true ->
-            get_title()
+            ForumName
     end.
 
 users(Users) ->
@@ -244,6 +237,8 @@ user(User) ->
      {posts, integer_to_binary(ecf_user:posts(User))}].
 
 % grabs additional vars when looking at a user's profile page
+user_profile(undefined) ->
+    false;
 user_profile(User) ->
     U = user(User),
     FormatStr = "~4.10.0B-~2.10.0B-~2.10.0B",
