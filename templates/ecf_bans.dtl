@@ -19,7 +19,11 @@
             <td class="ban-by"><a href="{{ base_url }}/user/{{ ban.by.id }}">{{ ban.by.name }}</a>
             <td class="ban-reason">{{ ban.reason }}
             <td class="ban time"><time class="format-time" datetime="{{ ban.time }}"></time>
+            {% if ban.until != "permanent" %}
             <td class="ban-until"><time class="format-time" datetime="{{ ban.time }}"></time>
+            {% else %}
+            <td class="ban-until">Forever
+            {% endif %}
             <td class="ban-unban"><a href="{{ base_url }}/unban?id={{ ban.user.id }}">Unban</a>
         {% endfor %}
 </table>

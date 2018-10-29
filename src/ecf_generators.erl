@@ -283,11 +283,17 @@ ban_list(Bans) ->
 ban(undefined) ->
     false;
 ban(Ban) ->
+    Until = case ecf_ban:until(Ban) of
+                permanent ->
+                    <<"permanent">>;
+                T ->
+                  iso8601:format(T)
+            end,
     [{user, get_user(ecf_ban:user(Ban))},
      {by, get_user(ecf_ban:by(Ban))},
      {reason, ecf_ban:reason(Ban)},
      {time, iso8601:format(ecf_ban:time(Ban))},
-     {until, iso8601:format(ecf_ban:until(Ban))}].
+     {until, Until}].
 
 
 perm_list(Perms) ->

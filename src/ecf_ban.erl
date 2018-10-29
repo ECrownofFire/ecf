@@ -13,7 +13,7 @@
          by     :: ecf_user:id(),
          reason :: binary(),
          time   :: erlang:timestamp(),
-         until  :: erlang:timestamp()}).
+         until  :: erlang:timestamp() | permanent}).
 -type ban() :: #ecf_ban{}.
 
 
@@ -45,7 +45,7 @@ check_perm(User, [H|T], none) ->
 
 
 -spec new_ban(ecf_user:id(), ecf_user:id(), binary(),
-              erlang:timestamp(), erlang:timestamp()) -> ok.
+              erlang:timestamp(), erlang:timestamp() | permanent) -> ok.
 new_ban(User, By, Reason, Time, Until) ->
     F = fun() ->
                 ecf_group:add_member(3, User),
@@ -69,13 +69,18 @@ check_ban(User) ->
                 case mnesia:read({ecf_ban, User}) of
                     [] -> undefined;
                     [B] ->
-                        Time = timer:now_diff(until(B), erlang:timestamp()),
-                        if Time < 0 ->
-                               delete_ban(User),
-                               ecf_group:remove_member(3, User),
-                               undefined;
-                           true ->
-                               B
+                        case until(B) of
+                            permanent ->
+                                B;
+                            U ->
+                                Time = timer:now_diff(U, erlang:timestamp()),
+                                if Time < 0 ->
+                                       delete_ban(User),
+                                       ecf_group:remove_member(3, User),
+                                       undefined;
+                                   true ->
+                                       B
+                                end
                         end
                 end
         end,
@@ -107,7 +112,7 @@ reason(Ban) ->
 time(Ban) ->
     Ban#ecf_ban.time.
 
--spec until(ban()) -> erlang:timestamp().
+-spec until(ban()) -> erlang:timestamp() | permanent.
 until(Ban) ->
     Ban#ecf_ban.until.
 

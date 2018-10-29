@@ -14,7 +14,7 @@
         <option value="days">Days
         <option value="weeks">Weeks
         <option value="years">Years
-        <option value="forever">Forever
+        <option value="permanent">Forever
     </select>
     <button>Ban User!</button>
 </form>

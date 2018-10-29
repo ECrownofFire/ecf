@@ -75,9 +75,8 @@ get_time(<<"weeks">>, Num) ->
 get_time(<<"years">>, Num) ->
     Micro = timer:hours(Num * 24 * 365.25) * 1000,
     get_time(Micro);
-get_time(<<"forever">>, Num) ->
-    Micro = timer:hours(Num * 100 * 24 * 365.25) * 1000,
-    get_time(Micro).
+get_time(<<"permanent">>, _) ->
+    permanent.
 
 get_time(MicroSeconds) ->
     {Mega, Sec, Mic} = erlang:timestamp(),
@@ -102,7 +101,7 @@ check(User, Id, Req) ->
     end.
 
 time_constraint(A, Bin) when A =:= forward; A =:= reverse ->
-    List = [<<"hours">>, <<"days">>, <<"weeks">>, <<"years">>, <<"forever">>],
+    List = [<<"hours">>, <<"days">>, <<"weeks">>, <<"years">>, <<"permanent">>],
     case lists:member(Bin, List) of
         true ->
             {ok, Bin};
