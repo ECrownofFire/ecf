@@ -28,10 +28,12 @@ generate(admin, User, _) ->
                 false ->
                     Vars
             end,
+    CanViewBans = ecf_perms:check_perm_global(User, view_bans),
     Vars3 = [{forums, FVar}
              , {can_reorder, CanReorder}
              , {can_create_forum, CanCreate}
              , {can_edit_perms, CanEditPerms}
+             , {can_view_bans, CanViewBans}
              | Vars2],
     {ok, Res} = ecf_admin_dtl:render(Vars3),
     Res;
@@ -93,12 +95,15 @@ generate(user, User, Profile) ->
     Vars = get_vars(User, ["Profile of ", ecf_user:name(Profile)]),
     Self = User =/= undefined andalso ecf_user:id(User) =:= ecf_user:id(Profile),
     CanEdit = Self orelse ecf_perms:check_perm_global(User, edit_user),
+    CanBan = ecf_ban:check_perm(User, Profile),
     AddList = groups_add(User, Profile),
     RemList = groups_rem(User, Profile),
-    Vars2 = [{can_edit, CanEdit},
-             {profile, user_profile(Profile)},
-             {add_list, AddList},
-             {rem_list, RemList}
+    Vars2 = [{can_edit, CanEdit}
+             , {can_ban, CanBan}
+             , {profile, user_profile(Profile)}
+             , {add_list, AddList}
+             , {rem_list, RemList}
+             , {ban, ban(ecf_ban:check_ban(ecf_user:id(Profile)))}
              | Vars],
     {ok, Res} = ecf_user_dtl:render(Vars2),
     Res;
@@ -189,6 +194,25 @@ generate(user_edit, User, Profile) ->
     Vars2 = [{profile, ProfileV} | Vars],
     {ok, Res} = ecf_user_edit_dtl:render(Vars2),
     Res;
+generate(ban, User, {Target, Ban}) ->
+    Vars = get_vars(User, "Ban User"),
+    Vars2 = [{target, user(Target)}
+             , {ban, ban(Ban)}
+             | Vars],
+    {ok, Res} = ecf_ban_dtl:render(Vars2),
+    Res;
+generate(unban, User, {Target, Ban}) ->
+    Vars = get_vars(User, "Unban User"),
+    Vars2 = [{target, user(Target)}
+             , {ban, ban(Ban)}
+             | Vars],
+    {ok, Res} = ecf_unban_dtl:render(Vars2),
+    Res;
+generate(bans, User, Bans) ->
+    Vars = get_vars(User, "Bans"),
+    Vars2 = [{ban_list, ban_list(Bans)} | Vars],
+    {ok, Res} = ecf_bans_dtl:render(Vars2),
+    Res;
 generate(Status, User, {Type, Storage})
   when is_integer(Status), Status >= 400, Status =< 499 ->
     Desc = status_desc(Status),
@@ -252,6 +276,18 @@ user_profile(User) ->
      , {loc, ecf_user:loc(User)}
      , {group_list, [group(X) || X <- ecf_user:groups(User)]}
      | U].
+
+ban_list(Bans) ->
+    [ban(X) || X <- Bans].
+
+ban(undefined) ->
+    false;
+ban(Ban) ->
+    [{user, get_user(ecf_ban:user(Ban))},
+     {by, get_user(ecf_ban:by(Ban))},
+     {reason, ecf_ban:reason(Ban)},
+     {time, iso8601:format(ecf_ban:time(Ban))},
+     {until, iso8601:format(ecf_ban:until(Ban))}].
 
 
 perm_list(Perms) ->

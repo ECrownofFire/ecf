@@ -41,13 +41,20 @@
     <button>Remove</button>
 </form>
 {% endif %}
-<div id="profile-links">
+<footer id="profile-links">
+{% if can_ban %}
+    {% if not ban %}
+    <a href="{{ base_url }}/ban?id={{ profile.id }}">Ban user</a>
+    {% else %}
+    <a href="{{ base_url }}/unban?id={{ profile.id }}">Unban user</a>
+    {% endif %}
+{% endif %}
 {% if can_edit %}
-<a href="{{ base_url }}/user/edit?id={{ profile.id }}">Edit profile</a>
+    <a href="{{ base_url }}/user/edit?id={{ profile.id }}">Edit profile</a>
 {% endif %}
 {% if user.id == profile.id %}
-<a href="{{ base_url }}/change_password">Change your password</a>
+    <a href="{{ base_url }}/change_password">Change your password</a>
 {% endif %}
-</div>
+</footer>
 </main>
 {% endblock %}

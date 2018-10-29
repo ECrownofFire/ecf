@@ -1,0 +1,19 @@
+{% extends "ecf_base.dtl" %}
+{# vim: set ft=htmldjango: #}
+{% block content %}
+<main id="unban-user">
+{% if ban %}
+<h2>Unban <a href="{{ base_url }}/user/{{ target.id }}">{{ target.name }}</a>?</h2>
+<p>{{ target.name }} was banned on <time class="format-time" datetime="{{ ban.time }}"></time> by <a href="{{ base_url }}/user/{{ ban.by.id }}">{{ ban.by.name }}</a>, and will be banned until <time class="format-time" datetime="{{ ban.until }}"></time>.
+<form method="post" action="{{ base_url }}/unban">
+    <input type="hidden" name="id" value="{{ target.id }}">
+    <button>Unban!</button>
+</form>
+{% else %}
+<h2>{{ target.name }} is not currently banned</h2>
+{% endif %}
+<footer id="unban-footer">
+<a href="{{ base_url }}/user/{{ target.id }}">Go back</a>
+</footer>
+</main>
+{% endblock %}

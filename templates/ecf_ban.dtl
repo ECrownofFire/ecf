@@ -1,0 +1,28 @@
+{% extends "ecf_base.dtl" %}
+{# vim: set ft=htmldjango: #}
+{% block content %}
+<main id="ban-user">
+{% if not ban %}
+<h2>Ban <a href="{{ base_url }}/user/{{ target.id }}">{{ target.name }}</a>?</h2>
+<form id="form-ban-user" method="post" action="{{ base_url }}/ban">
+    <input type="hidden" name="id" value="{{ target.id }}">
+    <label><h3>Reason:</h3><input name="reason" required></label>
+    <label><h3>Length:</h3><input type="number" name="length" required></label>
+    <select name="time" required>
+        <option value="">Length
+        <option value="hours">Hours
+        <option value="days">Days
+        <option value="weeks">Weeks
+        <option value="years">Years
+        <option value="forever">Forever
+    </select>
+    <button>Ban User!</button>
+</form>
+{% else %}
+<h2>{{ target.name }} is already banned!</h2>
+{% endif %}
+<footer id="ban-footer">
+<a href="{{ base_url }}/user/{{ target.id }}">Go back</a>
+</footer>
+</main>
+{% endblock %}

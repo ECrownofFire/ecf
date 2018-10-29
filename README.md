@@ -18,7 +18,6 @@ At the bare minimum, ECF still needs the following:
 * Terms of use and privacy policy?
 * Limit lengths on various things
 * Administration frontend
-    * Banning accounts
     * Editing permissions on forums, threads, and groups
 * Security
     * Logging stuff (most likely through lager)
@@ -26,7 +25,6 @@ At the bare minimum, ECF still needs the following:
 
 So that ECF is reasonably useable, I'd like to add the following as well:
 * Track read/unread posts (needs backend)
-* Banning people for a given length of time
 * Listing all users, sorting by various fields (partially done, needs sorting)
 * Searching (needs backend)
     * List all posts by a user
