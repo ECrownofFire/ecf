@@ -91,7 +91,7 @@
             </form>
             {% endif %}
             </header>
-            <p>{{ post.text }}</p>
+            {{ post.text|force_escape|linebreaks|safe }} {# this is stupid #}
         </article>
     </li>
     {% endfor %}
