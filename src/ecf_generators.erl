@@ -7,7 +7,7 @@
 
 -spec generate(atom() | integer(), ecf_user:user() | undefined, term()) -> iodata().
 generate(main, User, Forums) ->
-    Vars = get_vars(User),
+    Vars = get_vars(User, ""),
     ForumList = forum_list(Forums),
     Vars2 = [{forum_list, ForumList}|Vars],
     {ok, Res} = ecf_main_dtl:render(Vars2),
@@ -96,7 +96,7 @@ generate(user, User, Profile) ->
     AddList = groups_add(User, Profile),
     RemList = groups_rem(User, Profile),
     Vars2 = [{can_edit, CanEdit},
-             {profile, user(Profile)},
+             {profile, user_profile(Profile)},
              {add_list, AddList},
              {rem_list, RemList}
              | Vars],
@@ -185,19 +185,19 @@ generate(post_edit, User, {Thread, Post}) ->
     Res;
 generate(user_edit, User, Profile) ->
     Vars = get_vars(User, "Edit Profile"),
-    ProfileV = user(Profile),
+    ProfileV = user_profile(Profile),
     Vars2 = [{profile, ProfileV} | Vars],
     {ok, Res} = ecf_user_edit_dtl:render(Vars2),
     Res;
 generate(Status, User, {Type, Storage})
   when is_integer(Status), Status >= 400, Status =< 499 ->
     Desc = status_desc(Status),
-    Vars = get_vars(User, [integer_to_list(Status), " - ", Desc]),
+    Vars = get_vars(User, [integer_to_binary(Status), " - ", Desc]),
     Message = case Type of
                   false -> false;
                   _ -> application:get_env(ecf, Type, Desc)
               end,
-    Vars2 = [{code, integer_to_list(Status)},
+    Vars2 = [{code, integer_to_binary(Status)},
              {desc, Desc},
              {message, Message},
              {storage, Storage}
@@ -206,15 +206,10 @@ generate(Status, User, {Type, Storage})
     Res.
 
 
-get_vars(User) ->
-    [{base, get_base()},
-     {title, get_title()},
-     {user, user(User)}].
-
 get_vars(User, Title) ->
     [{base, get_base()},
      {title, get_title(Title)},
-     {user, user(User)}].
+     {user, user_profile(User)}].
 
 get_base() ->
     {ok, Base} = application:get_env(ecf, base_url),
@@ -227,7 +222,12 @@ get_title() ->
 
 -spec get_title(iodata()) -> iodata().
 get_title(String) ->
-    [get_title(), " - ", String].
+    case string:is_empty(String) of
+        false ->
+            [get_title(), " - ", String];
+        true ->
+            get_title()
+    end.
 
 users(Users) ->
     [user(get_user(X)) || X <- Users].
@@ -237,21 +237,26 @@ users(Users) ->
 user(undefined) ->
     false;
 user(User) ->
+    [{id, ecf_user:id(User)},
+     {name, ecf_user:name(User)},
+     {joined, iso8601:format(ecf_user:joined(User))},
+     {title, ecf_user:title(User)},
+     {posts, integer_to_binary(ecf_user:posts(User))}].
+
+% grabs additional vars when looking at a user's profile page
+user_profile(User) ->
+    U = user(User),
     FormatStr = "~4.10.0B-~2.10.0B-~2.10.0B",
     Bday = case ecf_user:bday(User) of
                {{Y,M,D},_} -> io_lib:format(FormatStr, [Y, M, D]);
                _ -> ""
            end,
-    [{id, ecf_user:id(User)},
-     {name, ecf_user:name(User)},
-     {email, ecf_user:email(User)},
-     {joined, iso8601:format(ecf_user:joined(User))},
-     {bday, Bday},
-     {bio, ecf_user:bio(User)},
-     {title, ecf_user:title(User)},
-     {loc, ecf_user:loc(User)},
-     {group_list, [group(X) || X <- ecf_user:groups(User)]},
-     {posts, integer_to_list(ecf_user:posts(User))}].
+    [{email, ecf_user:email(User)}
+     , {bday, Bday}
+     , {bio, ecf_user:bio(User)}
+     , {loc, ecf_user:loc(User)}
+     , {group_list, [group(X) || X <- ecf_user:groups(User)]}
+     | U].
 
 
 perm_list(Perms) ->
@@ -297,7 +302,7 @@ forum_list(Forums) ->
     [forum(X) || X <- Forums].
 
 forum(Forum) ->
-    [{id, integer_to_list(ecf_forum:id(Forum))},
+    [{id, integer_to_binary(ecf_forum:id(Forum))},
      {name, ecf_forum:name(Forum)},
      {desc, ecf_forum:desc(Forum)},
      {threads, integer_to_binary(ecf_forum:threads(Forum))},
@@ -325,10 +330,10 @@ group_list(Groups) ->
 group(Id) when is_integer(Id) ->
     group(get_group(Id));
 group(Group) ->
-    [{id, integer_to_list(ecf_group:id(Group))},
+    [{id, integer_to_binary(ecf_group:id(Group))},
      {name, ecf_group:name(Group)},
      {desc, ecf_group:desc(Group)},
-     {members, integer_to_list(length(ecf_group:members(Group)))}].
+     {members, integer_to_binary(length(ecf_group:members(Group)))}].
 
 
 groups_add(User, Profile) ->
@@ -365,15 +370,15 @@ thread(Thread) ->
     Creator = get_user(CreatorId),
     CreatorName = ecf_user:name(Creator),
     Views = ecf_thread:views(Thread),
-    [{id, integer_to_list(Id)},
+    [{id, integer_to_binary(Id)},
      {title, ecf_thread:title(Thread)},
-     {replies, integer_to_list(LastId)},
-     {creator_id, integer_to_list(CreatorId)},
+     {replies, integer_to_binary(LastId)},
+     {creator_id, integer_to_binary(CreatorId)},
      {creator_name, CreatorName},
      {last_time, iso8601:format(LastPostTime)},
-     {last_poster_id, integer_to_list(LastPosterId)},
+     {last_poster_id, integer_to_binary(LastPosterId)},
      {last_poster_name, LastPosterName},
-     {views, integer_to_list(Views)}].
+     {views, integer_to_binary(Views)}].
 
 pm_users(Thread) ->
     case ecf_thread:forum(Thread) of
@@ -410,7 +415,7 @@ post(Post) ->
     Gravatar = gravatar(Poster),
     Time = iso8601:format(ecf_post:time(Post)),
     Text = ecf_post:text(Post),
-    [{id, integer_to_list(Id)},
+    [{id, integer_to_binary(Id)},
      {gravatar, Gravatar},
      {poster, user(Poster)},
      {time, Time},
