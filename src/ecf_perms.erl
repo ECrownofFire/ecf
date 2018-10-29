@@ -301,9 +301,9 @@ mode_constraint(forward, Mode) ->
             {error, invalid_mode}
     end;
 mode_constraint(reverse, Mode) ->
-    Ret = atom_to_binary(Mode, latin1),
-    case lists:member(Ret, get_modes()) of
+    case lists:member(Mode, get_modes()) of
         true ->
+            Ret = atom_to_binary(Mode, latin1),
             {ok, Ret};
         false ->
             {error, invalid_mode}
