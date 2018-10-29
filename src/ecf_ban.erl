@@ -75,6 +75,7 @@ check_ban(User) ->
 -spec delete_ban(ecf_user:id()) -> ok.
 delete_ban(User) ->
     F = fun() ->
+                ecf_group:remove_member(3, User),
                 mnesia:delete({ecf_ban, User})
         end,
     mnesia:activity(transaction, F).

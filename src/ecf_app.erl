@@ -20,6 +20,8 @@
 
 -define(MSG_ACTIONS, [<<"create">>, <<"add">>, <<"remove">>]).
 
+-define(BAN_ACTIONS, [<<"ban">>, <<"unban">>]).
+
 start(_Type, _Args) ->
     IdC = [{id, int}],
     GCon = [{action, make_fun(?G_ACTIONS)}],
@@ -29,6 +31,7 @@ start(_Type, _Args) ->
     FCon = [{action, make_fun(?F_ACTIONS)}],
     PeCon = [{action, make_fun(?PE_ACTIONS)}],
     MsgCon = [{action, make_fun(?MSG_ACTIONS)}],
+    BanCon = [{action, make_fun(?BAN_ACTIONS)}],
     Host = application:get_env(ecf, host, '_'),
     Base = application:get_env(ecf, base_url, ""),
     Dispatch = cowboy_router:compile([
@@ -56,6 +59,7 @@ start(_Type, _Args) ->
                {[Base, "/forum/:action"], FCon, ecf_forum_handler, {}},
                {[Base, "/perms/:action"], PeCon, ecf_perms_handler, {}},
                {[Base, "/msg/:action"], MsgCon, ecf_msg_handler, {}},
+               {[Base, "/:action"], BanCon, ecf_ban_handler, {}},
                {[Base, "/"], ecf_handler, {}},
                {[Base, "/[...]"], ecf_404_handler, {}}]}
     ]),
