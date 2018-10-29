@@ -57,7 +57,8 @@ new_ban(User, By, Reason, Time, Until) ->
 -spec get_bans() -> [ban()].
 get_bans() ->
     F = fun() ->
-                mnesia:select(ecf_ban, [{'_',[],['$_']}])
+                Keys = mnesia:all_keys(ecf_ban),
+                [check_ban(X) || X <- Keys]
         end,
     mnesia:activity(transaction, F).
 
