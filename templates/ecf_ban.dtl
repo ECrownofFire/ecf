@@ -6,9 +6,9 @@
 <h2>Ban <a href="{{ base_url }}/user/{{ target.id }}">{{ target.name }}</a>?</h2>
 <form id="form-ban-user" method="post" action="{{ base_url }}/ban">
     <input type="hidden" name="id" value="{{ target.id }}">
-    <label><h3>Reason:</h3><input name="reason" required></label>
-    <label><h3>Length:</h3><input type="number" name="length" required></label>
-    <select name="time" required>
+    <label><h3>Reason:</h3><input id="form-ban-reason" name="reason" required></label>
+    <label><h3>Length:</h3><input id="form-ban-length" type="number" name="length" required></label>
+    <select id="form-ban-time" name="time" required>
         <option value="">Length
         <option value="hours">Hours
         <option value="days">Days
@@ -16,7 +16,7 @@
         <option value="years">Years
         <option value="permanent">Forever
     </select>
-    <button>Ban User!</button>
+    <button id="form-ban-button">Ban User!</button>
 </form>
 {% else %}
 <h2>{{ target.name }} is already banned!</h2>

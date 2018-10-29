@@ -86,6 +86,10 @@
     border: 1px solid black;
 }
 
+#form-ban-reason {
+    width: 100%;
+}
+
 #form-reset-pw label, #edit-post label {
     display: block;
 }
