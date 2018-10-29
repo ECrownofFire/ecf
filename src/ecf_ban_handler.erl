@@ -23,7 +23,8 @@ do_get(User, Req) ->
     Action = binary_to_atom(cowboy_req:binding(action, Req), latin1),
     case check(User, Id, Req) of
         {ok, Target} ->
-            Html = ecf_generators:generate(Action, User, Target),
+            Ban = ecf_ban:check_ban(Id),
+            Html = ecf_generators:generate(Action, User, {Target, Ban}),
             cowboy_req:reply(200, #{<<"content-type">> => <<"text/html">>},
                              Html, Req);
         R ->
@@ -31,7 +32,7 @@ do_get(User, Req) ->
     end.
 
 do_ban(User, Req0) ->
-    L = [{id, int}, reason, [time, fun time_constraint/2], {length, int, 1}],
+    L = [{id, int}, reason, {time, fun time_constraint/2}, {length, int, 1}],
     {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body(L, Req0),
     #{id := Id, reason := Reason, time := Time, length := Length} = M,
     case check(User, Id, Req) of
@@ -74,15 +75,15 @@ get_time(<<"weeks">>, Num) ->
 get_time(<<"years">>, Num) ->
     Micro = timer:hours(Num * 24 * 365.25) * 1000,
     get_time(Micro);
-get_time(<<"forever">>, _) ->
-    Micro = timer:hours(24 * 365.25 * 100) * 1000,
+get_time(<<"forever">>, Num) ->
+    Micro = timer:hours(Num * 100 * 24 * 365.25) * 1000,
     get_time(Micro).
 
 get_time(MicroSeconds) ->
     {Mega, Sec, Mic} = erlang:timestamp(),
     Micros = Mega * 1000000 * 1000000 + Sec * 1000000 + Mic,
-    Time = Micros + MicroSeconds,
-    {Time div 1000000000000,
+    Time = round(Micros + MicroSeconds),
+    {Time div 1000000 div 1000000,
      Time div 1000000 rem 1000000,
      Time rem 1000000}.
 
