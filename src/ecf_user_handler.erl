@@ -23,11 +23,16 @@ handle_get(Req, User, -1, undefined) ->
 handle_get(Req, User, Id, undefined) ->
     case ecf_user:get_user(Id) of
         undefined ->
-            ecf_utils:reply_status(404, User, false, Req);
+            ecf_utils:reply_status(404, User, user_404, Req);
         Profile ->
-            Html = ecf_generators:generate(user, User, Profile),
-            cowboy_req:reply(200, #{<<"content-type">> => <<"text/html">>},
-                             Html, Req)
+            case ecf_perms:check_perm_global(User, view_user) of
+                false ->
+                    ecf_utils:reply_status(403, User, user_403, Req);
+                true ->
+                    Html = ecf_generators:generate(user, User, Profile),
+                    cowboy_req:reply(200, #{<<"content-type">> => <<"text/html">>},
+                                     Html, Req)
+            end
     end;
 handle_get(Req, undefined, _, <<"edit">>) ->
     ecf_utils:reply_status(401, undefined, edit_user_401, Req);
@@ -35,7 +40,7 @@ handle_get(Req, User, _, <<"edit">>) ->
     #{id := Id} = cowboy_req:match_qs([{id, int, ecf_user:id(User)}], Req),
     case ecf_user:get_user(Id) of
         undefined ->
-            ecf_utils:reply_status(404, User, false, Req);
+            ecf_utils:reply_status(404, User, user_404, Req);
         Profile ->
             case ecf_user:id(User) =:= Id
                  orelse ecf_perms:check_perm_global(User, edit_user) of
