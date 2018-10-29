@@ -82,30 +82,5 @@ handle_post(Req0, User, <<"edit">>) ->
                              Req);
         false ->
             ecf_utils:reply_status(403, User, edit_user_403, Req)
-    end;
-handle_post(Req0, User, <<"ban">>) ->
-    {ok, #{id := Id}, Req} = cowboy_req:read_and_match_urlencoded_body([{id, int}], Req0),
-    case ecf_perms:check_perm_global(User, ban_user) of
-        true ->
-            ok = ecf_user:ban_user(Id),
-            Base = application:get_env(ecf, base_url, ""),
-            cowboy_req:reply(303,
-                             #{<<"location">> => [Base, "/user/",
-                                                  integer_to_binary(Id)]},
-                             Req);
-        false ->
-            ecf_utils:reply_status(403, User, ban_user_403, Req)
-    end;
-handle_post(Req0, User, <<"unban">>) ->
-    {ok, #{id := Id}, Req} = cowboy_req:read_and_match_urlencoded_body([{id, int}], Req0),
-    case ecf_perms:check_perm_global(User, ban_user) of
-        true ->
-            ok = ecf_user:unban_user(Id),
-            Base = application:get_env(ecf, base_url, ""),
-            cowboy_req:reply(303,
-                             #{<<"location">> => [Base, "/user/", integer_to_binary(Id)]},
-                             Req);
-        false ->
-            ecf_utils:reply_status(403, User, unban_user_403, Req)
     end.
 

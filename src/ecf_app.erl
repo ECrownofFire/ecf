@@ -8,7 +8,7 @@
                     <<"join">>, <<"leave">>,
                     <<"add">>, <<"remove">>]).
 
--define(U_ACTIONS, [<<"edit">>, <<"ban">>, <<"unban">>]).
+-define(U_ACTIONS, [<<"edit">>]).
 
 -define(T_ACTIONS, [<<"create">>, <<"delete">>, <<"edit">>]).
 
@@ -88,10 +88,12 @@ start_tls({Port, CertFile, KeyFile}, Dispatch) ->
     ok.
 
 make_fun(List) ->
-    fun(_, Name) ->
+    fun(forward, Name) ->
             case lists:member(Name, List) of
                 true -> {ok, Name};
                 false -> {error, invalid_type}
-            end
+            end;
+       (reverse, Name) ->
+            {ok, Name}
     end.
 
