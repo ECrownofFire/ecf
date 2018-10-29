@@ -117,7 +117,7 @@ generate(group, User, Group) ->
     MemberList = users(ecf_group:members(Group)),
     GroupV = [{member_list, MemberList}|group(Group)],
     CanEdit = ecf_perms:check_perm_group(User, Group, edit_group),
-    CanDelete = ecf_group:id(Group) >= 2
+    CanDelete = ecf_group:id(Group) >= 4
                 andalso ecf_perms:check_perm_group(User, Group, delete_group),
     Vars2 = [{group, GroupV},
              {can_edit, CanEdit},
@@ -340,6 +340,7 @@ groups_add(User, Profile) ->
     Gs = ecf_user:groups(Profile),
     F1 = fun(G) -> not lists:member(ecf_group:id(G), Gs)
                    andalso ecf_group:id(G) =/= 1
+                   andalso ecf_group:id(G) =/= 3
          end,
     Groups = lists:filter(F1, ecf_group:get_groups()),
     F2 = fun(G) -> ecf_perms:check_perm_group(User, G, manage_group) end,
@@ -349,6 +350,7 @@ groups_rem(User, Profile) ->
     Gs = ecf_user:groups(Profile),
     F1 = fun(G) -> lists:member(ecf_group:id(G), Gs)
                    andalso ecf_group:id(G) =/= 1
+                   andalso ecf_group:id(G) =/= 3
          end,
     Groups = lists:filter(F1, ecf_group:get_groups()),
     F2 = fun(G) -> ecf_perms:check_perm_group(User, G, manage_group) end,

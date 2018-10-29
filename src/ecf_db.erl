@@ -29,7 +29,8 @@ install() ->
     ecf_post:create_table(Nodes),
     ecf_user:create_table(Nodes),
     ecf_group:create_table(Nodes),
-    ecf_email:create_table(Nodes).
+    ecf_email:create_table(Nodes),
+    ecf_ban:create_table(Nodes).
 
 -spec create_id_table([node()]) -> ok.
 create_id_table(Nodes) ->

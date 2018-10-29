@@ -8,7 +8,7 @@
          get_global_perms/0, edit_global_perm/3, remove_global_perm/2,
          check_perm_global/2, check_perm_forum/3, check_perm_thread/3,
          check_perm_group/3,
-         get_perm/2, edit_perm/4, remove_perm/3,
+         get_perm/2, check_perm/3, edit_perm/4, remove_perm/3,
          mode/1, allow/1, deny/1]).
 
 -export([class_constraint/2, set_constraint/2, mode_constraint/2]).

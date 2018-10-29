@@ -23,7 +23,6 @@
          add_post/2,
          delete_user/1,
          check_session/2, check_pass/2, fake_hash/0,
-         ban_user/1, unban_user/1,
          id/1, name/1, enabled/1, email/1,
          joined/1, groups/1, bday/1, title/1, bio/1, loc/1, posts/1,
          last_post/1]).
@@ -340,14 +339,6 @@ fake_hash() ->
     Test = <<"$argon2id$v=19$m=65536,t=3,p=1$1uZRoN+31tWAp5568l4NdQ$K41NbPMWptYR+KDI2iAHmP0qoeL1agZqptVwuSdpUGA">>,
     enacl:pwhash_str_verify(Test, <<"badpassword">>),
     ok.
-
--spec ban_user(id()) -> ok.
-ban_user(Id) ->
-    ecf_group:add_member(3, Id).
-
--spec unban_user(id()) -> ok.
-unban_user(Id) ->
-    ecf_group:remove_member(3, Id).
 
 -spec email(user()) -> binary().
 email(User) ->
