@@ -274,8 +274,6 @@ class_constraint(reverse, Val) ->
         false ->
             {error, invalid_class}
     end;
-class_constraint(Op, _Val) when Op =:= forward; Op =:= reverse ->
-    {error, invalid_class};
 class_constraint(format_error, {invalid_class, Val}) ->
     io_lib:format("~p is not a valid class type.", [Val]).
 
