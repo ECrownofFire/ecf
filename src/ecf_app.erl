@@ -60,6 +60,7 @@ start(_Type, _Args) ->
                {[Base, "/perms/:action"], PeCon, ecf_perms_handler, {}},
                {[Base, "/msg/:action"], MsgCon, ecf_msg_handler, {}},
                {[Base, "/:action"], BanCon, ecf_ban_handler, {}},
+               {[Base, "/bans"], ecf_bans_handler, {}},
                {[Base, "/"], ecf_handler, {}},
                {[Base, "/[...]"], ecf_404_handler, {}}]}
     ]),

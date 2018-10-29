@@ -3,6 +3,7 @@
 -export([create_table/1,
          check_perm/2,
          new_ban/5,
+         get_bans/0,
          check_ban/1,
          delete_ban/1,
          user/1, by/1, reason/1, time/1, until/1]).
@@ -50,6 +51,13 @@ new_ban(User, By, Reason, Time, Until) ->
                 ecf_group:add_member(3, User),
                 mnesia:write(#ecf_ban{user=User,by=By,reason=Reason,
                                       time=Time,until=Until})
+        end,
+    mnesia:activity(transaction, F).
+
+-spec get_bans() -> [ban()].
+get_bans() ->
+    F = fun() ->
+                mnesia:select(ecf_ban, [{'_',[],['$_']}])
         end,
     mnesia:activity(transaction, F).
 
