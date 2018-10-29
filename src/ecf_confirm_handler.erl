@@ -15,7 +15,7 @@ init(Req, State) ->
                        undefined ->
                            ecf_utils:reply_status(400, User, confirm_400, Req);
                        Code ->
-                           ok = ecf_user:confirm_email(Id),
+                           ok = ecf_group:add_member(2, Id),
                            ok = ecf_email:clear_confirm_code(Id),
                            Html = ecf_generators:generate(confirmed_email,
                                                           User,

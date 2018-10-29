@@ -23,8 +23,8 @@
          add_post/2,
          delete_user/1,
          check_session/2, check_pass/2, fake_hash/0,
-         confirm_email/1, ban_user/1, unban_user/1,
-         id/1, name/1, enabled/1, email/1, email_confirmed/1, banned/1,
+         ban_user/1, unban_user/1,
+         id/1, name/1, enabled/1, email/1,
          joined/1, groups/1, bday/1, title/1, bio/1, loc/1, posts/1,
          last_post/1]).
 
@@ -341,10 +341,6 @@ fake_hash() ->
     enacl:pwhash_str_verify(Test, <<"badpassword">>),
     ok.
 
--spec confirm_email(id()) -> ok.
-confirm_email(Id) ->
-    ecf_group:add_member(2, Id).
-
 -spec ban_user(id()) -> ok.
 ban_user(Id) ->
     ecf_group:add_member(3, Id).
@@ -356,14 +352,6 @@ unban_user(Id) ->
 -spec email(user()) -> binary().
 email(User) ->
     User#ecf_user.email.
-
--spec email_confirmed(user()) -> boolean().
-email_confirmed(User) ->
-    lists:member(2, groups(User)).
-
--spec banned(user()) -> boolean().
-banned(User) ->
-    lists:member(3, groups(User)).
 
 -spec joined(user()) -> erlang:timestamp().
 joined(User) ->
