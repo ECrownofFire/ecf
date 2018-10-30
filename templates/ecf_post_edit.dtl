@@ -4,7 +4,7 @@
 <main id="edit-post">
 <h2>Edit Post</h2>
 <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page }}#post-{{ post.id }}">Go Back to Post</a>
-<form class="form-post" action="{{ base_url }}/post/edit" method="post" onsubmit="savePost();">
+<form id="form-post" action="{{ base_url }}/post/edit" method="post" onsubmit="savePost();">
     <input type="hidden" name="thread" value="{{ thread.id }}">
     <input type="hidden" name="post" value="{{ post.id }}">
     <label>Thread: <input value="{{ thread.title }}" disabled></label>
