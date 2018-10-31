@@ -1,7 +1,7 @@
 -module(ecf_utils).
 
 -export([check_user_session/1,
-         valid_password/1, valid_username/1,
+         valid_password/1, valid_username/1, valid_email/1,
          get_ip/1, set_login_cookies/3, reply_status/4, reply_status/5]).
 
 %%% Contains a few utility functions
@@ -97,6 +97,11 @@ valid_username(Username) ->
         _ ->
             false
     end.
+
+-spec valid_email(binary()) -> boolean().
+valid_email(Email) ->
+    Re = <<"^\\V+@\\V+$">>, % reject newlines to avoid dumb breakage
+    re:run(Email, Re, [unicode, {capture, none}]) =:= match.
 
 
 -spec set_login_cookies(cowboy_req:req(), ecf_user:id(), binary())

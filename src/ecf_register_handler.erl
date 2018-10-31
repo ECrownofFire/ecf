@@ -27,6 +27,7 @@ init(Req0 = #{method := <<"POST">>}, State) ->
                true ->
                    try_register(ecf_utils:valid_username(Username),
                                 ecf_utils:valid_password(Password),
+                                ecf_utils:valid_email(Email),
                                 Username, Password, Email, Bday, Bio,
                                 Req);
                false ->
@@ -44,7 +45,7 @@ init(Req0 = #{method := <<"POST">>}, State) ->
 terminate(_Reason, _Req, _State) ->
     ok.
 
-try_register(true, true, Username, Password, Email, Bday, Bio, Req) ->
+try_register(true, true, true, Username, Password, Email, Bday, Bio, Req) ->
     case ecf_user:new_user(Username, Password, Email) of
         {error, Reason} ->
             BaseV = [{username, Username}, {email, Email},
@@ -61,10 +62,12 @@ try_register(true, true, Username, Password, Email, Bday, Bio, Req) ->
             % TODO: flash here
             cowboy_req:reply(303, #{<<"location">> => [Base, "/"]}, Req2)
     end;
-try_register(false, _, Username, _, Email, Bday, Bio, Req) ->
+try_register(false, _, _, Username, _, Email, Bday, Bio, Req) ->
     fail(invalid_username, Username, Email, Bday, Bio, Req);
-try_register(_, false, Username, _, Email, Bday, Bio, Req) ->
-    fail(invalid_password, Username, Email, Bday, Bio, Req).
+try_register(_, false, _, Username, _, Email, Bday, Bio, Req) ->
+    fail(invalid_password, Username, Email, Bday, Bio, Req);
+try_register(_, _, false, Username, _, Email, Bday, Bio, Req) ->
+    fail(invalid_email, Username, Email, Bday, Bio, Req).
 
 fail(Reason, Username, Email, Bday, Bio, Req) ->
     BaseV = [{username, Username}, {email, Email}, {bday, Bday}, {bio, Bio}],
