@@ -2,7 +2,7 @@
 {# vim: set ft=htmldjango: #}
 {% block content %}
 <main id="group">
-<a href="{{ base_url }}/group">Groups</a>
+<a href="{{ base }}/group">Groups</a>
 <h2>{{ group.name }}</h2>
 <p>{{ group.desc }}</p>
 {% if can_edit %}
@@ -28,7 +28,7 @@
     <tbody>
         {% for user in group.member_list %}
         <tr>
-            <td class="username"><a href="{{ base_url }}/user/{{ user.id }}">{{ user.name }}</a>
+            <td class="username"><a href="{{ base }}/user/{{ user.id }}">{{ user.name }}</a>
             <td><time class="format-time" datetime="{{ user.joined }}"></time>
             <td>{{ user.posts }}
         {% endfor %}

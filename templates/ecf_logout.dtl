@@ -4,7 +4,7 @@
 {% if user %}
 <main id="logout">
     <p>Click here to logout</p>
-    <form action="{{ base_url }}/logout" method="post">
+    <form action="{{ base }}/logout" method="post">
         <button>Logout</button>
     </form>
 </main>
@@ -12,7 +12,7 @@
 <main id="logged-out">
     <p>{{ message }}</p>
     <script type="text/javascript">
-        window.setTimeout(function() { location.href = "{{ base_url }}/{{ url }}";}, 2000);
+        window.setTimeout(function() { location.href = "{{ base }}/{{ url }}";}, 2000);
     </script>
 </main>
 {% endif %}

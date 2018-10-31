@@ -3,9 +3,9 @@
 {% block content %}
 <main id="unban-user">
 {% if ban %}
-<h2>Unban <a href="{{ base_url }}/user/{{ target.id }}">{{ target.name }}</a>?</h2>
-<p>{{ target.name }} was banned on <time class="format-time" datetime="{{ ban.time }}"></time> by <a href="{{ base_url }}/user/{{ ban.by.id }}">{{ ban.by.name }}</a>, and will be banned until {% if ban.until != "permanent" %}<time class="format-time" datetime="{{ ban.until }}"></time>{% else %}the end of time{% endif %}.
-<form method="post" action="{{ base_url }}/unban">
+<h2>Unban <a href="{{ base }}/user/{{ target.id }}">{{ target.name }}</a>?</h2>
+<p>{{ target.name }} was banned on <time class="format-time" datetime="{{ ban.time }}"></time> by <a href="{{ base }}/user/{{ ban.by.id }}">{{ ban.by.name }}</a>, and will be banned until {% if ban.until != "permanent" %}<time class="format-time" datetime="{{ ban.until }}"></time>{% else %}the end of time{% endif %}.
+<form method="post" action="{{ base }}/unban">
     <input type="hidden" name="id" value="{{ target.id }}">
     <button>Unban!</button>
 </form>
@@ -13,7 +13,7 @@
 <h2>{{ target.name }} is not currently banned</h2>
 {% endif %}
 <footer id="unban-footer">
-<a href="{{ base_url }}/user/{{ target.id }}">Go back</a>
+<a href="{{ base }}/user/{{ target.id }}">Go back</a>
 </footer>
 </main>
 {% endblock %}

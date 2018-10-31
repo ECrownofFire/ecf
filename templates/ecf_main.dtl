@@ -16,7 +16,7 @@
     <tbody>
     {% for forum in forum_list %}
         <tr>
-            <td class="forum-name-desc"><a href="{{ base_url }}/forum/{{ forum.id }}">{{ forum.name }}</a><p>{{ forum.desc }}</p>
+            <td class="forum-name-desc"><a href="{{ base }}/forum/{{ forum.id }}">{{ forum.name }}</a><p>{{ forum.desc }}</p>
             <td class="forum-threads">{{ forum.threads }}
             <td class="forum-posts">{{ forum.posts }}
     {% endfor %}

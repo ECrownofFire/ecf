@@ -2,11 +2,11 @@
 {# vim: set ft=htmldjango: #}
 {% block content %}
 <main id="group-list">
-<a href="{{  base_url }}/">Home</a>
+<a href="{{  base }}/">Home</a>
 <h2>Groups</h2>
 <p>You can see every group that you have permission to see here.</p>
-<form id="form-join" action="{{ base_url }}/group/join" method="post" hidden></form>
-<form id="form-leave" action="{{ base_url }}/group/leave" method="post" hidden></form>
+<form id="form-join" action="{{ base }}/group/join" method="post" hidden></form>
+<form id="form-leave" action="{{ base }}/group/leave" method="post" hidden></form>
 <table>
     <thead>
         <tr>
@@ -19,7 +19,7 @@
     <tbody>
         {% for group in group_list %}
         <tr>
-            <td><a href="{{ base_url }}/group/{{ group.id }}">{{ group.name }}</a></td>
+            <td><a href="{{ base }}/group/{{ group.id }}">{{ group.name }}</a></td>
             <td>{{ group.desc }}</td>
             <td>{{ group.members }}</td>
             {% if group.can_leave %}

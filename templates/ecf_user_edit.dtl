@@ -2,7 +2,7 @@
 {# vim: set ft=htmldjango: #}
 {% block content %}
 <main id="edit-profile">
-    <form id="form-edit-profile" action="{{ base_url }}/user/edit" method="post">
+    <form id="form-edit-profile" action="{{ base }}/user/edit" method="post">
         <input type="hidden" name="id" value="{{ profile.id }}">
         <label><h3>Username:</h3><input id="username" type="text" autocomplete="username" name="username" disabled value="{{ profile.name }}"></label>
         <label><h3>Birthday:</h3><input id="bday" type="date" autocomplete="bday" name="bday" value="{{ profile.bday }}"></label>

@@ -3,8 +3,8 @@
 {% block content %}
 <main id="ban-user">
 {% if not ban %}
-<h2>Ban <a href="{{ base_url }}/user/{{ target.id }}">{{ target.name }}</a>?</h2>
-<form id="form-ban-user" method="post" action="{{ base_url }}/ban">
+<h2>Ban <a href="{{ base }}/user/{{ target.id }}">{{ target.name }}</a>?</h2>
+<form id="form-ban-user" method="post" action="{{ base }}/ban">
     <input type="hidden" name="id" value="{{ target.id }}">
     <label><h3>Reason:</h3><input id="form-ban-reason" name="reason" required></label>
     <label><h3>Length:</h3><input id="form-ban-length" type="number" name="length" required></label>
@@ -22,7 +22,7 @@
 <h2>{{ target.name }} is already banned!</h2>
 {% endif %}
 <footer id="ban-footer">
-<a href="{{ base_url }}/user/{{ target.id }}">Go back</a>
+<a href="{{ base }}/user/{{ target.id }}">Go back</a>
 </footer>
 </main>
 {% endblock %}

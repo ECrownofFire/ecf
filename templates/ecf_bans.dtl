@@ -15,8 +15,8 @@
     <tbody>
         {% for ban in ban_list %}
         <tr>
-            <td class="ban-user"><a href="{{ base_url }}/user/{{ ban.user.id }}">{{ ban.user.name }}</a>
-            <td class="ban-by"><a href="{{ base_url }}/user/{{ ban.by.id }}">{{ ban.by.name }}</a>
+            <td class="ban-user"><a href="{{ base }}/user/{{ ban.user.id }}">{{ ban.user.name }}</a>
+            <td class="ban-by"><a href="{{ base }}/user/{{ ban.by.id }}">{{ ban.by.name }}</a>
             <td class="ban-reason">{{ ban.reason }}
             <td class="ban time"><time class="format-time" datetime="{{ ban.time }}"></time>
             {% if ban.until != "permanent" %}
@@ -24,7 +24,7 @@
             {% else %}
             <td class="ban-until">Forever
             {% endif %}
-            <td class="ban-unban"><a href="{{ base_url }}/unban?id={{ ban.user.id }}">Unban</a>
+            <td class="ban-unban"><a href="{{ base }}/unban?id={{ ban.user.id }}">Unban</a>
         {% endfor %}
 </table>
 </main>

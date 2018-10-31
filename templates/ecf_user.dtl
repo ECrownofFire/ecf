@@ -14,7 +14,7 @@
     <dt>Location<dd id="loc">{{ profile.loc }}</dd>
     <dt>Groups<dd id="groups">
     <ul>{% for group in profile.group_list %}
-        <li><a href="{{ base_url }}/group/{{ group.id }}">{{ group.name }}</a></li>
+        <li><a href="{{ base }}/group/{{ group.id }}">{{ group.name }}</a></li>
         {% endfor %}</ul></dd>
 </dl>
 {% if add_list %}
@@ -44,16 +44,16 @@
 <footer id="profile-links">
 {% if can_ban %}
     {% if not ban %}
-    <a href="{{ base_url }}/ban?id={{ profile.id }}">Ban user</a>
+    <a href="{{ base }}/ban?id={{ profile.id }}">Ban user</a>
     {% else %}
-    <a href="{{ base_url }}/unban?id={{ profile.id }}">Unban user</a>
+    <a href="{{ base }}/unban?id={{ profile.id }}">Unban user</a>
     {% endif %}
 {% endif %}
 {% if can_edit %}
-    <a href="{{ base_url }}/user/edit?id={{ profile.id }}">Edit profile</a>
+    <a href="{{ base }}/user/edit?id={{ profile.id }}">Edit profile</a>
 {% endif %}
 {% if user.id == profile.id %}
-    <a href="{{ base_url }}/change_password">Change your password</a>
+    <a href="{{ base }}/change_password">Change your password</a>
 {% endif %}
 </footer>
 </main>

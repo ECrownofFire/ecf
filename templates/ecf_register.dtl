@@ -5,7 +5,7 @@
     <script src='https://www.google.com/recaptcha/api.js' async defer></script>
     <h2>Register</h2>
     <p>{{ message }}</p>
-    <form id="form-register" action="{{ base_url }}/register" method="post">
+    <form id="form-register" action="{{ base }}/register" method="post">
         <label><h3>Username:</h3><p>1-32 characters. Only dashes, underscores, letters, and numbers.</p><input id="username" type="text" autocomplete="username" name="username" value="{{ username }}" required></label>
         <label><h3>Email:</h3><input id="email" type="email" autocomplete="email" name="email" value="{{ email }}" required></label>
         <label><h3>Password:</h3><p>8-64 characters.</p><input id="password" type="password" autocomplete="new-password" name="password" required></label>

@@ -2,18 +2,18 @@
 {# vim: set ft=htmldjango: #}
 {% block content %}
 <main id="admin">
-<a href="{{ base_url }}/">Home</a>
+<a href="{{ base }}/">Home</a>
 <h2>Administration</h2>
 <p>This page contains several administrative functions. Note that you can only see what you have permission to do.</p>
 {% if can_view_bans %}
 <h3>Bans</h3>
-<a href="{{ base_url }}">All current bans</a>
+<a href="{{ base }}">All current bans</a>
 {% endif %}
 {% if can_reorder %}
 <h3>Reorder Forums</h3>
 <ol>
 {% for forum in forums %}
-<li><form id="form-reorder" action="{{ base_url }}/forum/reorder" method="post">
+<li><form id="form-reorder" action="{{ base }}/forum/reorder" method="post">
         <input type="hidden" name="id" value="{{ forum.id }}">
         {% if not forloop.first %}
         <button name="action" value="top">Move to Top</button>
@@ -56,11 +56,11 @@
         {% for class in perm.allow %}
             <td>
                 {% if class.type != "others" %}
-                <a href="{{ base_url }}/{{ class.type }}/{{ class.id }}">{{ class.name }}</a>
+                <a href="{{ base }}/{{ class.type }}/{{ class.id }}">{{ class.name }}</a>
                 {% else %}
                 <span>Others</span>
                 {% endif %}
-                <form action="{{ base_url }}/perms/remove" method="post">
+                <form action="{{ base }}/perms/remove" method="post">
                     <input type="hidden" name="mode" value="{{ perm.mode }}">
                     <input type="hidden" name="class" value="{{ class.type }}">
                     <input type="hidden" name="class_id" value="{{ class.id }}">
@@ -74,11 +74,11 @@
         {% for class in perm.deny %}
             <td>
                 {% if class.type != "others" %}
-                <a href="{{ base_url }}/{{ class.type }}/{{ class.id }}">{{ class.name }}</a>
+                <a href="{{ base }}/{{ class.type }}/{{ class.id }}">{{ class.name }}</a>
                 {% else %}
                 <span>Others</span>
                 {% endif %}
-                <form action="{{ base_url }}/perms/remove" method="post">
+                <form action="{{ base }}/perms/remove" method="post">
                     <input type="hidden" name="mode" value="{{ perm.mode }}">
                     <input type="hidden" name="class" value="{{ class.type }}">
                     <input type="hidden" name="class_id" value="{{ class.id }}">
@@ -92,7 +92,7 @@
 </table>
 <h3>Add New Global Permission</h3>
 <h4>User</h4>
-<form class="add-perms" action="{{ base_url }}/perms/add" method="post">
+<form class="add-perms" action="{{ base }}/perms/add" method="post">
     <input type="hidden" name="class" value="user">
     <select name="mode" required>
         <option value="">Mode
@@ -109,7 +109,7 @@
     <button>Submit</button>
 </form>
 <h4>Group</h4>
-<form class="add-perms" action="{{ base_url }}/perms/add" method="post">
+<form class="add-perms" action="{{ base }}/perms/add" method="post">
     <input type="hidden" name="class" value="group">
     <select name="mode" required>
         <option value="">Mode
@@ -131,7 +131,7 @@
     <button>Submit</button>
 </form>
 <h4>Others</h4>
-<form class="add-perms" action="{{ base_url }}/perms/add" method="post">
+<form class="add-perms" action="{{ base }}/perms/add" method="post">
     <input type="hidden" name="class" value="others">
     <select name="mode" required>
         <option value="">Mode

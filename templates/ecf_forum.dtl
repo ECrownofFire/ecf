@@ -3,7 +3,7 @@
 {% block content %}
 <main id="forum">
 <header id="forum-header">
-<a href="{{ base_url }}/">Home</a>
+<a href="{{ base }}/">Home</a>
 <h2>{{ forum.name }}</h2>
 <p>{{ forum.desc }}</p>
 
@@ -24,15 +24,15 @@
 {% endif %}
 
 <nav class="pagination">
-    {% if page >= 2 %} <a href="{{ base_url }}/forum/{{ forum.id }}?page={{ page|add:"-1" }}" rel="prev">Previous</a> {% endif %}
-    {% if page > 1 %} <a href="{{ base_url }}/forum/{{ forum.id }}?page=1">First</a> {% endif %}
-    {% if page >= 3 %} <a href="{{ base_url }}/forum/{{ forum.id }}?page={{ page|add:"-2" }}">{{ page|add:"-2" }}</a> {% endif %}
-    {% if page >= 2 %} <a href="{{ base_url }}/forum/{{ forum.id }}?page={{ page|add:"-1" }}">{{ page|add:"-1" }}</a> {% endif %}
+    {% if page >= 2 %} <a href="{{ base }}/forum/{{ forum.id }}?page={{ page|add:"-1" }}" rel="prev">Previous</a> {% endif %}
+    {% if page > 1 %} <a href="{{ base }}/forum/{{ forum.id }}?page=1">First</a> {% endif %}
+    {% if page >= 3 %} <a href="{{ base }}/forum/{{ forum.id }}?page={{ page|add:"-2" }}">{{ page|add:"-2" }}</a> {% endif %}
+    {% if page >= 2 %} <a href="{{ base }}/forum/{{ forum.id }}?page={{ page|add:"-1" }}">{{ page|add:"-1" }}</a> {% endif %}
     <span>[{{ page }}]</span>
-    {% if page_last >= page|add:"1" %} <a href="{{ base_url }}/forum/{{ forum.id }}?page={{ page|add:"1" }}">{{ page|add:"1" }}</a> {% endif %}
-    {% if page_last >= page|add:"2" %} <a href="{{ base_url }}/forum/{{ forum.id }}?page={{ page|add:"2" }}">{{ page|add:"2" }}</a> {% endif %}
-    {% if page_last > page %} <a href="{{ base_url }}/forum/{{ forum.id }}?page={{ page_last }}">Last</a> {% endif %}
-    {% if page_last >= page|add:"1" %} <a href="{{ base_url }}/forum/{{ forum.id }}?page={{ page|add:"1" }}" rel="next">Next</a> {% endif %}
+    {% if page_last >= page|add:"1" %} <a href="{{ base }}/forum/{{ forum.id }}?page={{ page|add:"1" }}">{{ page|add:"1" }}</a> {% endif %}
+    {% if page_last >= page|add:"2" %} <a href="{{ base }}/forum/{{ forum.id }}?page={{ page|add:"2" }}">{{ page|add:"2" }}</a> {% endif %}
+    {% if page_last > page %} <a href="{{ base }}/forum/{{ forum.id }}?page={{ page_last }}">Last</a> {% endif %}
+    {% if page_last >= page|add:"1" %} <a href="{{ base }}/forum/{{ forum.id }}?page={{ page|add:"1" }}" rel="next">Next</a> {% endif %}
 </nav>
 </header>
 
@@ -47,18 +47,18 @@
     <tbody>
         {% for thread in thread_list %}
         <tr>
-            <td class="thread-title"><a href="{{ base_url }}/thread/{{ thread.id }}">{{ thread.title }}</a>
+            <td class="thread-title"><a href="{{ base }}/thread/{{ thread.id }}">{{ thread.title }}</a>
             <td class="thread-views">{{ thread.views }}
             <td class="thread-replies">{{ thread.replies }}
-            <td class="thread-creator"><a href="{{ base_url }}/user/{{ thread.creator_id }}">{{ thread.creator_name }}</a>
-            <td class="thread-last-post"><time class="format-time" datetime="{{ thread.last_time }}"></time><div>by <a href="{{ base_url }}/user/{{ thread.last_poster_id }}">{{ thread.last_poster_name }}</a></div>
+            <td class="thread-creator"><a href="{{ base }}/user/{{ thread.creator_id }}">{{ thread.creator_name }}</a>
+            <td class="thread-last-post"><time class="format-time" datetime="{{ thread.last_time }}"></time><div>by <a href="{{ base }}/user/{{ thread.last_poster_id }}">{{ thread.last_poster_name }}</a></div>
         {% endfor %}
 </table>
 
 {% if can_create_thread %}
 <footer id="forum-footer">
     {% if forum.id != 0 %}
-    <form id="form-thread" action="{{ base_url }}/thread/create" method="post" onsubmit="saveThread();">
+    <form id="form-thread" action="{{ base }}/thread/create" method="post" onsubmit="saveThread();">
         <h3>Create New Thread</h3>
         <input type="hidden" name="forum" value="{{ forum.id }}">
         <label><h4>Title:</h4><input id="thread-title" type="text" name="title" required></label>
@@ -66,7 +66,7 @@
         <button>Create</button>
     </form>
     {% else %}
-    <form id="form-pm" action="{{ base_url }}/msg/create" method="post" onsubmit="saveThread();">
+    <form id="form-pm" action="{{ base }}/msg/create" method="post" onsubmit="saveThread();">
         <h3>New Private Message</h3>
         <label><h4>To:</h4><input id="pm-to" type="text" name="to" required></label>
         <label><h4>Subject:</h4><input id="pm-subject" type="text" name="subject" required></label>

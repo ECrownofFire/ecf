@@ -6,7 +6,7 @@
 <p id="message">{{ message }}</p>
 {% if not user %}
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-<form id="form-login" action="{{ base_url }}/login?url={{ url|urlencode }}" method="post">
+<form id="form-login" action="{{ base }}/login?url={{ url|urlencode }}" method="post">
     <label>Email: <input id="email" type="text" autocomplete="email" name="email" required></label>
     <label>Password: <input id="password" type="password" autocomplete="current-password" name="password" required></label>
     {% if captcha %}
@@ -14,10 +14,10 @@
     {% endif %}
     <button id="submit-login">Login</button>
 </form>
-<a href="{{ base_url }}/forgot_password">Forgot your password?</a>
+<a href="{{ base }}/forgot_password">Forgot your password?</a>
 {% else %}
 <script language="javascript" type="text/javascript">
-    window.setTimeout(function() { location.href = "{{ base_url }}/{{ url }}";}, 2000);
+    window.setTimeout(function() { location.href = "{{ base }}/{{ url }}";}, 2000);
 </script>
 {% endif %}
 </main>

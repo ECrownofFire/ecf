@@ -3,6 +3,6 @@
 {% block content %}
 <main id="confirmed-email">
 <p>Thanks for confirming your email, {{ user.name }}!</p>
-<a href="{{ base_url }}/">Home</a>
+<a href="{{ base }}/">Home</a>
 </main>
 {% endblock %}

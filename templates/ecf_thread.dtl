@@ -3,17 +3,17 @@
 {% block content %}
 <main id="thread">
 <header id="thread-header">
-<a href="{{ base_url }}/forum/{{ forum.id }}">{{ forum.name }}</a>
+<a href="{{ base }}/forum/{{ forum.id }}">{{ forum.name }}</a>
 <h2>{{ thread.title }}</h2>
 {% if can_edit_thread %}
-<form id='form-edit-thread' action="{{ base_url }}/thread/edit" method="post">
+<form id='form-edit-thread' action="{{ base }}/thread/edit" method="post">
     <input type="hidden" name="id" value="{{ thread.id }}">
     <label>Title:<input id='edit-title' name="title" value="{{ thread.title }}"></label>
     <button>Edit Title</button>
 </form>
 {% endif %}
 {% if can_delete_thread %}
-<form id="form-delete-thread" action="{{ base_url }}/thread/delete" method="post">
+<form id="form-delete-thread" action="{{ base }}/thread/delete" method="post">
     <input type="hidden" name="id" value="{{ thread.id }}">
     <button id='button-delete' type='submit' onclick="return confirm('Are you sure you want to delete this thread and every post in it?');">Delete Thread</button>
 </form>
@@ -23,9 +23,9 @@
 <h3>Users in this PM</h3>
 <ul>
 {% for u in pm_users %}
-<li><a href="{{ base_url }}/user/{{ u.id }}">{{ u.name }}</a>
+<li><a href="{{ base }}/user/{{ u.id }}">{{ u.name }}</a>
     {% if u.id != user.id %}
-    <form class="form-pm-remove-user" action="{{ base_url }}/msg/remove" method="post">
+    <form class="form-pm-remove-user" action="{{ base }}/msg/remove" method="post">
         <input type="hidden" name="id" value="{{ thread.id }}">
         <input type="hidden" name="uid" value="{{ u.id }}">
         <button>Remove</button>
@@ -34,7 +34,7 @@
 {% endfor %}
 </ul>
 {% if can_edit_perms %}
-<form id="form-pm-add-user" action="{{ base_url }}/msg/add" method="post">
+<form id="form-pm-add-user" action="{{ base }}/msg/add" method="post">
     <input type="hidden" name="id" value="{{ thread.id }}">
     <label>User:<input type="text" name="user" required></label>
     <button>Add User</button>
@@ -43,15 +43,15 @@
 {% endif %}
 
 <nav class="pagination">
-    {% if page >= 2 %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page|add:"-1" }}" rel="prev">Prev</a> {% endif %}
-    {% if page > 1 %} <a href="{{ base_url }}/thread/{{ thread.id }}?page=1">First</a> {% endif %}
-    {% if page >= 3 %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page|add:"-2" }}">{{ page|add:"-2" }}</a> {% endif %}
-    {% if page >= 2 %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page|add:"-1" }}">{{ page|add:"-1" }}</a> {% endif %}
+    {% if page >= 2 %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page|add:"-1" }}" rel="prev">Prev</a> {% endif %}
+    {% if page > 1 %} <a href="{{ base }}/thread/{{ thread.id }}?page=1">First</a> {% endif %}
+    {% if page >= 3 %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page|add:"-2" }}">{{ page|add:"-2" }}</a> {% endif %}
+    {% if page >= 2 %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page|add:"-1" }}">{{ page|add:"-1" }}</a> {% endif %}
     <span>[{{ page }}]</span>
-    {% if page_last >= page|add:"1" %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page|add:"1" }}">{{ page|add:"1" }}</a> {% endif %}
-    {% if page_last >= page|add:"2" %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page|add:"2" }}">{{ page|add:"2" }}</a> {% endif %}
-    {% if page_last > page %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page_last }}">Last</a> {% endif %}
-    {% if page_last >= page|add:"1" %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page|add:"1" }}" rel="next">Next</a> {% endif %}
+    {% if page_last >= page|add:"1" %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page|add:"1" }}">{{ page|add:"1" }}</a> {% endif %}
+    {% if page_last >= page|add:"2" %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page|add:"2" }}">{{ page|add:"2" }}</a> {% endif %}
+    {% if page_last > page %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page_last }}">Last</a> {% endif %}
+    {% if page_last >= page|add:"1" %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page|add:"1" }}" rel="next">Next</a> {% endif %}
 </nav>
 </header>
 
@@ -59,7 +59,7 @@
     {% for post in post_list %}
     <li id="post-{{ post.id }}" class="post">
         <section class="poster">
-            <h4><a href="{{ base_url }}/user/{{ post.poster.id }}">{{ post.poster.name }}</a></h4>
+            <h4><a href="{{ base }}/user/{{ post.poster.id }}">{{ post.poster.name }}</a></h4>
             <p class="user-title">{{ post.poster.title }}</p>
             <img src="{{ post.gravatar|safe }}" alt="">
             <p class="user-posts">Posts: {{ post.poster.posts }}</p>
@@ -68,7 +68,7 @@
             <header class="post-header">
             <h4><a href="#post-{{ post.id }}">Reply #{{ post.id }}</a> on: <time class="format-time post-time" datetime="{{ post.time }}"></time></h4>
             {% if post.editor %}
-            <p class="post-edited">Edited By: <a href="{{ base_url }}/user/{{ post.editor.id }}">{{ post.editor.name }}</a> on <time class="format-time" datetime="{{ post.edited }}"></time></p>
+            <p class="post-edited">Edited By: <a href="{{ base }}/user/{{ post.editor.id }}">{{ post.editor.name }}</a> on <time class="format-time" datetime="{{ post.edited }}"></time></p>
             {% endif %}
             {% if can_delete_posts
             or can_delete_own_posts and post.poster.id == user.id
@@ -81,12 +81,12 @@
                 {% if can_delete_posts
                 or can_delete_own_posts and post.poster.id == user.id %}
                     {% if post.id != 1 %}
-                <button class='post-delete' formaction="{{ base_url }}/post/delete" onclick="return confirm('Are you sure you want to delete this post?');">Delete Post</button>
+                <button class='post-delete' formaction="{{ base }}/post/delete" onclick="return confirm('Are you sure you want to delete this post?');">Delete Post</button>
                     {% endif %}
                 {% endif %}
                 {% if can_edit_posts
                 or can_edit_own_posts and post.poster.id == user.id %}
-                <button formaction="{{ base_url }}/post/edit" formmethod="get">Edit Post</button>
+                <button formaction="{{ base }}/post/edit" formmethod="get">Edit Post</button>
                 {% endif %}
             </form>
             {% endif %}
@@ -98,17 +98,17 @@
 </ol>
 <footer id="thread-footer">
 <nav class="pagination">
-    {% if page > 1 %} <a href="{{ base_url }}/thread/{{ thread.id }}?page=1">First</a> {% endif %}
-    {% if page >= 3 %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page|add:"-2" }}">{{ page|add:"-2" }}</a> {% endif %}
-    {% if page >= 2 %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page|add:"-1" }}" rel="prev">{{ page|add:"-1" }}</a> {% endif %}
+    {% if page > 1 %} <a href="{{ base }}/thread/{{ thread.id }}?page=1">First</a> {% endif %}
+    {% if page >= 3 %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page|add:"-2" }}">{{ page|add:"-2" }}</a> {% endif %}
+    {% if page >= 2 %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page|add:"-1" }}" rel="prev">{{ page|add:"-1" }}</a> {% endif %}
     <span>[{{ page }}]</span>
-    {% if page_last >= page|add:"1" %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page|add:"1" }}" rel="next">{{ page|add:"1" }}</a> {% endif %}
-    {% if page_last >= page|add:"2" %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page|add:"2" }}">{{ page|add:"2" }}</a> {% endif %}
-    {% if page_last > page %} <a href="{{ base_url }}/thread/{{ thread.id }}?page={{ page_last }}">Last</a> {% endif %}
+    {% if page_last >= page|add:"1" %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page|add:"1" }}" rel="next">{{ page|add:"1" }}</a> {% endif %}
+    {% if page_last >= page|add:"2" %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page|add:"2" }}">{{ page|add:"2" }}</a> {% endif %}
+    {% if page_last > page %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page_last }}">Last</a> {% endif %}
 </nav>
 
 {% if can_create_post %}
-<form id="form-post" action="{{ base_url }}/post/create" method="post" onsubmit="savePost();">
+<form id="form-post" action="{{ base }}/post/create" method="post" onsubmit="savePost();">
     <h3>Reply:</h3>
     <input type="hidden" name="thread" value="{{ thread.id }}">
     <textarea id="post-text" type="text" autocomplete="off" name="text"></textarea>

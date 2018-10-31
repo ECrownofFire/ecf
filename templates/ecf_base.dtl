@@ -5,14 +5,13 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="{{ base_url }}/static/main.css">
-    <link rel="icon" type="image/x-icon" href="{{ base_url }}/favicon.ico">
+    <link rel="stylesheet" href="{{ base }}/static/main.css">
+    <link rel="icon" type="image/x-icon" href="{{ base }}/favicon.ico">
     <title>{{ title }}</title>
     <meta property="og:type" content="website">
     <meta property="og:title" content="{{ title }}">
     <meta property="og:description" content="Simple BEAM-powered forum software">
-    <script>var BASE_URL = "{{ base_url }}";</script>
-    <script src="{{ base_url }}/static/format_dates.js" defer></script>
+    <script src="{{ base }}/static/format_dates.js" defer></script>
 </head>
 <body>
 <header>
@@ -28,15 +27,15 @@
     <hr>
     <nav id="main-menu">
         <ul>
-            <li><a href="{{ base_url }}/">Home</a>
+            <li><a href="{{ base }}/">Home</a>
             {% if user %}
-            <li><a href="{{ base_url }}/user/{{ user.id }}">Profile</a>
-            <li><a href="{{ base_url }}/forum/0">Private Messages</a>
-            <li><a href="{{ base_url }}/group">Groups</a>
-            <li><form id="logout-form" method="post" action="{{ base_url }}/logout"><a onclick="document.getElementById('logout-form').submit(); return false;" href="{{ base_url }}/logout">Logout</a></form>
+            <li><a href="{{ base }}/user/{{ user.id }}">Profile</a>
+            <li><a href="{{ base }}/forum/0">Private Messages</a>
+            <li><a href="{{ base }}/group">Groups</a>
+            <li><form id="logout-form" method="post" action="{{ base }}/logout"><a onclick="document.getElementById('logout-form').submit(); return false;" href="{{ base }}/logout">Logout</a></form>
             {% else %}
-            <li><a href="{{ base_url }}/login">Login</a>
-            <li><a href="{{ base_url }}/register">Register</a>
+            <li><a href="{{ base }}/login">Login</a>
+            <li><a href="{{ base }}/register">Register</a>
             {% endif %}
         </ul>
     </nav>
