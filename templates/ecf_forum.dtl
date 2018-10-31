@@ -23,17 +23,7 @@
 </form>
 {% endif %}
 
-<nav class="pagination">
-    {% if page >= 2 %} <a href="{{ base }}/forum/{{ forum.id }}?page={{ page|add:"-1" }}" rel="prev">Previous</a> {% endif %}
-    {% if page > 1 %} <a href="{{ base }}/forum/{{ forum.id }}?page=1">First</a> {% endif %}
-    {% if page >= 3 %} <a href="{{ base }}/forum/{{ forum.id }}?page={{ page|add:"-2" }}">{{ page|add:"-2" }}</a> {% endif %}
-    {% if page >= 2 %} <a href="{{ base }}/forum/{{ forum.id }}?page={{ page|add:"-1" }}">{{ page|add:"-1" }}</a> {% endif %}
-    <span>[{{ page }}]</span>
-    {% if page_last >= page|add:"1" %} <a href="{{ base }}/forum/{{ forum.id }}?page={{ page|add:"1" }}">{{ page|add:"1" }}</a> {% endif %}
-    {% if page_last >= page|add:"2" %} <a href="{{ base }}/forum/{{ forum.id }}?page={{ page|add:"2" }}">{{ page|add:"2" }}</a> {% endif %}
-    {% if page_last > page %} <a href="{{ base }}/forum/{{ forum.id }}?page={{ page_last }}">Last</a> {% endif %}
-    {% if page_last >= page|add:"1" %} <a href="{{ base }}/forum/{{ forum.id }}?page={{ page|add:"1" }}" rel="next">Next</a> {% endif %}
-</nav>
+{% include "ecf_pagination.dtl" with url=base|add:"/forum/"|add:forum.id page=page page_last=page_last only %}
 </header>
 
 <table id="thread-table">
@@ -57,6 +47,7 @@
 
 {% if can_create_thread %}
 <footer id="forum-footer">
+{% include "ecf_pagination.dtl" with url=base|add:"/forum/"|add:forum.id page=page page_last=page_last only %}
     {% if forum.id != 0 %}
     <form id="form-thread" action="{{ base }}/thread/create" method="post" onsubmit="saveThread();">
         <h3>Create New Thread</h3>

@@ -12,6 +12,14 @@
     padding: 0 4px;
 }
 
+.form-pagination {
+    display: inline;
+}
+
+.pagination-page {
+    width: 3em;
+}
+
 .form-pm-remove-user {
     display: inline;
     margin-left: 8px;

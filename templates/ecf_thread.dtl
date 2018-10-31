@@ -42,17 +42,7 @@
 {% endif %}
 {% endif %}
 
-<nav class="pagination">
-    {% if page >= 2 %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page|add:"-1" }}" rel="prev">Prev</a> {% endif %}
-    {% if page > 1 %} <a href="{{ base }}/thread/{{ thread.id }}?page=1">First</a> {% endif %}
-    {% if page >= 3 %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page|add:"-2" }}">{{ page|add:"-2" }}</a> {% endif %}
-    {% if page >= 2 %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page|add:"-1" }}">{{ page|add:"-1" }}</a> {% endif %}
-    <span>[{{ page }}]</span>
-    {% if page_last >= page|add:"1" %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page|add:"1" }}">{{ page|add:"1" }}</a> {% endif %}
-    {% if page_last >= page|add:"2" %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page|add:"2" }}">{{ page|add:"2" }}</a> {% endif %}
-    {% if page_last > page %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page_last }}">Last</a> {% endif %}
-    {% if page_last >= page|add:"1" %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page|add:"1" }}" rel="next">Next</a> {% endif %}
-</nav>
+{% include "ecf_pagination.dtl" with url=base|add:"/thread/"|add:thread.id page=page page_last=page_last only %}
 </header>
 
 <ol id="post-list">
@@ -97,15 +87,7 @@
     {% endfor %}
 </ol>
 <footer id="thread-footer">
-<nav class="pagination">
-    {% if page > 1 %} <a href="{{ base }}/thread/{{ thread.id }}?page=1">First</a> {% endif %}
-    {% if page >= 3 %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page|add:"-2" }}">{{ page|add:"-2" }}</a> {% endif %}
-    {% if page >= 2 %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page|add:"-1" }}" rel="prev">{{ page|add:"-1" }}</a> {% endif %}
-    <span>[{{ page }}]</span>
-    {% if page_last >= page|add:"1" %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page|add:"1" }}" rel="next">{{ page|add:"1" }}</a> {% endif %}
-    {% if page_last >= page|add:"2" %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page|add:"2" }}">{{ page|add:"2" }}</a> {% endif %}
-    {% if page_last > page %} <a href="{{ base }}/thread/{{ thread.id }}?page={{ page_last }}">Last</a> {% endif %}
-</nav>
+{% include "ecf_pagination.dtl" with url=base|add:"/thread/"|add:thread.id page=page page_last=page_last only %}
 
 {% if can_create_post %}
 <form id="form-post" action="{{ base }}/post/create" method="post" onsubmit="savePost();">
