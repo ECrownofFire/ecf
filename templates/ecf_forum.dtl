@@ -40,8 +40,8 @@
             <td class="thread-title"><a href="{{ base }}/thread/{{ thread.id }}">{{ thread.title }}</a>
             <td class="thread-views">{{ thread.views }}
             <td class="thread-replies">{{ thread.replies }}
-            <td class="thread-creator"><a href="{{ base }}/user/{{ thread.creator_id }}">{{ thread.creator_name }}</a>
-            <td class="thread-last-post"><time class="format-time" datetime="{{ thread.last_time }}"></time><div>by <a href="{{ base }}/user/{{ thread.last_poster_id }}">{{ thread.last_poster_name }}</a></div>
+            <td class="thread-creator">{% include "ecf_user_link.dtl" with user=thread.last_poster cvu=can_view_users only %}
+            <td class="thread-last-post"><time class="format-time" datetime="{{ thread.last_time }}"></time><div>by {% include "ecf_user_link.dtl" with user=thread.last_poster cvu=can_view_users only %}</div>
         {% endfor %}
 </table>
 

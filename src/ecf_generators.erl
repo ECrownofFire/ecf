@@ -232,8 +232,10 @@ generate(Status, User, {Type, Storage})
 
 get_vars(User, Title) ->
     {ok, Base} = application:get_env(ecf, base_url),
+    CanViewUsers = ecf_perms:check_perm_global(User, view_user),
     [{base, Base},
      {title, get_title(Title)},
+     {can_view_users, CanViewUsers},
      {user, user_profile(User)}].
 
 -spec get_title(iodata()) -> iodata().
@@ -402,21 +404,15 @@ thread(Thread) ->
     LastId = ecf_thread:last(Thread),
     LastPost = ecf_post:get_post(Id, LastId),
     LastPostTime = ecf_post:time(LastPost),
-    LastPosterId = ecf_post:poster(LastPost),
-    LastPoster = get_user(LastPosterId),
-    LastPosterName = ecf_user:name(LastPoster),
-    CreatorId = ecf_thread:creator(Thread),
-    Creator = get_user(CreatorId),
-    CreatorName = ecf_user:name(Creator),
+    LastPoster = get_user(ecf_post:poster(LastPost)),
+    Creator = get_user(ecf_thread:creator(Thread)),
     Views = ecf_thread:views(Thread),
     [{id, integer_to_binary(Id)},
      {title, ecf_thread:title(Thread)},
      {replies, integer_to_binary(LastId)},
-     {creator_id, integer_to_binary(CreatorId)},
-     {creator_name, CreatorName},
+     {creator, user(Creator)},
      {last_time, iso8601:format(LastPostTime)},
-     {last_poster_id, integer_to_binary(LastPosterId)},
-     {last_poster_name, LastPosterName},
+     {last_poster, user(LastPoster)},
      {views, integer_to_binary(Views)}].
 
 pm_users(Thread) ->

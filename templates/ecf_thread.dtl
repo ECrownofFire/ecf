@@ -23,7 +23,7 @@
 <h3>Users in this PM</h3>
 <ul>
 {% for u in pm_users %}
-<li><a href="{{ base }}/user/{{ u.id }}">{{ u.name }}</a>
+<li>{% include "ecf_user_link.dtl" with user=u cvu=can_view_users only %}
     {% if u.id != user.id %}
     <form class="form-pm-remove-user" action="{{ base }}/msg/remove" method="post">
         <input type="hidden" name="id" value="{{ thread.id }}">
@@ -49,7 +49,7 @@
     {% for post in post_list %}
     <li id="post-{{ post.id }}" class="post">
         <section class="poster">
-            <h4><a href="{{ base }}/user/{{ post.poster.id }}">{{ post.poster.name }}</a></h4>
+            <h4>{% include "ecf_user_link.dtl" with user=post.poster cvu=can_view_users only %}</h4>
             <p class="user-title">{{ post.poster.title }}</p>
             <img src="{{ post.gravatar|safe }}" alt="">
             <p class="user-posts">Posts: {{ post.poster.posts }}</p>
@@ -58,7 +58,7 @@
             <header class="post-header">
             <h4><a href="#post-{{ post.id }}">Reply #{{ post.id }}</a> on: <time class="format-time post-time" datetime="{{ post.time }}"></time></h4>
             {% if post.editor %}
-            <p class="post-edited">Edited By: <a href="{{ base }}/user/{{ post.editor.id }}">{{ post.editor.name }}</a> on <time class="format-time" datetime="{{ post.edited }}"></time></p>
+            <p class="post-edited">Edited By: {% spaceless %}{% include "ecf_user_link.dtl" with user=post.editor cvu=can_view_users only %}{% endspaceless %} on <time class="format-time" datetime="{{ post.edited }}"></time></p>
             {% endif %}
             {% if can_delete_posts
             or can_delete_own_posts and post.poster.id == user.id

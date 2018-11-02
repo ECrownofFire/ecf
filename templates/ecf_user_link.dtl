@@ -1,0 +1,2 @@
+{# vim: set ft=htmldjango: #}
+<a {% if cvu %}href="{{ base }}/user/{{ user.id }}"{% endif %}>{{ user.name }}</a>

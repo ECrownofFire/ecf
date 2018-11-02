@@ -28,7 +28,7 @@
     <tbody>
         {% for user in group.member_list %}
         <tr>
-            <td class="username"><a href="{{ base }}/user/{{ user.id }}">{{ user.name }}</a>
+            <td class="username">{% include "ecf_user_link.dtl" with user=user cvu=can_view_users only %}
             <td><time class="format-time" datetime="{{ user.joined }}"></time>
             <td>{{ user.posts }}
         {% endfor %}
