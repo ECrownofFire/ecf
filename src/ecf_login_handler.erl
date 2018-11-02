@@ -55,9 +55,8 @@ try_login(User, Password, Url, Req, Email) ->
             ecf_log:clear_log(Email, ecf_utils:get_ip(Req)),
             Session = ecf_user:new_session(ecf_user:id(User)),
             Req2 = ecf_utils:set_login_cookies(Req, ecf_user:id(User), Session),
-            Base = application:get_env(ecf, base_url, ""),
             cowboy_req:reply(303,
-                             #{<<"location">> => [Base, "/", Url]},
+                             #{<<"location">> => ["/", Url]},
                              Req2);
         {true, false} ->
             login_fail(Req, Email, login_fail);
