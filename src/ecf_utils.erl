@@ -1,6 +1,6 @@
 -module(ecf_utils).
 
--export([check_user_session/1,
+-export([check_user_session/1, get_session_cookies/1,
          valid_password/1, valid_username/1, valid_email/1,
          get_ip/1, set_login_cookies/3, reply_status/4, reply_status/5]).
 
@@ -8,30 +8,39 @@
 
 -spec check_user_session(cowboy_req:req()) -> ecf_user:user() | undefined.
 check_user_session(Req) ->
-    #{session := SessionEncoded,
-      user := UID} = cowboy_req:match_cookies([{session, [], undefined},
-                                               {user, int, -1}],
-                                              Req),
-    check_user_session(UID, SessionEncoded).
+    case get_session_cookies(Req) of
+        undefined ->
+            undefined;
+        {Id, Session} ->
+            check_user_session(Id, Session)
+    end.
 
--spec check_user_session(integer(),
-                         binary() | undefined) -> ecf_user:user() | undefined.
-check_user_session(_, undefined) ->
-    undefined;
-check_user_session(-1, _) ->
-    undefined;
-check_user_session(ID, SessionEncoded) ->
-    case ecf_user:get_user(ID) of
+-spec check_user_session(integer(), binary()) -> ecf_user:user() | undefined.
+check_user_session(Id, Session) ->
+    case ecf_user:get_user(Id) of
         undefined ->
             undefined;
         User ->
-            Session = base64:decode(SessionEncoded),
-            case ecf_user:check_session(ID, Session) of
+            case ecf_user:check_session(Id, Session) of
                 true ->
                     User;
                 false ->
                     undefined
             end
+    end.
+
+-spec get_session_cookies(cowboy_req:req()) -> {ecf_user:id(), binary()} | undefined.
+get_session_cookies(Req) ->
+    #{session := SessionEncoded,
+      user := Id} = cowboy_req:match_cookies([{session, [], undefined},
+                                              {user, int, -1}],
+                                             Req),
+    if Id =:= -1 ->
+           undefined;
+       SessionEncoded =:= undefined ->
+           undefined;
+       true ->
+           {Id, base64:decode(SessionEncoded)}
     end.
 
 
