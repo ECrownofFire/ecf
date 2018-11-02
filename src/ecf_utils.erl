@@ -121,15 +121,20 @@ set_login_cookies(Req, Id, Session) ->
     {ok, SessionMins} = application:get_env(ecf, minutes_session),
     SessionSecs = SessionMins * 60,
     SessionEncoded = base64:encode(Session),
+    Base0 = application:get_env(ecf, base_url, ""),
+    Base = case string:is_empty(Base0) of true -> "/"; false -> Base0 end,
     Req2 = cowboy_req:set_resp_cookie(<<"session">>, SessionEncoded,
                                       Req,
                                       #{http_only => true,
                                         secure => true,
+                                        path => Base,
                                         max_age => SessionSecs}),
     cowboy_req:set_resp_cookie(<<"user">>,
-                               integer_to_list(Id),
+                               integer_to_binary(Id),
                                Req2,
-                               #{max_age => SessionSecs}).
+                               #{max_age => SessionSecs,
+                                 secure => true,
+                                 path => Base}).
 
 -spec clear_login_cookies(cowboy_req:req()) -> cowboy_req:req().
 clear_login_cookies(Req) ->
