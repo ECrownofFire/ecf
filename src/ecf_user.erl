@@ -22,7 +22,7 @@
          edit_title/2, edit_loc/2,
          add_post/2,
          delete_user/1,
-         check_session/2, check_pass/2, fake_hash/0,
+         check_session/2, refresh_session/2, check_pass/2, fake_hash/0,
          id/1, name/1, enabled/1, email/1,
          joined/1, groups/1, bday/1, title/1, bio/1, loc/1, posts/1,
          last_post/1]).
@@ -219,8 +219,8 @@ clean_sessions(Id) ->
     mnesia:activity(transaction, F).
 
 clean_sess({_, Time}) ->
-    Diff = erlang:system_time(second) - Time,
-    Diff < 0.
+    Remaining = Time - erlang:system_time(second),
+    Remaining > 0.
 
 -spec check_session(id(), binary()) -> boolean().
 check_session(Id, Session) ->
@@ -231,6 +231,32 @@ check_session(Id, Session) ->
         false ->
             false
     end.
+
+-spec refresh_session(id(), binary()) -> binary() | false | ok.
+refresh_session(Id, Old) ->
+    F =
+    fun() ->
+            User = clean_sessions(Id),
+            case lists:keyfind(Old, 1, User#ecf_user.session) of
+                false ->
+                    false;
+                {Old, Time} ->
+                    Limit = application:get_env(ecf, minutes_refresh, 10080) * 60,
+                    Remaining = Time - erlang:system_time(second),
+                    if Remaining < Limit ->
+                           % expire old session with 5 minute grace period
+                           List = lists:keyreplace(Old, 1,
+                                                   User#ecf_user.session,
+                                                   {Old, Time + 5 * 60}),
+                           % this extra write is inefficient, but reuses code
+                           mnesia:write(User#ecf_user{session=List}),
+                           new_session(Id);
+                       true ->
+                           ok
+                    end
+            end
+    end,
+    mnesia:activity(transaction, F).
 
 
 -spec enable_user(id()) -> ok.
