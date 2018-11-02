@@ -203,13 +203,15 @@ reset_session(Id, Session) ->
         end,
     mnesia:activity(transaction, F).
 
--spec clean_sessions(id()) -> ok.
+-spec clean_sessions(id()) -> user().
 clean_sessions(Id) ->
     F = fun() ->
                 [User] = mnesia:wread({ecf_user, Id}),
                 Old = User#ecf_user.session,
                 New = lists:filter(fun clean_sess/1, Old),
-                mnesia:write(User#ecf_user{session=New})
+                NewUser = User#ecf_user{session=New},
+                mnesia:write(NewUser),
+                NewUser
         end,
     mnesia:activity(transaction, F).
 
@@ -217,6 +219,16 @@ clean_sess({_, Time}) ->
     Limit = application:get_env(ecf, minutes_session, 20160) * 60,
     Diff = erlang:system_time(second) - Time,
     Diff < Limit.
+
+-spec check_session(id(), binary()) -> boolean().
+check_session(Id, Session) ->
+    User = clean_sessions(Id),
+    case lists:keyfind(Session, 1, User#ecf_user.session) of
+        {_, _} ->
+            enabled(User);
+        false ->
+            false
+    end.
 
 
 -spec enable_user(id()) -> ok.
@@ -317,16 +329,6 @@ name(User) ->
 -spec enabled(user()) -> boolean().
 enabled(User) ->
     User#ecf_user.enabled.
-
--spec check_session(user(), binary()) -> boolean().
-check_session(User, Session) ->
-    ok = clean_sessions(id(User)),
-    case lists:keyfind(Session, 1, User#ecf_user.session) of
-        {_, _} ->
-            enabled(User);
-        false ->
-            false
-    end.
 
 -spec check_pass(user(), binary()) -> boolean().
 check_pass(User, Pass) ->

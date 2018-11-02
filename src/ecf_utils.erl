@@ -26,7 +26,7 @@ check_user_session(ID, SessionEncoded) ->
             undefined;
         User ->
             Session = base64:decode(SessionEncoded),
-            case ecf_user:check_session(User, Session) of
+            case ecf_user:check_session(ID, Session) of
                 true ->
                     User;
                 false ->
