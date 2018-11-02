@@ -458,7 +458,7 @@ post(Post) ->
      {gravatar, Gravatar},
      {poster, user(Poster)},
      {time, Time},
-     {text, Text}] ++ edited(ecf_post:edited(Post)).
+     {text, binary_to_list(Text)}] ++ edited(ecf_post:edited(Post)).
 
 edited(undefined) ->
     [];
