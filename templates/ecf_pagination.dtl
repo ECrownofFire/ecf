@@ -16,10 +16,10 @@
     {% else %}
     <a class="pagination-inactive">{{ page }}</a>
     {% endif %}
-    {% if page_last > page|add:1 %}<a class="+1" href="{{ url }}?page={{ page|add:1 }}">{{ page|add:1 }}</a>{% endif %}
-    {% if page_last > page|add:2 %}<a class="+2" href="{{ url }}?page={{ page|add:2 }}">{{ page|add:2 }}</a>{% endif %}
+    {% if page_last > page|add:1 %}<a href="{{ url }}?page={{ page|add:1 }}">{{ page|add:1 }}</a>{% endif %}
+    {% if page_last > page|add:2 %}<a href="{{ url }}?page={{ page|add:2 }}">{{ page|add:2 }}</a>{% endif %}
     {% if page_last|add:-4 > page %}<span>...</span>{% endif %}
-    {% if page_last|add:-3 > page %}<a class="last-1" href="{{ url }}?page={{ page_last|add:-1 }}">{{ page_last|add:-1 }}</a>{% endif %}
+    {% if page_last|add:-3 > page %}<a href="{{ url }}?page={{ page_last|add:-1 }}">{{ page_last|add:-1 }}</a>{% endif %}
     {% if page_last > page %}<a href="{{ url }}?page={{ page_last }}" rel="last">{{ page_last }}</a>{% endif %}
     {% if page_last >= page|add:1 %}<a href="{{ url }}?page={{ page|add:1 }}" rel="next"
     {% else %}<a class="pagination-inactive"{% endif %}>Next</a>
