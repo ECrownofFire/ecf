@@ -186,9 +186,12 @@ edit_pass(Id, NewPass) ->
 -spec new_session(id()) -> binary().
 new_session(Id) ->
     Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
+    Time = erlang:system_time(second),
+    Limit = application:get_env(ecf, minutes_session, 20160) * 60,
+    Expire = Time + Limit,
     F = fun() ->
                 [User] = mnesia:wread({ecf_user, Id}),
-                New = [{Session, erlang:system_time(second)}|User#ecf_user.session],
+                New = [{Session, Expire}|User#ecf_user.session],
                 mnesia:write(User#ecf_user{session=New})
         end,
     ok = mnesia:activity(transaction, F),
@@ -216,9 +219,8 @@ clean_sessions(Id) ->
     mnesia:activity(transaction, F).
 
 clean_sess({_, Time}) ->
-    Limit = application:get_env(ecf, minutes_session, 20160) * 60,
     Diff = erlang:system_time(second) - Time,
-    Diff < Limit.
+    Diff < 0.
 
 -spec check_session(id(), binary()) -> boolean().
 check_session(Id, Session) ->
