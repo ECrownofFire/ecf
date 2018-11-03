@@ -22,21 +22,23 @@ At the bare minimum, ECF still needs the following:
 * Security
     * Logging stuff (most likely through lager)
     * Deny non-HTTPS traffic
+* Some kind of rich text formatting (markdown? could kludge it in with client
+side JS)
 
 So that ECF is reasonably useable, I'd like to add the following as well:
 * Track read/unread posts (needs backend)
 * Listing all users, sorting by various fields (partially done, needs sorting)
 * Searching (needs backend)
     * List all posts by a user
-
-The following may happen at some point, but I'm unsure about them:
-* Markdown for posts (could be done with clientside JS)
-
-And these would be nice to eventually get:
-* Events calendar
-* Announcements
+* Thread tags
 * Replying to posts
 * Email notifications for posts/replies/threads/forums/PMs
+
+And these would be nice to get:
+* Events calendar
+* Announcements
+* Other "addons", perhaps as optional systems
+    * e.g. threadmarks
 
 ### Requirements
 Erlang/OTP 20
