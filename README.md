@@ -60,17 +60,24 @@ TODO: Describe all configuration options.
 You will need to set the following app env variables:
 * `captcha_key`: reCAPTCHA site key
 * `captcha_secret`: reCAPTCHA site secret
-* `host`: The FQDN that the forum is hosted on
+* `host`: The domain name that the forum is hosted on
+    * `<<"example.com">>`
 * `base_url`: The "base" url of the forum, use a leading slash but no trailing
+    * `"/ecf"`, `"/forum"`
 * `email_addr`: The address to send email as
+    * `<<"ecf@example.com">>`
 * `email_relay`: The host to use as a relay
-* `email_host`: The host to EHLO as when sending email
-* `forum_name`: The name of your forum
+* `email_login`: `{Username, Password}` if your relay requires authentication,
+or `false` if it doesn't (e.g. if you're using a relay on localhost).
+* `email_host`: The host to EHLO as when sending email, set to `false` to use
+`host`
+* `forum_name`: The name of your forum.
 * `http`: `false` or a port number.
 * `https`: `false` or `{Port, CertFile, KeyFile}`.
 
 So when setting up ECF behind an HTTPS-serving reverse proxy, you'll want to set
-`http` to the local port (such as 8080, the default), and `https` to `false`.
+`http` to the local port (such as 8080, the default), and `https` to `false`
+(also the default).
 
 If you want ECF to server HTTPS traffic directly, set `http` to `false` and then
 `https` to the required things. Note that they must be strings and not binaries.
@@ -92,9 +99,9 @@ ECF makes use of the following third-party software:
 * [iso8601](https://github.com/erlsci/iso8601), MIT license.
 * [Jiffy](https://github.com/davisp/jiffy), MIT License.
 * [Cowboy](https://github.com/ninenines/cowboy), ISC License.
-* [gen_smtp](https://github.com/Vagabond/gen_smtp), BSD 2-Clause License.
+* [gen\_smtp](https://github.com/Vagabond/gen_smtp), BSD 2-Clause License.
 * [ErlyDTL](https://github.com/erlydtl/erlydtl), MIT License.
-* [parse_trans](https://github.com/uwiger/parse_trans), Apache License 2.0.
+* [parse\_trans](https://github.com/uwiger/parse_trans), Apache License 2.0.
 * [enacl](https://github.com/jlouis/enacl), MIT License.
 * [libsodium](https://github.com/jedisct1/libsodium), ISC License.
 

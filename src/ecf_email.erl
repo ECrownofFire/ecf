@@ -39,11 +39,10 @@ get_code(Id, Type) ->
                     [] ->
                         undefined;
                     [C] ->
-                        Limit = get_limit(Type),
                         Diff = erlang:system_time(second) - C#ecf_email.time,
-                        case Diff > Limit of
+                        case Diff > 0 of
                             true ->
-                                mnesia:delete_object(C),
+                                mnesia:delete({Id, Type}),
                                 undefined;
                             false ->
                                 C#ecf_email.code
@@ -84,24 +83,23 @@ send_email(User, Type) ->
     Code = make_code(),
     Body = make_body(Type, ForumName, Code),
     Username = ecf_user:name(User),
-    Email0 = ecf_user:email(User),
-    Email = <<"<",Email0/binary,">">>,
+    To0 = ecf_user:email(User),
+    To = <<"<",To0/binary,">">>,
     {ok, Addr0} = application:get_env(ecf, email_addr),
     Addr = <<"<",Addr0/binary,">">>,
-    {ok, Relay} = application:get_env(ecf, email_relay),
-    {ok, EHost} = application:get_env(ecf, email_host),
     Mail = mimemail:encode({<<"text">>, <<"plain">>,
                             [{<<"Subject">>, Subject},
                              {<<"From">>, <<ForumName/binary," ",Addr/binary>>},
-                             {<<"To">>, <<Username/binary," ",Email/binary>>}],
+                             {<<"To">>, <<Username/binary," ",To/binary>>}],
                             [],
                             Body}),
-    {ok, _} = gen_smtp_client:send({Addr, [Email], Mail},
-                                   [{relay, Relay}, {hostname, EHost}]),
+    Opts = get_email_opts(),
+    {ok, _} = gen_smtp_client:send({Addr, [To], Mail}, Opts),
+    Limit = get_limit(Type),
     F = fun() ->
                 mnesia:write(#ecf_email{key={ecf_user:id(User), Type},
                                         code=Code,
-                                        time=erlang:system_time(second)})
+                                        time=erlang:system_time(second)+Limit})
         end,
     mnesia:activity(transaction, F).
 
@@ -124,8 +122,8 @@ make_body(Type, ForumName, Code) ->
 
 make_body(confirm, BaseUrl, ForumName, Code) ->
     <<"Thanks for signing up at ", ForumName/binary, ".\n\n",
-     "Use the following link to confirm your email:\n\n",
-     BaseUrl/binary,"/confirm?code=",Code/binary>>;
+      "Use the following link to confirm your email:\n\n",
+      BaseUrl/binary,"/confirm?code=",Code/binary>>;
 
 make_body(reset_password, BaseUrl, ForumName, Code) ->
     <<"A password reset was requested for your account at ",
@@ -137,7 +135,7 @@ make_body(reset_password, BaseUrl, ForumName, Code) ->
 
 make_code() ->
     Possible = "1234567890" ++ lists:seq($A, $Z) ++ lists:seq($a, $z),
-    crypto:rand_seed(),
+    _ = crypto:rand_seed(),
     list_to_binary([lists:nth(rand:uniform(length(Possible)), Possible)
                     || _ <- lists:seq(1,64)]).
 
@@ -146,4 +144,20 @@ get_limit(confirm) ->
     application:get_env(ecf, days_confirm_email, 7) * ?SECS_PER_DAY;
 get_limit(reset_password) ->
     application:get_env(ecf, days_reset_password, 1) * ?SECS_PER_DAY.
+
+get_email_opts() ->
+    {ok, Relay} = application:get_env(ecf, email_relay),
+    Host = case application:get_env(ecf, email_host, false) of
+               false ->
+                   {ok, H} = application:get_env(ecf, host),
+                   H;
+               E -> E
+           end,
+    Login = case application:get_env(ecf, email_login, false) of
+                false ->
+                    [];
+                {Username, Password} ->
+                    [{username, Username}, {password, Password}]
+            end,
+    [{relay, Relay}, {hostname, Host} | Login].
 
