@@ -7,12 +7,12 @@
 -export([create_table/1,
          get_forum/1, get_forums/0,
          new_forum/2, count_thread/1, count_post/1,
-         edit_name/2, edit_desc/2, reorder/2,
+         edit_name/2, edit_desc/2, reorder/2, pin_thread/2, unpin_thread/2,
          edit_perm/4, remove_perm/3,
          delete_forum/1,
          visible_forums/2,
          filter_forums/2, order_forums/1,
-         id/1, name/1, desc/1, order/1, posts/1, threads/1, perms/1]).
+         id/1, name/1, desc/1, order/1, pins/1, posts/1, threads/1, perms/1]).
 
 % for matchspec construction
 -dialyzer({nowarn_function, get_forums/0}).
@@ -25,11 +25,11 @@
          order :: integer(),
          name  :: binary(),
          desc  :: binary(),
+         pins = [] :: [ecf_thread:id()],
          posts = 0 :: non_neg_integer(),
          threads = 0 :: non_neg_integer(),
          perms = [] :: [ecf_perms:perm()]}).
 -type forum() :: #ecf_forum{}.
-
 
 -spec create_table([node()]) -> ok.
 create_table(Nodes) ->
@@ -182,6 +182,24 @@ get_reorder(down, Old, Forums) ->
             H
     end.
 
+-spec pin_thread(id(), ecf_thread:id()) -> ok.
+pin_thread(Id, Thread) ->
+    F = fun() ->
+                [Forum] = mnesia:wread({ecf_forum, Id}),
+                OldPins = pins(Forum),
+                mnesia:write(Forum#ecf_forum{pins=[Thread|OldPins]})
+        end,
+    mnesia:activity(transaction, F).
+
+-spec unpin_thread(id(), ecf_thread:id()) -> ok.
+unpin_thread(Id, Thread) ->
+    F = fun() ->
+                [Forum] = mnesia:wread({ecf_forum, Id}),
+                Pins = lists:delete(Thread, pins(Forum)),
+                mnesia:write(Forum#ecf_forum{pins=Pins})
+        end,
+    mnesia:activity(transaction, F).
+
 -spec edit_perm(id(), ecf_perms:class(), ecf_perms:mode(), allow | deny) -> ok.
 edit_perm(Id, Class, Mode, Set) ->
     F = fun() ->
@@ -234,6 +252,10 @@ name(Forum) ->
 -spec desc(forum()) -> binary().
 desc(Forum) ->
     Forum#ecf_forum.desc.
+
+-spec pins(forum()) -> [ecf_thread:id()].
+pins(Forum) ->
+    Forum#ecf_forum.pins.
 
 -spec posts(forum()) -> non_neg_integer().
 posts(Forum) ->

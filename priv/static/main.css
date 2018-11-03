@@ -41,6 +41,10 @@
     width: 60%;
 }
 
+.pinned {
+    background: #aaa;
+}
+
 #post-list {
     list-style-type: none;
 }

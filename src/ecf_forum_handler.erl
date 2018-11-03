@@ -35,7 +35,7 @@ handle_get(Req, User, Id) ->
                     PerPage = application:get_env(ecf, threads_per_page, 40),
                     % TODO: threads per page could be a user preference?
                     Threads = ecf_thread:get_forum_threads(Id),
-                    Threads2 = ecf_thread:visible_threads(Threads, User),
+                    Threads2 = ecf_thread:visible_threads(Threads, User, Forum),
                     Threads3 = lists:sublist(Threads2,
                                              (Page-1) * PerPage + 1, PerPage),
                     LastPage = length(Threads2) div PerPage + 1,

@@ -133,7 +133,7 @@ generate(group, User, Group) ->
 generate(forum, User, {Forum, Threads, Page, Last}) ->
     Vars = get_vars(User, ecf_forum:name(Forum)),
     ForumV = forum(Forum),
-    ThreadList = thread_list(Threads),
+    ThreadList = thread_list(Threads, ecf_forum:pins(Forum)),
     CanEdit = ecf_forum:id(Forum) >= 1
               andalso ecf_perms:check_perm_forum(User, Forum, edit_forum),
     CanDelete = ecf_forum:id(Forum) >= 1
@@ -152,7 +152,7 @@ generate(forum, User, {Forum, Threads, Page, Last}) ->
 generate(thread, User, {Forum, Thread, Posts, Page, Last}) ->
     Vars = get_vars(User, ecf_thread:title(Thread)),
     ForumV = forum(Forum),
-    ThreadV = thread(Thread),
+    ThreadV = thread(Thread, ecf_forum:pins(Forum)),
     PostList = post_list(Posts),
     CreatePost = ecf_perms:check_perm_thread(User, Thread, create_post),
     EditPosts = ecf_perms:check_perm_thread(User, Thread, edit_post),
@@ -162,6 +162,7 @@ generate(thread, User, {Forum, Thread, Posts, Page, Last}) ->
     EditThread = ecf_perms:check_perm_thread(User, Thread, edit_thread),
     DeleteThread = ecf_perms:check_perm_thread(User, Thread, delete_thread),
     EditPerms = ecf_perms:check_perm_thread(User, Thread, edit_perms),
+    PinThread = ecf_perms:check_perm_thread(User, Thread, pin_thread),
     Users = pm_users(Thread),
     Vars2 = [{forum, ForumV},
              {thread, ThreadV},
@@ -174,6 +175,7 @@ generate(thread, User, {Forum, Thread, Posts, Page, Last}) ->
              {can_edit_thread, EditThread},
              {can_delete_thread, DeleteThread},
              {can_edit_perms, EditPerms},
+             {can_pin_thread, PinThread},
              {page, Page},
              {page_last, Last},
              {pm_users, Users}
@@ -396,8 +398,12 @@ groups_rem(User, Profile) ->
     lists:filter(F2, Groups).
 
 
-thread_list(Threads) ->
-    [thread(X) || X <- Threads].
+thread_list(Threads, Pins) ->
+    [thread(X, Pins) || X <- Threads].
+
+thread(Thread, Pins) ->
+    Id = ecf_thread:id(Thread),
+    [{pinned, lists:member(Id, Pins)} | thread(Thread)].
 
 thread(Thread) ->
     Id = ecf_thread:id(Thread),

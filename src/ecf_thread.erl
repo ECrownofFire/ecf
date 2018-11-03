@@ -14,8 +14,7 @@
          new_post/2,
          delete_thread/1, delete_forum_threads/1,
          delete_post/2,
-         visible_threads/2,
-         filter_threads/2, order_threads/1,
+         visible_threads/3,
          id/1, forum/1, title/1, time/1, last/1, last_time/1, creator/1,
          views/1, perms/1]).
 
@@ -168,6 +167,8 @@ delete_post2(Thread, Post) ->
 -spec delete_thread(id()) -> ok.
 delete_thread(Id) ->
     F = fun() ->
+                [Thread] = mnesia:wread({ecf_thread, Id}),
+                ecf_forum:unpin_thread(forum(Thread), Id),
                 ecf_post:delete_posts(Id),
                 mnesia:delete({ecf_thread, Id})
         end,
@@ -184,20 +185,31 @@ delete_forum_threads(Forum) ->
 
 %% Utilities
 
--spec visible_threads([thread()], ecf_user:user()) -> [thread()].
-visible_threads(Threads, User) ->
-    order_threads(filter_threads(Threads, User)).
+-spec visible_threads([thread()], ecf_user:user(), ecf_forum:forum()) -> [thread()].
+visible_threads(Threads, User, Forum) ->
+    order_threads(filter_threads(Threads, User), ecf_forum:pins(Forum)).
 
 -spec filter_threads([thread()], ecf_user:user()) -> [thread()].
 filter_threads(Threads, User) ->
-    lists:filter(fun(T) -> ecf_perms:check_perm_thread(User, T, view_thread)
-                 end,
-                 Threads).
+    F = fun(T) -> ecf_perms:check_perm_thread(User, T, view_thread) end,
+    lists:filter(F, Threads).
 
--spec order_threads([thread()]) -> [thread()].
-order_threads(Threads) ->
-    F = fun(A, B) -> A#ecf_thread.last_time >= B#ecf_thread.last_time end,
+-spec order_threads([thread()], [id()]) -> [thread()].
+order_threads(Threads, Pins) ->
+    F = fun(A, B) ->
+                Before = last_time(A) >= last_time(B),
+                order_pins(id(A), id(B), Pins, Before)
+        end,
     lists:sort(F, Threads).
+
+order_pins(_, _, [], Default) ->
+    Default;
+order_pins(A, _, [A|_], _) ->
+    true;
+order_pins(_, B, [B|_], _) ->
+    false;
+order_pins(A, B, [_|T], Default) ->
+    order_pins(A, B, T, Default).
 
 %% Wrapper functions
 

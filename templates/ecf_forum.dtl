@@ -36,7 +36,7 @@
             <th class="thread-last-post">Last Post
     <tbody>
         {% for thread in thread_list %}
-        <tr>
+        <tr {% if thread.pinned %}class="pinned"{% endif %}>
             <td class="thread-title"><a href="{{ base }}/thread/{{ thread.id }}">{{ thread.title }}</a>
             <td class="thread-views">{{ thread.views }}
             <td class="thread-replies">{{ thread.replies }}
