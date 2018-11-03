@@ -46,10 +46,11 @@ create(User, Req0) ->
                 denied ->
                     ecf_utils:reply_status(403, User, create_thread_403, Req);
                 Id ->
+                    ToId = ecf_user:id(To),
                     ecf_thread:edit_perm(Id, {user, From}, view_thread, allow),
-                    ecf_thread:edit_perm(Id, {user, To}, view_thread, allow),
+                    ecf_thread:edit_perm(Id, {user, ToId}, view_thread, allow),
                     ecf_thread:edit_perm(Id, {user, From}, create_post, allow),
-                    ecf_thread:edit_perm(Id, {user, To}, create_post, allow),
+                    ecf_thread:edit_perm(Id, {user, ToId}, create_post, allow),
                     ecf_thread:edit_perm(Id, {user, From}, edit_perms, allow),
                     reply(Id, Req)
             end

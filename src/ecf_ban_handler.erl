@@ -73,7 +73,7 @@ get_time(<<"weeks">>, Num) ->
     Micro = timer:hours(Num * 24 * 7) * 1000,
     get_time(Micro);
 get_time(<<"years">>, Num) ->
-    Micro = timer:hours(Num * 24 * 365.25) * 1000,
+    Micro = timer:hours(Num * 24 * 365) * 1000,
     get_time(Micro);
 get_time(<<"permanent">>, _) ->
     permanent.

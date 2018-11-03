@@ -14,6 +14,9 @@
          filter_forums/2, order_forums/1,
          id/1, name/1, desc/1, order/1, posts/1, threads/1, perms/1]).
 
+% for matchspec construction
+-dialyzer({nowarn_function, get_forums/0}).
+
 
 -type id()  :: non_neg_integer().
 
@@ -64,7 +67,7 @@ get_forum(Id) ->
 get_forums() ->
     F = fun() ->
                 mnesia:read_lock_table(ecf_forum),
-                Head = {ecf_forum, '$1', '_', '_', '_', '_', '_', '_'},
+                Head = #ecf_forum{id='$1', _ = '_'},
                 Guard = {'>', '$1', 0}, % skip PM forum
                 mnesia:select(ecf_forum,[{Head,[Guard],['$_']}])
         end,

@@ -10,6 +10,9 @@
          edit_post/5,
          id/1, thread/1, poster/1, time/1, text/1, edited/1]).
 
+% for matchspec construction
+-dialyzer({nowarn_function, get_posts/1}).
+
 
 %%% Post type wrapper
 
