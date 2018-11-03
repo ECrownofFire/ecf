@@ -28,7 +28,6 @@ So that ECF is reasonably useable, I'd like to add the following as well:
 * Listing all users, sorting by various fields (partially done, needs sorting)
 * Searching (needs backend)
     * List all posts by a user
-* Pinning threads
 
 The following may happen at some point, but I'm unsure about them:
 * Markdown for posts (could be done with clientside JS)
