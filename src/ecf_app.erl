@@ -10,7 +10,8 @@
 
 -define(U_ACTIONS, [<<"edit">>]).
 
--define(T_ACTIONS, [<<"create">>, <<"delete">>, <<"edit">>]).
+-define(T_ACTIONS, [<<"create">>, <<"delete">>, <<"edit">>,
+                    <<"pin">>, <<"unpin">>]).
 
 -define(PO_ACTIONS, [<<"create">>, <<"delete">>, <<"edit">>]).
 

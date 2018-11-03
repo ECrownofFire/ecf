@@ -59,50 +59,72 @@ handle_post(Req0, User, <<"create">>) ->
         denied ->
             ecf_utils:reply_status(403, User, create_thread_403, Req);
         Id ->
-            Base = application:get_env(ecf, base_url, ""),
-            cowboy_req:reply(303,
-                             #{<<"location">> => [Base, "/thread/",
-                                                  integer_to_list(Id)]},
-                             Req)
+            do_303(Req, Id)
     end;
 handle_post(Req0, User, <<"delete">>) ->
     {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body([{id, int}], Req0),
     #{id := Id} = M,
-    case ecf_thread:get_thread(Id) of
-        undefined ->
-            ecf_utils:reply_status(400, User, thread_400, Req);
-        Thread ->
-            case ecf_perms:check_perm_thread(User, Thread, delete_thread) of
-                true ->
-                    ok = ecf_thread:delete_thread(Id),
-                    Base = application:get_env(ecf, base_url, ""),
-                    Forum = ecf_thread:forum(Thread),
-                    cowboy_req:reply(303,
-                                     #{<<"location">>
-                                       => [Base, "/forum/",
-                                           integer_to_list(Forum)]},
-                                     Req);
-                false ->
-                    ecf_utils:reply_status(403, User, delete_thread_403, Req)
-            end
+    case get_and_check_perm(Req, Id, User, delete_thread) of
+        {ok, Thread} ->
+            ok = ecf_thread:delete_thread(Id),
+            Base = application:get_env(ecf, base_url, ""),
+            Forum = ecf_thread:forum(Thread),
+            cowboy_req:reply(303, #{<<"location">> => [Base, "/forum/",
+                                                       integer_to_list(Forum)]},
+                             Req);
+        R ->
+            R
     end;
 handle_post(Req0, User, <<"edit">>) ->
     {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body([{id, int}, title], Req0),
     #{id := Id, title := Title} = M,
+    case get_and_check_perm(Req, Id, User, edit_thread) of
+        {ok, _Thread} ->
+            ok = ecf_thread:edit_title(Id, Title),
+            do_303(Req, Id);
+        R ->
+            R
+    end;
+handle_post(Req0, User, <<"pin">>) ->
+    {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body([{id, int}], Req0),
+    #{id := Id} = M,
+    case get_and_check_perm(Req, Id, User, pin_thread) of
+        {ok, Thread} ->
+            ok = ecf_forum:pin_thread(ecf_thread:forum(Thread), Id),
+            do_303(Req, Id);
+        R ->
+            R
+    end;
+handle_post(Req0, User, <<"unpin">>) ->
+    {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body([{id, int}], Req0),
+    #{id := Id} = M,
+    case get_and_check_perm(Req, Id, User, pin_thread) of
+        {ok, Thread} ->
+            ok = ecf_forum:unpin_thread(ecf_thread:forum(Thread), Id),
+            do_303(Req, Id);
+        R ->
+            R
+    end.
+
+get_and_check_perm(Req, Id, User, Mode) ->
     case ecf_thread:get_thread(Id) of
         undefined ->
             ecf_utils:reply_status(400, User, thread_400, Req);
         Thread ->
-            case ecf_perms:check_perm_thread(User, Thread, edit_thread) of
-                true ->
-                    ok = ecf_thread:edit_title(Id, Title),
-                    Base = application:get_env(ecf, base_url, ""),
-                    cowboy_req:reply(303,
-                                     #{<<"location">> => [Base, "/thread/",
-                                                          integer_to_binary(Id)]},
-                                     Req);
+            case ecf_perms:check_perm_thread(User, Thread, Mode) of
                 false ->
-                    ecf_utils:reply_status(403, User, edit_thread_403, Req)
+                    % view_thread -> view_thread_403
+                    Fail0 = atom_to_binary(Mode, latin1),
+                    Fail = binary_to_atom(<<Fail0/binary,"_403">>, latin1),
+                    ecf_utils:reply_status(403, User, Fail, Req);
+                true ->
+                    {ok, Thread}
             end
     end.
+
+do_303(Req, Id) ->
+    Base = application:get_env(ecf, base_url, ""),
+    cowboy_req:reply(303,
+                     #{<<"location">> => [Base, "/thread/", integer_to_binary(Id)]},
+                     Req).
 
