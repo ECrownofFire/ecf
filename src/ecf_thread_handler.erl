@@ -23,25 +23,36 @@ handle_get(Req, User, Id) ->
         undefined ->
             ecf_utils:reply_status(404, User, false, Req);
         Thread ->
-            case ecf_perms:check_perm_thread(User, Thread, view_thread) of
-                true ->
-                    ecf_thread:view_thread(Id),
-                    #{page := Page} = cowboy_req:match_qs([{page, int, 1}], Req),
-                    PerPage = application:get_env(ecf, posts_per_page, 40),
-                    Forum = ecf_forum:get_forum(ecf_thread:forum(Thread)),
-                    First = (Page-1) * PerPage + 1,
-                    Posts = ecf_post:get_posts(Id, First, First + PerPage - 1),
-                    LastPage = (ecf_thread:last(Thread) - 1) div PerPage + 1,
-                    Html = ecf_generators:generate(thread, User,
-                                                   {Forum, Thread, Posts,
-                                                    Page, LastPage}),
-                    cowboy_req:reply(200,
-                                     #{<<"content-type">> => <<"text/html">>},
-                                     Html, Req);
-                false ->
-                    ecf_utils:reply_status(403, User, view_thread_403, Req)
-            end
+            Perm = ecf_perms:check_perm_thread(User, Thread, view_thread),
+            Post = cowboy_req:binding(post, Req),
+            do_get(Req, User, Thread, Perm, Post)
     end.
+
+do_get(Req, User, _, false, _) ->
+    ecf_utils:reply_status(403, User, view_thread_403, Req);
+do_get(Req, User, Thread, true, undefined) ->
+    Id = ecf_thread:id(Thread),
+    ecf_thread:view_thread(ecf_thread:id(Thread)),
+    #{page := Page} = cowboy_req:match_qs([{page, int, 1}], Req),
+    PerPage = application:get_env(ecf, posts_per_page, 40),
+    Forum = ecf_forum:get_forum(ecf_thread:forum(Thread)),
+    First = (Page-1) * PerPage + 1,
+    Posts = ecf_post:get_posts(Id, First, First + PerPage - 1),
+    LastPage = (ecf_thread:last(Thread) - 1) div PerPage + 1,
+    Html = ecf_generators:generate(thread, User,
+                                   {Forum, Thread, Posts, Page, LastPage}),
+    cowboy_req:reply(200, #{<<"content-type">> => <<"text/html">>},
+                     Html, Req);
+do_get(Req, _, Thread, true, Post) ->
+    Id = ecf_thread:id(Thread),
+    PerPage = application:get_env(ecf, posts_per_page, 40),
+    Page = (Post-1) div PerPage + 1,
+    Base = application:get_env(ecf, base_url, ""),
+    cowboy_req:reply(301, #{<<"location">>
+                            => [Base, "/thread/", integer_to_binary(Id),
+                                "?page=", integer_to_binary(Page),
+                                "#post-", integer_to_binary(Post)]},
+                     Req).
 
 
 handle_post(Req, undefined, _Action) ->

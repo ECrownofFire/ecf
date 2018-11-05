@@ -25,6 +25,7 @@
 
 start(_Type, _Args) ->
     IdC = [{id, int}],
+    TPCon = [{id, int}, {post, int}],
     GCon = make_con(?G_ACTIONS),
     UCon = make_con(?U_ACTIONS),
     TCon = make_con(?T_ACTIONS),
@@ -53,7 +54,7 @@ start(_Type, _Args) ->
                {[Base, "/group/:action"], GCon, ecf_group_handler, {}},
                {[Base, "/user[/:id]"], IdC, ecf_user_handler, {}},
                {[Base, "/user/:action"], UCon, ecf_user_handler, {}},
-               {[Base, "/thread/:id"], IdC, ecf_thread_handler, {}},
+               {[Base, "/thread/:id[/post/:post]"], TPCon, ecf_thread_handler, {}},
                {[Base, "/thread/:action"], TCon, ecf_thread_handler, {}},
                {[Base, "/post/:action"], PoCon, ecf_post_handler, {}},
                {[Base, "/forum/:id"], IdC, ecf_forum_handler, {}},

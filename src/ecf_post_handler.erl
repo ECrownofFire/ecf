@@ -62,7 +62,7 @@ try_post(Req0 = #{method := <<"POST">>}, User, <<"create">>) ->
                     cowboy_req:reply(303,
                                      #{<<"location">>
                                        => [Base, <<"/thread/">>, integer_to_binary(Thread),
-                                           <<"#post-">>, integer_to_list(Post)]},
+                                           <<"/post/">>, integer_to_binary(Post)]},
                                      Req);
                 false ->
                     ecf_utils:reply_status(403, User, create_post_403, Req)
@@ -120,13 +120,10 @@ post_edit(User, Thread, Post, Text, Req) ->
             ecf_post:edit_post(TId, Id, ecf_user:id(User),
                                erlang:timestamp(), Text),
             Base = application:get_env(ecf, base_url, ""),
-            PerPage = application:get_env(ecf, posts_per_page, 40),
-            Page = ecf_post:id(Post) div PerPage + 1,
             cowboy_req:reply(303,
                              #{<<"location">>
-                               => [Base, <<"/thread/">>, integer_to_list(TId),
-                                   <<"?page=">>, integer_to_list(Page),
-                                   <<"#post-">>, integer_to_list(Id)]},
+                               => [Base, <<"/thread/">>, integer_to_binary(TId),
+                                   <<"/post/">>, integer_to_binary(Id)]},
                              Req)
     end.
 
