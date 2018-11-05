@@ -25,14 +25,14 @@
 
 start(_Type, _Args) ->
     IdC = [{id, int}],
-    GCon = [{action, make_fun(?G_ACTIONS)}],
-    UCon = [{action, make_fun(?U_ACTIONS)}],
-    TCon = [{action, make_fun(?T_ACTIONS)}],
-    PoCon = [{action, make_fun(?PO_ACTIONS)}],
-    FCon = [{action, make_fun(?F_ACTIONS)}],
-    PeCon = [{action, make_fun(?PE_ACTIONS)}],
-    MsgCon = [{action, make_fun(?MSG_ACTIONS)}],
-    BanCon = [{action, make_fun(?BAN_ACTIONS)}],
+    GCon = make_con(?G_ACTIONS),
+    UCon = make_con(?U_ACTIONS),
+    TCon = make_con(?T_ACTIONS),
+    PoCon = make_con(?PO_ACTIONS),
+    FCon = make_con(?F_ACTIONS),
+    PeCon = make_con(?PE_ACTIONS),
+    MsgCon = make_con(?MSG_ACTIONS),
+    BanCon = make_con(?BAN_ACTIONS),
     Host = application:get_env(ecf, host, '_'),
     Base = application:get_env(ecf, base_url, ""),
     Dispatch = cowboy_router:compile([
@@ -92,6 +92,9 @@ start_tls({Port, CertFile, KeyFile}, Dispatch) ->
         #{env => #{dispatch => Dispatch},
           middlewares => [ecf_csrf, cowboy_router, cowboy_handler]}),
     ok.
+
+make_con(List) ->
+    [{action, make_fun(List)}].
 
 make_fun(List) ->
     fun(forward, Name) ->
