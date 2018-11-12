@@ -34,7 +34,7 @@ start(_Type, _Args) ->
     PeCon = make_con(?PE_ACTIONS),
     MsgCon = make_con(?MSG_ACTIONS),
     BanCon = make_con(?BAN_ACTIONS),
-    Host = application:get_env(ecf, host, '_'),
+    {ok, Host} = application:get_env(ecf, host),
     Base = application:get_env(ecf, base_url, ""),
     Dispatch = cowboy_router:compile([
         {Host, [{[Base, "/favicon.ico"], cowboy_static,
