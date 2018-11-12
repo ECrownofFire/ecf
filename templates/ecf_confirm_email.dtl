@@ -1,0 +1,10 @@
+{% extends "ecf_base.dtl" %}
+{# vim: set ft=htmldjango: #}
+{% block content %}
+<main id="confirm-email">
+<form id="form-confirm-email" action="{{ base }}/confirm" method="post">
+    <input type="hidden" name="code" value="{{ code }}">
+    <button>Confirm Email</button>
+</form>
+</main>
+{% endblock %}

@@ -87,8 +87,13 @@ generate(register, _, {Type, BaseVars}) ->
     Vars2 = [{message, Message}, {recaptcha_key, Key} | Vars],
     {ok, Res} = ecf_register_dtl:render(Vars2),
     Res;
-generate(confirmed_email, User, _) ->
+generate(confirm_email, User, Code) ->
     Vars = get_vars(User, "Confirm Email"),
+    Vars2 = [{code, Code} | Vars],
+    {ok, Res} = ecf_confirm_email_dtl:render(Vars2),
+    Res;
+generate(confirmed_email, User, _) ->
+    Vars = get_vars(User, "Email Confirmed"),
     {ok, Res} = ecf_confirmed_email_dtl:render(Vars),
     Res;
 generate(user, User, Profile) ->
