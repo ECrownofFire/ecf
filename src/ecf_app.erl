@@ -68,30 +68,31 @@ start(_Type, _Args) ->
     ]),
     {ok, Http} = application:get_env(ecf, http),
     {ok, Https} = application:get_env(ecf, https),
-    start_clear(Http, Dispatch),
-    start_tls(Https, Dispatch),
+    Middlewares = [ecf_csrf, ecf_refresh, cowboy_router, cowboy_handler],
+    start_clear(Http, Dispatch, Middlewares),
+    start_tls(Https, Dispatch, Middlewares),
     ecf_sup:start_link().
 
 stop(_State) ->
     ok.
 
 
-start_clear(false, _) ->
+start_clear(false, _, _) ->
     ok;
-start_clear(Port, Dispatch) ->
+start_clear(Port, Dispatch, Middlewares) ->
     {ok, _Pid} = cowboy:start_clear(ecf_http_listener,
         [{port, Port}],
         #{env => #{dispatch => Dispatch},
-          middlewares => [ecf_csrf, ecf_refresh, cowboy_router, cowboy_handler]}),
+          middlewares => Middlewares}),
     ok.
 
-start_tls(false, _) ->
+start_tls(false, _, _) ->
     ok;
-start_tls({Port, CertFile, KeyFile}, Dispatch) ->
+start_tls({Port, CertFile, KeyFile}, Dispatch, Middlewares) ->
     {ok, _Pid} = cowboy:start_tls(ecf_https_listener,
         [{port, Port}, {certfile, CertFile}, {keyfile, KeyFile}],
         #{env => #{dispatch => Dispatch},
-          middlewares => [ecf_csrf, cowboy_router, cowboy_handler]}),
+          middlewares => Middlewares}),
     ok.
 
 make_con(List) ->
