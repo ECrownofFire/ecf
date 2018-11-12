@@ -2,11 +2,13 @@
 {# vim: set ft=htmldjango: #}
 {% block content %}
 <main id="reset-pw">
+{% if captcha %}
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+{% endif %}
 <p id="message">{{ message }}</p>
 <form id="form-reset-pw" action="{{ base }}/reset_password" method="post">
     <label>Email: <input autocomplete="email" name="email" required></label>
-    <label>Code: <input autocomplete="off" name= "code" value="{{ code }}"></label>
+    <label>Code: <input autocomplete="off" name="code" value="{{ code }}" required></label>
     <label>Password (8-64 characters):<input id="password" type="password" autocomplete="new-password" name="password" required></label>
     <label>Confirm Password:<input type="password" autocomplete="new-password" name="password-confirm" required oninput="confirmPassword(this)"></label>
     {% if captcha %}
