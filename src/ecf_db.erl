@@ -22,6 +22,7 @@ install() ->
     ok = mnesia:create_schema(Nodes),
     ok = application:start(mnesia),
     ok = create_id_table(Nodes),
+    ecf_global:create_table(Nodes),
     ecf_log:create_table(Nodes),
     ecf_perms:create_table(Nodes),
     ecf_forum:create_table(Nodes),
