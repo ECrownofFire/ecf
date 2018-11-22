@@ -283,7 +283,7 @@ user_profile(User) ->
      , {bday, Bday}
      , {bio, ecf_user:bio(User)}
      , {loc, ecf_user:loc(User)}
-     , {group_list, [group(X) || X <- ecf_user:groups(User)]}
+     , {group_list, group_list(User, ecf_user:groups(User))}
      | U].
 
 ban_list(Bans) ->
@@ -357,6 +357,8 @@ forum(Forum) ->
 group_list(User, Groups) ->
     [group(User, X) || X <- Groups].
 
+group(User, Group) when is_integer(Group) ->
+    group(User, get_group(Group));
 group(User, Group) ->
     Id = ecf_group:id(Group),
     InGroup = lists:member(Id, ecf_user:groups(User)),
@@ -390,7 +392,7 @@ groups_add(User, Profile) ->
          end,
     Groups = lists:filter(F1, ecf_group:get_groups()),
     F2 = fun(G) -> ecf_perms:check_perm_group(User, G, manage_group) end,
-    lists:filter(F2, Groups).
+    group_list(lists:filter(F2, Groups)).
 
 groups_rem(User, Profile) ->
     Gs = ecf_user:groups(Profile),
@@ -400,7 +402,7 @@ groups_rem(User, Profile) ->
          end,
     Groups = lists:filter(F1, ecf_group:get_groups()),
     F2 = fun(G) -> ecf_perms:check_perm_group(User, G, manage_group) end,
-    lists:filter(F2, Groups).
+    group_list(lists:filter(F2, Groups)).
 
 
 thread_list(Threads, Pins) ->
