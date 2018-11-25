@@ -55,7 +55,7 @@ create_table(Nodes) ->
     {id(), binary()} | {error, atom()}.
 new_user(Name, Pass, Email0) ->
     Email = string:trim(Email0),
-    {ok, Hash} = ?HASH(Pass),
+    Hash = hash_pass(Pass),
     Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
     Sess = {Session, erlang:system_time(second)},
     F = fun() ->
@@ -172,7 +172,7 @@ edit_email(Id, Email) ->
 
 -spec edit_pass(id(), binary()) -> binary().
 edit_pass(Id, NewPass) ->
-    {ok, Hash} = ?HASH(NewPass),
+    Hash = hash_pass(NewPass),
     Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
     Sess = {Session, erlang:system_time(second)},
     F = fun() ->
@@ -360,8 +360,23 @@ enabled(User) ->
 
 -spec check_pass(user(), binary()) -> boolean().
 check_pass(User, Pass) ->
-    Hash = User#ecf_user.pass,
-    enacl:pwhash_str_verify(Hash, Pass).
+    <<Nonce:24/binary, Enc/binary>> = User#ecf_user.pass,
+    Key = ecf_global:get(encryption_key),
+    case enacl:aead_xchacha20poly1305_decrypt(Key, Nonce, <<>>, Enc) of
+        Hash when is_binary(Hash) ->
+            enacl:pwhash_str_verify(Hash, Pass);
+        _ ->
+            fake_hash(),
+            false
+    end.
+
+-spec hash_pass(binary()) -> binary().
+hash_pass(Pass) ->
+    {ok, Hash} = ?HASH(Pass),
+    Nonce = crypto:strong_rand_bytes(24),
+    Key = ecf_global:get(encryption_key),
+    Enc = enacl:aead_xchacha20poly1305_encrypt(Key, Nonce, <<>>, Hash),
+    <<Nonce:24/binary, Enc/binary>>.
 
 % Fakes hashing for invalid logins
 -spec fake_hash() -> ok.

@@ -6,7 +6,7 @@ BUILD_DEPS = parse_trans
 
 DEPS = cowboy iso8601 jiffy erlydtl gen_smtp enacl
 dep_cowboy_commit = 2.5.0
-dep_enacl = git https://github.com/ecrownoffire/enacl
+dep_enacl = git https://github.com/ecrownoffire/enacl xchacha
 
 LOCAL_DEPS = mnesia crypto public_key ssl inets runtime_tools sasl
 
