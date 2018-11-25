@@ -92,10 +92,10 @@ compile(Module, T) ->
 
 -spec forms(atom(), any()) -> [erl_syntax:syntaxTree()].
 forms(Module, T) ->
-    [erl_syntax:revert(X) || X <- term_to_abstract(Module, term, T)].
+    [erl_syntax:revert(X) || X <- term_to_abstract(Module, T)].
 
--spec term_to_abstract(atom(), atom(), any()) -> [erl_syntax:syntaxTree()].
-term_to_abstract(Module, Getter, T) ->
+-spec term_to_abstract(atom(), any()) -> [erl_syntax:syntaxTree()].
+term_to_abstract(Module, T) ->
     [%% -module(Module).
      erl_syntax:attribute(
        erl_syntax:atom(module),
@@ -104,11 +104,11 @@ term_to_abstract(Module, Getter, T) ->
      erl_syntax:attribute(
        erl_syntax:atom(export),
        [erl_syntax:list(
-         [erl_syntax:arity_qualifier(
-            erl_syntax:atom(Getter),
-            erl_syntax:integer(0))])]),
-     %% Getter() -> T.
+          [erl_syntax:arity_qualifier(
+             erl_syntax:atom(value),
+             erl_syntax:integer(0))])]),
+     %% value() -> T.
      erl_syntax:function(
-       erl_syntax:atom(Getter),
-[erl_syntax:clause([], none, [erl_syntax:abstract(T)])])].
+       erl_syntax:atom(value),
+       [erl_syntax:clause([], none, [erl_syntax:abstract(T)])])].
 
