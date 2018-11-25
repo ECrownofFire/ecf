@@ -64,7 +64,8 @@ db_get(Key, Default) ->
                 mnesia:read({ecf_global, Key})
         end,
     case mnesia:activity(transaction, F) of
-        [Val] ->
+        [G] ->
+            Val = G#ecf_global.val,
             global_put(Key, Val),
             Val;
         _ ->
