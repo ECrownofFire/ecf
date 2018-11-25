@@ -49,6 +49,8 @@ create_table(Nodes) ->
     {atomic, ok} = mnesia:create_table(ecf_user,
                         [{attributes, record_info(fields, ecf_user)},
                          {disc_copies, Nodes}]),
+    Key = crypto:strong_rand_bytes(32),
+    ecf_global:put(encryption_key, Key),
     ok.
 
 -spec new_user(binary(), binary(), binary()) ->
