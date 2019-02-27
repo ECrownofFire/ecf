@@ -12,11 +12,6 @@ LOCAL_DEPS = mnesia crypto public_key ssl inets runtime_tools sasl
 
 DEP_PLUGINS = cowboy
 
-# workaround for dialyzer bug with PIC
-# also handle parse transforms for dialyzer (erlang.mk #814)
-DIALYZER_OPTS = --no_native -pa ebin -Werror_handling -Wrace_conditions -Wunmatched_returns
-DIALYZER_PLT_OPTS = --no_native
-
 # Whitespace to be used when creating files from templates.
 SP = 4
 
