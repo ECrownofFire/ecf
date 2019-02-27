@@ -4,7 +4,8 @@
 <main id="unban-user">
 {% if ban %}
 <h2>Unban <a href="{{ base }}/user/{{ target.id }}">{{ target.name }}</a>?</h2>
-<p>{{ target.name }} was banned on <time class="format-time" datetime="{{ ban.time }}"></time> by <a href="{{ base }}/user/{{ ban.by.id }}">{{ ban.by.name }}</a>, and will be banned until {% if ban.until != "permanent" %}<time class="format-time" datetime="{{ ban.until }}"></time>{% else %}the end of time{% endif %}.
+<p>{{ target.name }} was banned on <time class="format-time" datetime="{{ ban.time }}"></time> by <a href="{{ base }}/user/{{ ban.by.id }}">{{ ban.by.name }}</a>, and will be banned until {% if ban.until != "permanent" %}<time class="format-time" datetime="{{ ban.until }}"></time>{% else %}the end of time{% endif %}.</p>
+<p>The reason for the ban was: "{{ ban.reason }}".</p>
 <form method="post" action="{{ base }}/unban">
     <input type="hidden" name="id" value="{{ target.id }}">
     <button>Unban!</button>
