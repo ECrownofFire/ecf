@@ -76,7 +76,6 @@ check_ban(User) ->
                                 Time = timer:now_diff(U, erlang:timestamp()),
                                 if Time < 0 ->
                                        delete_ban(User),
-                                       ecf_group:remove_member(3, User),
                                        undefined;
                                    true ->
                                        B
