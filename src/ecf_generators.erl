@@ -256,12 +256,14 @@ get_title(String) ->
     end.
 
 users(Users) ->
-    [user(get_user(X)) || X <- Users].
+    [user(X) || X <- Users].
 
 -spec user(ecf_user:user()) -> [{atom(), term()}];
           (undefined) -> false.
 user(undefined) ->
     false;
+user(Id) when is_integer(Id) ->
+    user(get_user(Id));
 user(User) ->
     [{id, ecf_user:id(User)},
      {name, ecf_user:name(User)},
@@ -298,8 +300,8 @@ ban(Ban) ->
                 T ->
                   iso8601:format(T)
             end,
-    [{user, get_user(ecf_ban:user(Ban))},
-     {by, get_user(ecf_ban:by(Ban))},
+    [{user, user(ecf_ban:user(Ban))},
+     {by, user(ecf_ban:by(Ban))},
      {reason, ecf_ban:reason(Ban)},
      {time, iso8601:format(ecf_ban:time(Ban))},
      {until, Until}].
@@ -417,15 +419,15 @@ thread(Thread) ->
     LastId = ecf_thread:last(Thread),
     LastPost = ecf_post:get_post(Id, LastId),
     LastPostTime = ecf_post:time(LastPost),
-    LastPoster = get_user(ecf_post:poster(LastPost)),
-    Creator = get_user(ecf_thread:creator(Thread)),
+    LastPoster = user(ecf_post:poster(LastPost)),
+    Creator = user(ecf_thread:creator(Thread)),
     Views = ecf_thread:views(Thread),
     [{id, integer_to_binary(Id)},
      {title, ecf_thread:title(Thread)},
      {replies, integer_to_binary(LastId)},
-     {creator, user(Creator)},
+     {creator, Creator},
      {last_time, iso8601:format(LastPostTime)},
-     {last_poster, user(LastPoster)},
+     {last_poster, LastPoster},
      {views, integer_to_binary(Views)}].
 
 pm_users(Thread) ->
@@ -459,20 +461,20 @@ post_list(Posts) ->
 post(Post) ->
     Id = ecf_post:id(Post),
     PosterId = ecf_post:poster(Post),
-    Poster = get_user(PosterId),
+    Poster = user(PosterId),
     Gravatar = gravatar(Poster),
     Time = iso8601:format(ecf_post:time(Post)),
     Text = ecf_post:text(Post),
     [{id, integer_to_binary(Id)},
      {gravatar, Gravatar},
-     {poster, user(Poster)},
+     {poster, Poster},
      {time, Time},
      {text, binary_to_list(Text)}] ++ edited(ecf_post:edited(Post)).
 
 edited(undefined) ->
     [];
 edited({Id, Time}) ->
-    [{editor, user(get_user(Id))}, {edited, iso8601:format(Time)}].
+    [{editor, user(Id)}, {edited, iso8601:format(Time)}].
 
 status_desc(400) ->
     "Bad Request";

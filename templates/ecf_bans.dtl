@@ -18,7 +18,7 @@
             <td class="ban-user"><a href="{{ base }}/user/{{ ban.user.id }}">{{ ban.user.name }}</a>
             <td class="ban-by"><a href="{{ base }}/user/{{ ban.by.id }}">{{ ban.by.name }}</a>
             <td class="ban-reason">{{ ban.reason }}
-            <td class="ban time"><time class="format-time" datetime="{{ ban.time }}"></time>
+            <td class="ban-time"><time class="format-time" datetime="{{ ban.time }}"></time>
             {% if ban.until != "permanent" %}
             <td class="ban-until"><time class="format-time" datetime="{{ ban.time }}"></time>
             {% else %}

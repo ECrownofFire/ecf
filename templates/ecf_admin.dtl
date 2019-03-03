@@ -7,7 +7,7 @@
 <p>This page contains several administrative functions. Note that you can only see what you have permission to do.</p>
 {% if can_view_bans %}
 <h3>Bans</h3>
-<a href="{{ base }}">All current bans</a>
+<a href="{{ base }}/bans">All current bans</a>
 {% endif %}
 {% if can_reorder %}
 <h3>Reorder Forums</h3>
