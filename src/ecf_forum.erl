@@ -29,7 +29,7 @@
          posts = 0 :: non_neg_integer(),
          threads = 0 :: non_neg_integer(),
          perms = [] :: [ecf_perms:perm()]}).
--type forum() :: #ecf_forum{}.
+-opaque forum() :: #ecf_forum{}.
 
 -spec create_table([node()]) -> ok.
 create_table(Nodes) ->

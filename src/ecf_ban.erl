@@ -1,5 +1,7 @@
 -module(ecf_ban).
 
+-export_type([ban/0]).
+
 -export([create_table/1,
          check_perm/2,
          new_ban/5,
@@ -14,7 +16,7 @@
          reason :: binary(),
          time   :: erlang:timestamp(),
          until  :: erlang:timestamp() | permanent}).
--type ban() :: #ecf_ban{}.
+-opaque ban() :: #ecf_ban{}.
 
 
 -spec create_table([node()]) -> ok.

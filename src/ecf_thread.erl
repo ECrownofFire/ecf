@@ -28,7 +28,7 @@
          creator   :: ecf_user:id(),
          views = 0 :: non_neg_integer(),
          perms = []:: [ecf_perms:perm()]}).
--type thread() :: #ecf_thread{}.
+-opaque thread() :: #ecf_thread{}.
 
 -spec create_table([node()]) -> ok.
 create_table(Nodes) ->

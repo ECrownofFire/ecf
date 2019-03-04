@@ -25,7 +25,7 @@
          time   :: erlang:timestamp(),
          text   :: binary(),
          edited :: undefined | {ecf_user:id(), erlang:timestamp()}}).
--type post() :: #ecf_post{}.
+-opaque post() :: #ecf_post{}.
 
 -spec create_table([node()]) -> ok.
 create_table(Nodes) ->

@@ -42,7 +42,7 @@
          loc    = <<"">> :: binary(),
          posts = 0 :: non_neg_integer(),
          last_post :: erlang:timestamp()}).
--type user() :: #ecf_user{}.
+-opaque user() :: #ecf_user{}.
 
 -spec create_table([node()]) -> ok.
 create_table(Nodes) ->

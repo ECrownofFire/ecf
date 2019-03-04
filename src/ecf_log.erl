@@ -11,7 +11,7 @@
         {user_or_ip  :: binary() | inet:ip_address(),
          fails :: non_neg_integer()
          }).
--type log() :: #ecf_log{}.
+-opaque log() :: #ecf_log{}.
 
 create_table(Nodes) ->
     {atomic, ok} = mnesia:create_table(ecf_log,

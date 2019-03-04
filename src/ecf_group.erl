@@ -22,7 +22,7 @@
          desc :: binary(),
          members = [] :: [ecf_user:id()],
          perms = [] :: [ecf_perms:perm()]}).
--type group() :: #ecf_group{}.
+-opaque group() :: #ecf_group{}.
 
 -spec create_table([node()]) -> ok.
 create_table(Nodes) ->

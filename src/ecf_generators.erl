@@ -259,6 +259,7 @@ users(Users) ->
     [user(X) || X <- Users].
 
 -spec user(ecf_user:user()) -> [{atom(), term()}];
+          (ecf_user:id()) -> [{atom(), term()}];
           (undefined) -> false.
 user(undefined) ->
     false;
@@ -377,8 +378,6 @@ group(User, Group) ->
 group_list(Groups) ->
     [group(X) || X <- Groups].
 
-group(Id) when is_integer(Id) ->
-    group(get_group(Id));
 group(Group) ->
     [{id, integer_to_binary(ecf_group:id(Group))},
      {name, ecf_group:name(Group)},
@@ -461,13 +460,13 @@ post_list(Posts) ->
 post(Post) ->
     Id = ecf_post:id(Post),
     PosterId = ecf_post:poster(Post),
-    Poster = user(PosterId),
+    Poster = get_user(PosterId),
     Gravatar = gravatar(Poster),
     Time = iso8601:format(ecf_post:time(Post)),
     Text = ecf_post:text(Post),
     [{id, integer_to_binary(Id)},
      {gravatar, Gravatar},
-     {poster, Poster},
+     {poster, user(Poster)},
      {time, Time},
      {text, binary_to_list(Text)}] ++ edited(ecf_post:edited(Post)).
 
@@ -501,6 +500,7 @@ get_user(Id) ->
             User
     end.
 
+-spec get_group(ecf_group:id()) -> ecf_group:group().
 get_group(Id) ->
     case get({ecf_group, Id}) of
         undefined ->
