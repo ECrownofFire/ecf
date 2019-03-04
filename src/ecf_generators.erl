@@ -168,6 +168,7 @@ generate(thread, User, {Forum, Thread, Posts, Page, Last}) ->
     DeleteThread = ecf_perms:check_perm_thread(User, Thread, delete_thread),
     EditPerms = ecf_perms:check_perm_thread(User, Thread, edit_perms),
     PinThread = ecf_perms:check_perm_thread(User, Thread, pin_thread),
+    TagThread = ecf_perms:check_perm_thread(User, Thread, tag_thread),
     Users = pm_users(Thread),
     Vars2 = [{forum, ForumV},
              {thread, ThreadV},
@@ -180,6 +181,7 @@ generate(thread, User, {Forum, Thread, Posts, Page, Last}) ->
              {can_edit_thread, EditThread},
              {can_delete_thread, DeleteThread},
              {can_edit_perms, EditPerms},
+             {can_tag_thread, TagThread},
              {can_pin_thread, PinThread},
              {page, Page},
              {page_last, Last},
@@ -420,6 +422,7 @@ thread(Thread) ->
     LastPostTime = ecf_post:time(LastPost),
     LastPoster = user(ecf_post:poster(LastPost)),
     Creator = user(ecf_thread:creator(Thread)),
+    Tags = tags(ecf_tag:get_tags(Id)),
     Views = ecf_thread:views(Thread),
     [{id, integer_to_binary(Id)},
      {title, ecf_thread:title(Thread)},
@@ -427,7 +430,14 @@ thread(Thread) ->
      {creator, Creator},
      {last_time, iso8601:format(LastPostTime)},
      {last_poster, LastPoster},
+     {tags, Tags},
      {views, integer_to_binary(Views)}].
+
+tags(Tags) ->
+    [tag(X) || X <- Tags].
+
+tag(Tag) ->
+    [{name, ecf_tag:name(Tag)}].
 
 pm_users(Thread) ->
     case ecf_thread:forum(Thread) of

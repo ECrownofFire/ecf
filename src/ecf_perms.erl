@@ -27,6 +27,7 @@
               | delete_own_post | edit_own_post
               | reorder_forums
               | pin_thread | move_thread | lock_thread | ban_user | view_bans
+              | tag_thread | create_tag | delete_tag
               | edit_perms | manage_group
               | join_group | leave_group.
 

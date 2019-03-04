@@ -5,6 +5,29 @@
 <header id="thread-header">
 <a href="{{ base }}/forum/{{ forum.id }}">{{ forum.name }}</a>
 <h2>{{ thread.title }}</h2>
+
+{% if thread.tags %}
+<ul id="thread-tags">
+    {% for tag in thread.tags %}
+    <li>{{ tag.name }}
+        <form action="{{ base }}/thread/untag" method="post">
+            <input type="hidden" name="id" value="{{ thread.id }}">
+            <input type="hidden" name="tag" value="{{ tag.name }}">
+            <button>Remove</button>
+        </form>
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% if can_tag_thread %}
+<form id="form-tag-thread" action="{{ base }}/thread/tag" method="post">
+    <input type="hidden" name="id" value="{{ thread.id }}">
+    <input type="text" name="tag">
+    <button>Tag</button>
+</form>
+{% endif %}
+
 {% if can_edit_thread %}
 <form id='form-edit-thread' action="{{ base }}/thread/edit" method="post">
     <input type="hidden" name="id" value="{{ thread.id }}">
@@ -12,12 +35,14 @@
     <button>Edit Title</button>
 </form>
 {% endif %}
+
 {% if can_delete_thread %}
 <form id="form-delete-thread" action="{{ base }}/thread/delete" method="post">
     <input type="hidden" name="id" value="{{ thread.id }}">
     <button onclick="return confirm('Are you sure you want to delete this thread and every post in it?');">Delete Thread</button>
 </form>
 {% endif %}
+
 {% if can_pin_thread %}
 {% if not thread.pinned %}
 <form id="form-pin-thread" action="{{ base }}/thread/pin" method="post">

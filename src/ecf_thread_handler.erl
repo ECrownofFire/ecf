@@ -115,6 +115,40 @@ handle_post(Req0, User, <<"unpin">>) ->
             do_303(Req, Id);
         R ->
             R
+    end;
+handle_post(Req0, User, <<"tag">>) ->
+    L = [{id, int}, tag],
+    {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body(L, Req0),
+    #{id := Id, tag := Tag} = M,
+    case get_and_check_perm(Req, Id, User, tag_thread) of
+        {ok, Thread} ->
+            case ecf_tag:tag_thread(Tag, Id) of
+                ok ->
+                    do_303(Req, Id);
+                % if the user has permission to create tags, do it anyway
+                {error, tag_not_found} ->
+                    case check_perm(Req, User, Thread, create_tag) of
+                        ok ->
+                            ok = ecf_tag:new_tag(Tag),
+                            ok = ecf_tag:tag_thread(Tag, Id),
+                            do_303(Req, Id);
+                        E ->
+                            E
+                    end
+            end;
+        R ->
+            R
+    end;
+handle_post(Req0, User, <<"untag">>) ->
+    L = [{id, int}, tag],
+    {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body(L, Req0),
+    #{id := Id, tag := Tag} = M,
+    case get_and_check_perm(Req, Id, User, tag_thread) of
+        {ok, _Thread} ->
+            ok = ecf_tag:untag_thread(Tag, Id),
+            do_303(Req, Id);
+        R ->
+            R
     end.
 
 get_and_check_perm(Req, Id, User, Mode) ->
@@ -122,15 +156,22 @@ get_and_check_perm(Req, Id, User, Mode) ->
         undefined ->
             ecf_utils:reply_status(400, User, thread_400, Req);
         Thread ->
-            case ecf_perms:check_perm_thread(User, Thread, Mode) of
-                false ->
-                    % view_thread -> view_thread_403
-                    Fail0 = atom_to_binary(Mode, latin1),
-                    Fail = binary_to_atom(<<Fail0/binary,"_403">>, latin1),
-                    ecf_utils:reply_status(403, User, Fail, Req);
-                true ->
-                    {ok, Thread}
+            case check_perm(Req, User, Thread, Mode) of
+                ok ->
+                    {ok, Thread};
+                R -> R
             end
+    end.
+
+check_perm(Req, User, Thread, Mode) ->
+    case ecf_perms:check_perm_thread(User, Thread, Mode) of
+        false ->
+            % view_thread -> view_thread_403
+            Fail0 = atom_to_binary(Mode, latin1),
+            Fail = binary_to_atom(<<Fail0/binary,"_403">>, latin1),
+            ecf_utils:reply_status(403, User, Fail, Req);
+        true ->
+            ok
     end.
 
 do_303(Req, Id) ->
