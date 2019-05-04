@@ -17,7 +17,7 @@
 ERLANG_MK_FILENAME := $(realpath $(lastword $(MAKEFILE_LIST)))
 export ERLANG_MK_FILENAME
 
-ERLANG_MK_VERSION = 6ebc73e
+ERLANG_MK_VERSION = fb87e18
 ERLANG_MK_WITHOUT = 
 
 # Make 3.81 and 3.82 are deprecated.
@@ -1927,6 +1927,14 @@ pkg_gen_icmp_fetch = git
 pkg_gen_icmp_repo = https://github.com/msantos/gen_icmp
 pkg_gen_icmp_commit = master
 
+PACKAGES += gen_leader
+pkg_gen_leader_name = gen_leader
+pkg_gen_leader_description = leader election behavior
+pkg_gen_leader_homepage = https://github.com/garret-smith/gen_leader_revival
+pkg_gen_leader_fetch = git
+pkg_gen_leader_repo = https://github.com/garret-smith/gen_leader_revival
+pkg_gen_leader_commit = master
+
 PACKAGES += gen_nb_server
 pkg_gen_nb_server_name = gen_nb_server
 pkg_gen_nb_server_description = OTP behavior for writing non-blocking servers
@@ -1942,6 +1950,14 @@ pkg_gen_paxos_homepage = https://github.com/gburd/gen_paxos
 pkg_gen_paxos_fetch = git
 pkg_gen_paxos_repo = https://github.com/gburd/gen_paxos
 pkg_gen_paxos_commit = master
+
+PACKAGES += gen_rpc
+pkg_gen_rpc_name = gen_rpc
+pkg_gen_rpc_description = A scalable RPC library for Erlang-VM based languages
+pkg_gen_rpc_homepage = https://github.com/priestjim/gen_rpc.git
+pkg_gen_rpc_fetch = git
+pkg_gen_rpc_repo = https://github.com/priestjim/gen_rpc.git
+pkg_gen_rpc_commit = master
 
 PACKAGES += gen_smtp
 pkg_gen_smtp_name = gen_smtp
