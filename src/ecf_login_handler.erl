@@ -2,7 +2,6 @@
 -behaviour(cowboy_handler).
 
 -export([init/2]).
--export([terminate/3]).
 
 
 init(Req = #{method := <<"GET">>}, State) ->
@@ -16,30 +15,35 @@ init(Req = #{method := <<"GET">>}, State) ->
     {ok, Req2, State};
 init(Req0 = #{method := <<"POST">>}, State) ->
     #{url := Url} = cowboy_req:match_qs([{url, [], <<"">>}], Req0),
-    {ok, KV, Req} = cowboy_req:read_urlencoded_body(Req0),
-    {_, Email} = lists:keyfind(<<"email">>, 1, KV),
-    {_, Password} = lists:keyfind(<<"password">>, 1, KV),
-    Ip = ecf_utils:get_ip(Req),
-    Req2 = case ecf_log:check_log(Email, Ip) of
-               true ->
-                   case ecf_captcha:check_captcha(Ip, KV) of
-                       true ->
-                           try_login(Email, Password, Url, Req);
-                       false ->
-                           Html = ecf_generators:generate(login, undefined,
-                                                          {true, Url,
-                                                           failed_captcha}),
-                           cowboy_req:reply(429, #{<<"content-type">>
-                                                   => <<"text/html">>},
-                                            Html, Req)
-                   end;
-               false ->
-                   try_login(Email, Password, Url, Req)
-           end,
+    {Email, Password, Resp, Req} = get_login_vars(Req0),
+    Req2 = do_login(Email, Password, Url, Resp, Req),
     {ok, Req2, State}.
 
-terminate(_Reason, _Req, _State) ->
-    ok.
+get_login_vars(Req0) ->
+    Atom = ecf_captcha:get_atom(),
+    L = [email, password, {Atom, [], <<"">>}],
+    {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body(L, Req0),
+    #{email := Email, password := Password, Atom := Resp} = M,
+    {Email, Password, Resp, Req}.
+
+do_login(Email, Password, Url, Resp, Req) ->
+    Ip = ecf_utils:get_ip(Req),
+    case ecf_log:check_log(Email, Ip) of
+        true ->
+            case ecf_captcha:check_captcha(Ip, Resp) of
+                true ->
+                    try_login(Email, Password, Url, Req);
+                false ->
+                    Html = ecf_generators:generate(login, undefined,
+                                                   {true, Url,
+                                                    failed_captcha}),
+                    cowboy_req:reply(429, #{<<"content-type">>
+                                            => <<"text/html">>},
+                                     Html, Req)
+            end;
+        false ->
+            try_login(Email, Password, Url, Req)
+    end.
 
 try_login(Email, Password, Url, Req) ->
     User = ecf_user:get_user_by_email(Email),
