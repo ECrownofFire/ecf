@@ -32,36 +32,38 @@ do_get(User, Req) ->
     end.
 
 do_ban(User, Req0) ->
-    L = [{id, int}, reason, {time, fun time_constraint/2}, {length, int, 1}],
-    {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body(L, Req0),
-    #{id := Id, reason := Reason, time := Time, length := Length} = M,
+    {Id, Reason, BanTime, Req} = get_ban_params(Req0),
     case check(User, Id, Req) of
         {ok, _Target} ->
-            BanTime = get_time(Time, Length),
             ok = ecf_ban:new_ban(Id, ecf_user:id(User), Reason,
                                  erlang:timestamp(), BanTime),
-            Base = application:get_env(ecf, base_url, ""),
-            cowboy_req:reply(303, #{<<"location">> => [Base, "/user/",
-                                                       integer_to_binary(Id)]},
-                             Req);
+            ecf_utils:reply_redirect(303, ["/user/", integer_to_binary(Id)], Req);
         R ->
             R
     end.
 
-do_unban(User, Req0) ->
-    L = [{id, int}],
+get_ban_params(Req0) ->
+    L = [{id, int}, reason, {time, fun time_constraint/2}, {length, int, 1}],
     {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body(L, Req0),
-    #{id := Id} = M,
+    #{id := Id, reason := Reason, time := Time, length := Length} = M,
+    BanTime = get_time(Time, Length),
+    {Id, Reason, BanTime, Req}.
+
+do_unban(User, Req0) ->
+    {Id, Req} = get_unban_params(Req0),
     case check(User, Id, Req) of
         {ok, _Target} ->
-            ok = ecf_ban:delete_ban(Id),
-            Base = application:get_env(ecf, base_url, ""),
-            cowboy_req:reply(303, #{<<"location">> => [Base, "/user/",
-                                                       integer_to_binary(Id)]},
-                             Req);
+            ok = ecf_ban:unban_user(Id),
+            ecf_utils:reply_redirect(303, ["/user/", integer_to_binary(Id)], Req);
         R ->
             R
     end.
+
+get_unban_params(Req0) ->
+    L = [{id, int}],
+    {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body(L, Req0),
+    #{id := Id} = M,
+    {Id, Req}.
 
 get_time(<<"hours">>, Num) ->
     Micro = timer:hours(Num) * 1000,

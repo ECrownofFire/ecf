@@ -7,7 +7,7 @@
          new_ban/5,
          get_bans/0,
          check_ban/1,
-         delete_ban/1,
+         delete_ban/1, unban_user/1,
          user/1, by/1, reason/1, time/1, until/1]).
 
 -record(ecf_ban,
@@ -68,30 +68,43 @@ get_bans() ->
 -spec check_ban(ecf_user:id()) -> ban() | undefined.
 check_ban(User) ->
     F = fun() ->
-                case mnesia:read({ecf_ban, User}) of
-                    [] -> undefined;
-                    [B] ->
-                        case until(B) of
-                            permanent ->
-                                B;
-                            U ->
-                                Time = timer:now_diff(U, erlang:timestamp()),
-                                if Time < 0 ->
-                                       delete_ban(User),
-                                       undefined;
-                                   true ->
-                                       B
-                                end
-                        end
-                end
+            case mnesia:read({ecf_ban, User}) of
+                [] -> undefined;
+                [B] ->
+                    delete_ban_if_expired(B)
+            end
         end,
     mnesia:activity(transaction, F).
 
--spec delete_ban(ecf_user:id()) -> ok.
-delete_ban(User) ->
+-spec delete_ban_if_expired(ban()) -> ban() | undefined.
+delete_ban_if_expired(Ban) ->
+    case until(Ban) of
+        permanent ->
+            Ban;
+        U ->
+            case timer:now_diff(U, erlang:timestamp()) of
+                T when T < 0 ->
+                   delete_ban(Ban),
+                   undefined;
+                _  ->
+                   Ban
+            end
+    end.
+
+-spec delete_ban(ban()) -> ok.
+delete_ban(Ban) ->
     F = fun() ->
-                ecf_group:remove_member(3, User),
-                mnesia:delete({ecf_ban, User})
+            User = user(Ban),
+            ecf_group:remove_member(3, User),
+            mnesia:delete({ecf_ban, User})
+        end,
+    mnesia:activity(transaction, F).
+
+-spec unban_user(ecf_user:id()) -> ok.
+unban_user(User) ->
+    F = fun() ->
+            ecf_group:remove_member(3, User),
+            mnesia:delete({ecf_ban, User})
         end,
     mnesia:activity(transaction, F).
 

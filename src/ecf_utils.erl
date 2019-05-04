@@ -4,7 +4,8 @@
          valid_password/1, valid_username/1, valid_email/1,
          get_ip/1,
          set_login_cookies/3, clear_login_cookies/1,
-         reply_status/4, reply_status/5]).
+         reply_status/4, reply_status/5,
+         reply_redirect/3]).
 
 %%% Contains a few utility functions
 
@@ -81,6 +82,12 @@ reply_status(Status, User, Type, Req, Storage) ->
               _ -> #{<<"content-type">> => <<"text/html">>}
           end,
     cowboy_req:reply(Status, Map, Html, Req).
+
+-spec reply_redirect(integer(), iodata(), cowboy_req:req()) -> cowboy_req:req().
+reply_redirect(Status, Location, Req) ->
+    Base = application:get_env(ecf, base_url, ""),
+    Url = [Base, Location],
+    cowboy_req:reply(Status, #{<<"location">> => Url}, Req).
 
 
 -spec valid_password(binary()) -> boolean().
