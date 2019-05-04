@@ -78,30 +78,58 @@ send_password_reset_email(User) ->
 
 -spec send_email(ecf_user:user(), type()) -> ok.
 send_email(User, Type) ->
-    {ok, ForumName} = application:get_env(ecf, forum_name),
-    Subject = make_subject(Type, ForumName),
     Code = make_code(),
-    Body = make_body(Type, ForumName, Code),
-    Username = ecf_user:name(User),
-    To0 = ecf_user:email(User),
-    To = <<"<",To0/binary,">">>,
-    {ok, Addr0} = application:get_env(ecf, email_addr),
-    Addr = <<"<",Addr0/binary,">">>,
-    Mail = mimemail:encode({<<"text">>, <<"plain">>,
-                            [{<<"Subject">>, Subject},
-                             {<<"From">>, <<ForumName/binary," ",Addr/binary>>},
-                             {<<"To">>, <<Username/binary," ",To/binary>>}],
-                            [],
-                            Body}),
-    Opts = get_email_opts(),
-    {ok, _} = gen_smtp_client:send({Addr, [To], Mail}, Opts),
+    Mail = make_email(User, Type, Code),
+    {ok, _} = do_send_email(User, Mail),
     Limit = get_limit(Type),
     F = fun() ->
-                mnesia:write(#ecf_email{key={ecf_user:id(User), Type},
-                                        code=Code,
-                                        time=erlang:system_time(second)+Limit})
+                Email = #ecf_email{key = {ecf_user:id(User), Type},
+                                   code = Code,
+                                   time = erlang:system_time(second) + Limit},
+                mnesia:write(Email)
         end,
     mnesia:activity(transaction, F).
+
+make_email(User, Type, Code) ->
+    Body = make_body(Type, Code),
+    Headers = make_headers(User, Type),
+    mimemail:encode({<<"text">>, <<"plain">>,
+                     Headers,
+                     [],
+                     Body}).
+
+make_headers(User, Type) ->
+    {ok, ForumName} = application:get_env(ecf, forum_name),
+    Subject = make_subject(Type, ForumName),
+    From = get_from(),
+    To = get_to(User),
+    [{<<"Subject">>, Subject},
+     {<<"From">>, From},
+     {<<"To">>, To}].
+
+get_from() ->
+    {ok, ForumName} = application:get_env(ecf, forum_name),
+    Addr = get_from_addr(),
+    <<ForumName/binary," ",Addr/binary>>.
+
+get_from_addr() ->
+    {ok, Addr0} = application:get_env(ecf, email_addr),
+    <<"<",Addr0/binary,">">>.
+
+get_to(User) ->
+    Username = ecf_user:name(User),
+    To = get_to_addr(User),
+    <<Username/binary," ",To/binary>>.
+
+get_to_addr(User) ->
+    To0 = ecf_user:email(User),
+    <<"<",To0/binary,">">>.
+
+do_send_email(User, Mail) ->
+    Addr = get_from_addr(),
+    To = get_to_addr(User),
+    Opts = get_email_opts(),
+    gen_smtp_client:send({Addr, [To], Mail}, Opts).
 
 
 -spec make_subject(type(), binary()) -> binary().
@@ -112,8 +140,9 @@ make_subject(reset_password, ForumName) ->
     <<"Reset your password for ", ForumName/binary>>.
 
 
--spec make_body(type(), binary(), binary()) -> binary().
-make_body(Type, ForumName, Code) ->
+-spec make_body(type(), binary()) -> binary().
+make_body(Type, Code) ->
+    {ok, ForumName} = application:get_env(ecf, forum_name),
     {ok, Host} = application:get_env(ecf, host),
     Base = application:get_env(ecf, base_url, <<"">>),
     BaseUrl = <<"https://", Host/binary, Base/binary>>,
