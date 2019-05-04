@@ -133,6 +133,7 @@ set_login_cookies(Req, Id, Session) ->
     Req2 = cowboy_req:set_resp_cookie(<<"session">>, SessionEncoded,
                                       Req,
                                       #{http_only => true,
+                                        same_site => lax,
                                         secure => true,
                                         path => Base,
                                         max_age => SessionSecs}),
@@ -140,6 +141,7 @@ set_login_cookies(Req, Id, Session) ->
                                integer_to_binary(Id),
                                Req2,
                                #{max_age => SessionSecs,
+                                 same_site => lax,
                                  secure => true,
                                  path => Base}).
 
