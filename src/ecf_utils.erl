@@ -83,6 +83,7 @@ reply_status(Status, User, Type, Req, Storage) ->
           end,
     cowboy_req:reply(Status, Map, Html, Req).
 
+
 -spec reply_redirect(integer(), iodata(), cowboy_req:req()) -> cowboy_req:req().
 reply_redirect(Status, Location, Req) ->
     Base = application:get_env(ecf, base_url, ""),

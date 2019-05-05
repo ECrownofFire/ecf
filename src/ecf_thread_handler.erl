@@ -47,12 +47,11 @@ do_get(Req, _, Thread, true, Post) ->
     Id = ecf_thread:id(Thread),
     PerPage = application:get_env(ecf, posts_per_page, 40),
     Page = (Post-1) div PerPage + 1,
-    Base = application:get_env(ecf, base_url, ""),
-    cowboy_req:reply(301, #{<<"location">>
-                            => [Base, "/thread/", integer_to_binary(Id),
-                                "?page=", integer_to_binary(Page),
-                                "#post-", integer_to_binary(Post)]},
-                     Req).
+    ecf_utils:reply_redirect(301,
+                             ["/thread/", integer_to_binary(Id),
+                              "?page=", integer_to_binary(Page),
+                              "#post-", integer_to_binary(Post)],
+                             Req).
 
 
 handle_post(Req, undefined, _Action) ->
@@ -78,11 +77,10 @@ handle_post(Req0, User, <<"delete">>) ->
     case get_and_check_perm(Req, Id, User, delete_thread) of
         {ok, Thread} ->
             ok = ecf_thread:delete_thread(Id),
-            Base = application:get_env(ecf, base_url, ""),
             Forum = ecf_thread:forum(Thread),
-            cowboy_req:reply(303, #{<<"location">> => [Base, "/forum/",
-                                                       integer_to_list(Forum)]},
-                             Req);
+            ecf_utils:reply_redirect(303,
+                                     ["/forum/", integer_to_binary(Forum)],
+                                     Req);
         R ->
             R
     end;
@@ -126,6 +124,7 @@ handle_post(Req0, User, <<"tag">>) ->
                 ok ->
                     do_303(Req, Id);
                 % if the user has permission to create tags, do it anyway
+                % TODO: config this
                 {error, tag_not_found} ->
                     case check_perm(Req, User, Thread, create_tag) of
                         ok ->
@@ -175,8 +174,7 @@ check_perm(Req, User, Thread, Mode) ->
     end.
 
 do_303(Req, Id) ->
-    Base = application:get_env(ecf, base_url, ""),
-    cowboy_req:reply(303,
-                     #{<<"location">> => [Base, "/thread/", integer_to_binary(Id)]},
+    ecf_utils:reply_redirect(303,
+                     ["/thread/", integer_to_binary(Id)],
                      Req).
 
