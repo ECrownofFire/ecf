@@ -38,7 +38,7 @@
          deny  = [] :: [class()]
         }).
 
--type perm() :: #ecf_perm{}.
+-opaque perm() :: #ecf_perm{}.
 
 -spec mode(perm()) -> mode().
 mode(Perm) ->
@@ -224,23 +224,29 @@ edit_perm(Perms, Class, Mode, Set) ->
 edit_perm(Perm, Class, Set) ->
     case Set of
         allow ->
-            case lists:member(Class, Perm#ecf_perm.allow) of
-                true ->
-                    Perm;
-                false ->
-                    NewA = [Class|Perm#ecf_perm.allow],
-                    NewD = lists:delete(Class, Perm#ecf_perm.deny),
-                    Perm#ecf_perm{allow=NewA, deny=NewD}
-            end;
+            add_allow(Class, Perm);
         deny ->
-            case lists:member(Class, Perm#ecf_perm.deny) of
-                true ->
-                    Perm;
-                false ->
-                    NewA = lists:delete(Class, Perm#ecf_perm.allow),
-                    NewD = [Class|Perm#ecf_perm.deny],
-                    Perm#ecf_perm{allow=NewA, deny=NewD}
-            end
+            add_deny(Class, Perm)
+    end.
+
+add_allow(Class, Perm) ->
+    case lists:member(Class, Perm#ecf_perm.allow) of
+        true ->
+            Perm;
+        false ->
+            NewA = [Class|Perm#ecf_perm.allow],
+            NewD = lists:delete(Class, Perm#ecf_perm.deny),
+            Perm#ecf_perm{allow=NewA, deny=NewD}
+    end.
+
+add_deny(Class, Perm) ->
+    case lists:member(Class, Perm#ecf_perm.deny) of
+        true ->
+            Perm;
+        false ->
+            NewA = lists:delete(Class, Perm#ecf_perm.allow),
+            NewD = [Class|Perm#ecf_perm.deny],
+            Perm#ecf_perm{allow=NewA, deny=NewD}
     end.
 
 -spec remove_perm([perm()], class(), mode()) -> [perm()].

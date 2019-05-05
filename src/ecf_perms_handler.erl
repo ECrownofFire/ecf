@@ -30,10 +30,7 @@ do_reply(User, Action, Req0) ->
                 <<"add">> ->
                     ecf_perms:edit_global_perm(Class, Mode, Set)
             end,
-            Base = application:get_env(ecf, base_url, ""),
-            cowboy_req:reply(303,
-                             #{<<"location">> => [Base, <<"/admin">>]},
-                             Req);
+            ecf_utils:reply_redirect(303, <<"/admin">>, Req);
         false ->
             ecf_utils:reply_status(403, User, edit_perms_403, Req)
     end.
