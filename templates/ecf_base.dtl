@@ -12,6 +12,7 @@
     <meta property="og:title" content="{{ title }}">
     <meta property="og:description" content="Simple BEAM-powered forum software">
     <script src="{{ base }}/static/format_dates.js" defer></script>
+    <script src="{{ base }}/static/form_storage.js" defer></script>
 </head>
 <body>
 <header>

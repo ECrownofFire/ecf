@@ -49,7 +49,7 @@
 <footer id="forum-footer">
 {% include "ecf_pagination.dtl" with url=base|add:"/forum/"|add:forum.id page=page page_last=page_last only %}
     {% if forum.id != 0 %}
-    <form id="form-thread" action="{{ base }}/thread/create" method="post" onsubmit="saveThread();">
+    <form id="form-thread" class="form-save" action="{{ base }}/thread/create" method="post" data-loc="forum" data-id="{{ forum.id }}">
         <h3>Create New Thread</h3>
         <input type="hidden" name="forum" value="{{ forum.id }}">
         <label><h4>Title:</h4><input id="thread-title" type="text" name="title" required></label>
@@ -57,7 +57,7 @@
         <button>Create</button>
     </form>
     {% else %}
-    <form id="form-pm" action="{{ base }}/msg/create" method="post" onsubmit="saveThread();">
+    <form id="form-pm" class="form-save" action="{{ base }}/msg/create" method="post" data-loc="forum" data-id="{{ forum.id }}">
         <h3>New Private Message</h3>
         <label><h4>To:</h4><input id="pm-to" type="text" name="to" required></label>
         <label><h4>Subject:</h4><input id="pm-subject" type="text" name="subject" required></label>
@@ -65,25 +65,6 @@
         <button>Send</button>
     </form>
     {% endif %}
-<script>
-if(sessionStorage.getItem('restore')
-    && sessionStorage.getItem('loc') == "forum"
-    && sessionStorage.getItem('id') == {{ forum.id }}) {
-    var form = JSON.parse(sessionStorage.getItem('form'));
-    document.getElementById('thread-title').value = form.title;
-    document.getElementById('thread-text').value = form.text;
-}
-sessionStorage.removeItem('restore');
-sessionStorage.removeItem('form');
-sessionStorage.removeItem('loc');
-sessionStorage.removeItem('id');
-function saveThread() {
-    var form = {title: document.getElementById('thread-title').value, text: document.getElementById('thread-text').value};
-    sessionStorage.setItem('form', JSON.stringify(form));
-    sessionStorage.setItem('loc', 'forum');
-    sessionStorage.setItem('id', {{ forum.id }});
-}
-</script>
 </footer>
 {% endif %}
 </main>

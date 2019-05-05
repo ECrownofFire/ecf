@@ -128,28 +128,12 @@
 {% include "ecf_pagination.dtl" with url=base|add:"/thread/"|add:thread.id page=page page_last=page_last only %}
 
 {% if can_create_post %}
-<form id="form-post" action="{{ base }}/post/create" method="post" onsubmit="savePost();">
+<form id="form-post" class="form-save" action="{{ base }}/post/create" method="post" data-loc="thread" data-id="{{ thread.id }}">
     <h3>Reply:</h3>
     <input type="hidden" name="thread" value="{{ thread.id }}">
     <textarea id="post-text" type="text" autocomplete="off" name="text"></textarea>
     <input id="submit-post" type="submit" value="Post">
 </form>
-<script>
-if(sessionStorage.getItem('restore')
-    && sessionStorage.getItem('loc') == "thread"
-    && sessionStorage.getItem('id') == {{ thread.id }}) {
-    document.getElementById('post-text').value = sessionStorage.getItem('form');
-}
-sessionStorage.removeItem('restore');
-sessionStorage.removeItem('form');
-sessionStorage.removeItem('loc');
-sessionStorage.removeItem('id');
-function savePost() {
-    sessionStorage.setItem('form', document.getElementById('post-text').value);
-    sessionStorage.setItem('loc', 'thread');
-    sessionStorage.setItem('id', {{ thread.id }});
-}
-</script>
 {% endif %}
 </footer>
 </main>
