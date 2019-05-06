@@ -67,9 +67,8 @@ do_register(Username, Password, Email, Bday, Bio, Req) ->
             ok = ecf_user:edit_bday(Id, Bday),
             ok = ecf_user:edit_bio(Id, Bio),
             Req2 = ecf_utils:set_login_cookies(Req, Id, Session),
-            Base = application:get_env(ecf, base_url, ""),
             % TODO: flash here
-            cowboy_req:reply(303, #{<<"location">> => [Base, "/"]}, Req2)
+            ecf_utils:reply_redirect(303, <<"/">>, Req2)
     end.
 
 fail(Reason, Username, Email, Bday, Bio, Req) ->

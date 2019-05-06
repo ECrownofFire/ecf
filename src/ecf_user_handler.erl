@@ -75,11 +75,9 @@ handle_post(Req0, User, <<"edit">>) ->
             ecf_user:edit_bday(Id, Bday),
             ecf_user:edit_bio(Id, Bio),
             ecf_user:edit_loc(Id, Loc),
-            Base = application:get_env(ecf, base_url, ""),
-            cowboy_req:reply(303,
-                             #{<<"location">>
-                               => [Base, "/user/", integer_to_binary(Id)]},
-                             Req);
+            ecf_utils:reply_redirect(303,
+                                     [<<"/user/">>, integer_to_binary(Id)],
+                                     Req);
         false ->
             ecf_utils:reply_status(403, User, edit_user_403, Req)
     end.

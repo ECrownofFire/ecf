@@ -112,8 +112,5 @@ do_remove(Id, Thread) ->
     ecf_thread:remove_perm(Thread, {user, Id}, create_post).
 
 reply(Id, Req) ->
-    Base = application:get_env(ecf, base_url, ""),
-    cowboy_req:reply(303,
-                     #{<<"location">> => [Base, "/thread/", integer_to_list(Id)]},
-                     Req).
+    ecf_utils:reply_redirect(303, ["/thread/", integer_to_binary(Id)], Req).
 

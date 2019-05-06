@@ -58,8 +58,7 @@ create_table(Nodes) ->
 new_user(Name, Pass, Email0) ->
     Email = string:trim(Email0),
     Hash = hash_pass(Pass),
-    Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
-    Sess = {Session, erlang:system_time(second)},
+    Sess = make_session(),
     F = fun() ->
                 case get_user_by_name(Name) of
                     undefined ->
@@ -74,7 +73,8 @@ new_user(Name, Pass, Email0) ->
                                                  last_post=Time}),
                                 % All users are in the basic group
                                 ok = ecf_group:add_member(1, Id),
-                                {Id, Session};
+                                {S, _} = Sess,
+                                {Id, S};
                             _ ->
                                 {error, email_taken}
                         end;
@@ -135,14 +135,14 @@ get_user_by_email(Email) ->
 
 -spec edit_name(id(), binary()) -> binary() | {error, username_taken}.
 edit_name(Id, Name) ->
-    Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
-    Sess = {Session, erlang:system_time(second)},
+    Sess = make_session(),
     F = fun() ->
                 case get_user_by_name(Name) of
                     undefined ->
                         [User] = mnesia:wread({ecf_user, Id}),
                         ok = mnesia:write(User#ecf_user{name=Name,session=[Sess]}),
-                        Session;
+                        {S, _} = Sess,
+                        S;
                     _ ->
                         {error, username_taken}
                 end
@@ -151,15 +151,15 @@ edit_name(Id, Name) ->
 
 -spec edit_email(id(), binary()) -> binary() | {error, email_taken}.
 edit_email(Id, Email) ->
-    Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
-    Sess = {Session, erlang:system_time(second)},
+    Sess = make_session(),
     F = fun() ->
                 case get_user_by_email(Email) of
                     undefined ->
                         [User] = mnesia:wread({ecf_user, Id}),
                         ok = mnesia:write(User#ecf_user{email=Email,session=[Sess]}),
                         ok = ecf_group:remove_member(2, Id),
-                        Session;
+                        {S, _} = Sess,
+                        S;
                     _ ->
                         {error, email_taken}
                 end
@@ -175,11 +175,11 @@ edit_email(Id, Email) ->
 -spec edit_pass(id(), binary()) -> binary().
 edit_pass(Id, NewPass) ->
     Hash = hash_pass(NewPass),
-    Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
-    Sess = {Session, erlang:system_time(second)},
+    Sess = make_session(),
     F = fun() ->
                 [User] = mnesia:wread({ecf_user, Id}),
                 ok = mnesia:write(User#ecf_user{pass=Hash,session=[Sess]}),
+                {Session, _} = Sess,
                 Session
         end,
     mnesia:activity(transaction, F).
@@ -187,17 +187,15 @@ edit_pass(Id, NewPass) ->
 
 -spec new_session(id()) -> binary().
 new_session(Id) ->
-    Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
-    Time = erlang:system_time(second),
-    Limit = application:get_env(ecf, minutes_session, 20160) * 60,
-    Expire = Time + Limit,
+    Session = make_session(),
     F = fun() ->
                 [User] = mnesia:wread({ecf_user, Id}),
-                New = [{Session, Expire}|User#ecf_user.session],
+                New = [Session|User#ecf_user.session],
                 mnesia:write(User#ecf_user{session=New})
         end,
     ok = mnesia:activity(transaction, F),
-    Session.
+    {S, _} = Session,
+    S.
 
 -spec reset_session(id(), binary()) -> ok.
 reset_session(Id, Session) ->
@@ -211,12 +209,17 @@ reset_session(Id, Session) ->
 -spec clean_sessions(id()) -> user().
 clean_sessions(Id) ->
     F = fun() ->
-                [User] = mnesia:wread({ecf_user, Id}),
-                Old = User#ecf_user.session,
-                New = lists:filter(fun clean_sess/1, Old),
-                NewUser = User#ecf_user{session=New},
-                mnesia:write(NewUser),
-                NewUser
+            [User] = mnesia:wread({ecf_user, Id}),
+            Old = User#ecf_user.session,
+            New = lists:filter(fun clean_sess/1, Old),
+            case length(Old) =:= length(New) of
+                false ->
+                    NewUser = User#ecf_user{session=New},
+                    mnesia:write(NewUser),
+                    NewUser;
+                true ->
+                    User
+            end
         end,
     mnesia:activity(transaction, F).
 
@@ -238,25 +241,25 @@ check_session(Id, Session) ->
 refresh_session(Id, Old) ->
     F =
     fun() ->
-            User = clean_sessions(Id),
-            case lists:keyfind(Old, 1, User#ecf_user.session) of
-                false ->
-                    false;
-                {Old, Time} ->
-                    Limit = application:get_env(ecf, minutes_refresh, 10080) * 60,
-                    Remaining = Time - erlang:system_time(second),
-                    if Remaining < Limit ->
-                           % expire old session with 5 minute grace period
-                           List = lists:keyreplace(Old, 1,
-                                                   User#ecf_user.session,
-                                                   {Old, Time + 5 * 60}),
-                           % this extra write is inefficient, but reuses code
-                           mnesia:write(User#ecf_user{session=List}),
-                           new_session(Id);
-                       true ->
-                           ok
-                    end
-            end
+        User = clean_sessions(Id),
+        case lists:keyfind(Old, 1, User#ecf_user.session) of
+            false ->
+                false;
+            {Old, Time} ->
+                Limit = application:get_env(ecf, minutes_refresh, 10080) * 60,
+                Now = erlang:system_time(second),
+                case Time - Now of
+                    N when N < Limit ->
+                        % force expire old session in 15 minutes
+                        List = lists:keyreplace(Old, 1,
+                                                User#ecf_user.session,
+                                                {Old, Now + 15 * 60}),
+                        mnesia:write(User#ecf_user{session=List}),
+                        new_session(Id);
+                    _ ->
+                        ok
+                end
+        end
     end,
     mnesia:activity(transaction, F).
 
@@ -422,4 +425,13 @@ posts(User) ->
 -spec last_post(user()) -> erlang:timestamp().
 last_post(User) ->
     User#ecf_user.last_post.
+
+%%% UTILITIES
+
+make_session() ->
+    Session = crypto:strong_rand_bytes(?SESSION_LENGTH),
+    Time = erlang:system_time(second),
+    Limit = application:get_env(ecf, minutes_session, 20160) * 60,
+    Expire = Time + Limit,
+    {Session, Expire}.
 

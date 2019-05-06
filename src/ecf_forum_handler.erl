@@ -56,11 +56,7 @@ handle_post(Req, User, <<"create">>) ->
             {ok, M, Req2} = cowboy_req:read_and_match_urlencoded_body(L, Req),
             #{name := Name, desc := Desc} = M,
             Id = ecf_forum:new_forum(Name, Desc),
-            Base = application:get_env(ecf, base_url, ""),
-            cowboy_req:reply(303,
-                             #{<<"location">>
-                               => [Base, <<"/forum/">>, integer_to_list(Id)]},
-                             Req2)
+            redirect(Id, Req2)
     end;
 handle_post(Req0, User, <<"delete">>) ->
     {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body([{id, int}], Req0),
@@ -74,10 +70,7 @@ handle_post(Req0, User, <<"delete">>) ->
                     ecf_utils:reply_status(403, User, delete_forum_403, Req);
                 true ->
                     ok = ecf_forum:delete_forum(Id),
-                    Base = application:get_env(ecf, base_url, ""),
-                    cowboy_req:reply(303,
-                                     #{<<"location">> => [Base, "/"]},
-                                     Req)
+                    ecf_utils:reply_redirect(303, <<"/">>, Req)
             end
     end;
 handle_post(Req0, User, <<"edit">>) ->
@@ -94,12 +87,7 @@ handle_post(Req0, User, <<"edit">>) ->
                 true ->
                     ok = ecf_forum:edit_name(Id, Name),
                     ok = ecf_forum:edit_desc(Id, Desc),
-                    Base = application:get_env(ecf, base_url, ""),
-                    cowboy_req:reply(303,
-                                     #{<<"location">>
-                                       => [Base, <<"/forum/">>,
-                                           integer_to_binary(Id)]},
-                                     Req)
+                    redirect(Id, Req)
             end
     end;
 handle_post(Req0, User, <<"reorder">>) ->
@@ -116,11 +104,7 @@ handle_post(Req0, User, <<"reorder">>) ->
                 true ->
                     try ecf_forum:reorder(Id, Action) of
                         ok ->
-                            Base = application:get_env(ecf, base_url, ""),
-                            cowboy_req:reply(303,
-                                             #{<<"location">>
-                                               => [Base, <<"/admin">>]},
-                                             Req)
+                            ecf_utils:reply_redirect(303, <<"/admin">>, Req)
                     catch
                         error:function_clause ->
                             ecf_utils:reply_status(400, User, reorder_forum_400,
@@ -147,4 +131,7 @@ reorder_con(reverse, Action) ->
     end;
 reorder_con(format_error, {invalid_action, Val}) ->
     io_lib:format("~p is not a valid reorder action.", [Val]).
+
+redirect(Forum, Req) ->
+    ecf_utils:reply_redirect(303, [<<"/forum/">>, integer_to_binary(Forum)], Req).
 

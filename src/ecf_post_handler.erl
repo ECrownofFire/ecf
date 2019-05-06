@@ -58,12 +58,7 @@ try_post(Req0 = #{method := <<"POST">>}, User, <<"create">>) ->
                 true ->
                     Post = ecf_post:new_post(Thread, ecf_user:id(User),
                                              erlang:timestamp(), Text),
-                    Base = application:get_env(ecf, base_url, ""),
-                    cowboy_req:reply(303,
-                                     #{<<"location">>
-                                       => [Base, <<"/thread/">>, integer_to_binary(Thread),
-                                           <<"/post/">>, integer_to_binary(Post)]},
-                                     Req);
+                    redirect_post(Thread, Post, Req);
                 false ->
                     ecf_utils:reply_status(403, User, create_post_403, Req)
             end;
@@ -83,12 +78,7 @@ try_post(Req0 = #{method := <<"POST">>}, User, <<"delete">>) ->
                     case Id of
                         N when N > 1 ->
                             ok = ecf_post:delete_post(TId, Id),
-                            Base = application:get_env(ecf, base_url, ""),
-                            cowboy_req:reply(303,
-                                             #{<<"location">>
-                                               => [Base, <<"/thread/">>,
-                                                   integer_to_binary(TId)]},
-                                             Req);
+                            redirect_thread(TId, Req);
                         _ ->
                             ecf_utils:reply_status(400, User, delete_post_400, Req)
                     end;
@@ -119,16 +109,22 @@ post_edit(User, Thread, Post, Text, Req) ->
             Id = ecf_post:id(Post),
             ecf_post:edit_post(TId, Id, ecf_user:id(User),
                                erlang:timestamp(), Text),
-            Base = application:get_env(ecf, base_url, ""),
-            cowboy_req:reply(303,
-                             #{<<"location">>
-                               => [Base, <<"/thread/">>, integer_to_binary(TId),
-                                   <<"/post/">>, integer_to_binary(Id)]},
-                             Req)
+            redirect_post(TId, Id, Req)
     end.
 
 check_edit_perms(User, Thread, Post) ->
     ecf_perms:check_perm_thread(User, Thread, edit_post)
     orelse (ecf_post:poster(Post) =:= ecf_user:id(User)
             andalso ecf_perms:check_perm_thread(User, Thread, edit_own_post)).
+
+redirect_thread(Thread, Req) ->
+    ecf_utils:reply_redirect(303,
+                             [<<"/thread/">>, integer_to_binary(Thread)],
+                             Req).
+
+redirect_post(Thread, Post, Req) ->
+    ecf_utils:reply_redirect(303,
+                             [<<"/thread/">>, integer_to_binary(Thread),
+                              <<"/post/">>, integer_to_binary(Post)],
+                             Req).
 

@@ -24,8 +24,7 @@ init(Req, State) ->
     {ok, Req2, State}.
 
 try_logout(undefined, Req) ->
-    Base = application:get_env(ecf, base_url, <<"">>),
-    cowboy_req:reply(303, #{<<"location">> => [Base, "/"]}, Req);
+    ecf_utils:reply_redirect(303, <<"/">>, Req);
 try_logout(User, Req) ->
     #{url := Url} = cowboy_req:match_qs([{url, [], <<"">>}], Req),
     {_Id, Sess} = ecf_utils:get_session_cookies(Req),
