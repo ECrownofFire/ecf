@@ -50,7 +50,7 @@ try_post(Req0 = #{method := <<"POST">>}, User, <<"create">>) ->
     Time = timer:now_diff(erlang:timestamp(), ecf_user:last_post(User)),
     case Time > Limit of
         true ->
-            L = [{thread, int}, {text, int}],
+            L = [{thread, int}, text],
             {ok, M, Req} = cowboy_req:read_and_match_urlencoded_body(L, Req0),
             #{thread := Thread, text := Text} = M,
             case ecf_perms:check_perm_thread(User, ecf_thread:get_thread(Thread),
